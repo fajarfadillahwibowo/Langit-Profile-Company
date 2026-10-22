@@ -1,0 +1,198 @@
+/* ==========================================================================
+   LANGIT MOTION SYSTEM - GPU-Accelerated Animations & Kinetic Utilities
+   Engineered for 60-120 FPS, Zero Layout Shift, and Sub-second Paints
+   ========================================================================== */
+
+/* 1. Hardware Accelerated Aurora Mesh Layers (0% CPU impact) */
+@keyframes aurora-layer-1 {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    }
+    33% {
+        transform: translate3d(40px, -60px, 0) rotate(8deg) scale(1.1);
+    }
+    66% {
+        transform: translate3d(-30px, 30px, 0) rotate(-6deg) scale(0.95);
+    }
+    100% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    }
+}
+
+@keyframes aurora-layer-2 {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.05);
+    }
+    40% {
+        transform: translate3d(-50px, 50px, 0) rotate(-12deg) scale(0.9);
+    }
+    75% {
+        transform: translate3d(35px, -40px, 0) rotate(6deg) scale(1.15);
+    }
+    100% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.05);
+    }
+}
+
+@keyframes aurora-layer-3 {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(0.95);
+    }
+    50% {
+        transform: translate3d(60px, 40px, 0) rotate(15deg) scale(1.2);
+    }
+    100% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(0.95);
+    }
+}
+
+@keyframes hud-dot-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(var(--accent-rgb, 14, 165, 233), 0.6);
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.85;
+        box-shadow: 0 0 10px 4px rgba(var(--accent-rgb, 14, 165, 233), 0.4);
+    }
+}
+
+@keyframes spotlight-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* 2. Motion Utility Classes */
+.animate-aurora-1 {
+    animation: aurora-layer-1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    will-change: transform;
+}
+
+.animate-aurora-2 {
+    animation: aurora-layer-2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    will-change: transform;
+}
+
+.animate-aurora-3 {
+    animation: aurora-layer-3 32s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    will-change: transform;
+}
+
+.animate-hud-pulse {
+    animation: hud-dot-pulse 2s ease-in-out infinite;
+}
+
+/* 3. GPU Acceleration Helpers */
+.gpu-layer {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform, opacity;
+}
+
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+.preserve-3d {
+    transform-style: preserve-3d;
+}
+
+/* 4. Mouse-Tracking Spotlight & Glass Morph Card */
+.spotlight-card {
+    position: relative;
+    --mouse-x: 50%;
+    --mouse-y: 50%;
+    --accent-rgb: 14, 165, 233;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+
+.spotlight-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+        420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(var(--accent-rgb, 14, 165, 233), 0.12),
+        transparent 65%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.spotlight-card:hover::after {
+    opacity: 1;
+}
+
+/* 5. Kinetic Two-Row Marquee System (Stream Portofolio 2 Baris) */
+@keyframes kinetic-marquee-left {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+@keyframes kinetic-marquee-right {
+    0% {
+        transform: translate3d(-50%, 0, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-marquee-left {
+    display: flex;
+    width: max-content;
+    animation: kinetic-marquee-left var(--marquee-speed, 50s) linear infinite;
+    will-change: transform;
+}
+
+.animate-marquee-right {
+    display: flex;
+    width: max-content;
+    animation: kinetic-marquee-right var(--marquee-speed, 50s) linear infinite;
+    will-change: transform;
+}
+
+.animate-marquee-left:hover,
+.animate-marquee-right:hover,
+.marquee-paused .animate-marquee-left,
+.marquee-paused .animate-marquee-right {
+    animation-play-state: paused !important;
+}
+
+.marquee-mask {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+}
+
+/* 6. Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .animate-aurora-1,
+    .animate-aurora-2,
+    .animate-aurora-3,
+    .animate-hud-pulse,
+    .animate-marquee-left,
+    .animate-marquee-right {
+        animation: none !important;
+        transform: none !important;
+    }
+    
+    .spotlight-card {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+

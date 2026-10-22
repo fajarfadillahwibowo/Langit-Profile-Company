@@ -1,0 +1,197 @@
+@import 'tailwindcss';
+@import './animations.css';
+
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+@source '../views/**/*.blade.php';
+@source '../js/**/*.jsx';
+@source '../js/**/*.js';
+
+@import './etna.css';
+
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+    --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    --font-etna: 'Etna Sans Serif', 'Etna', sans-serif;
+    --font-serif: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+    --font-editorial: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+
+    --color-obsidian: #07090E;
+    --color-slate-midnight: #0F172A;
+    --color-card-dark: #0D131F;
+    --color-surface-glass: rgba(255, 255, 255, 0.04);
+    
+    --color-accent-photo: #D97706;
+    --color-accent-web: #0284C7;
+    --color-accent-edu: #059669;
+    --color-accent-hardware: #EA580C;
+    --color-accent-intern: #7C3AED;
+    --color-accent-rental: #0D9488;
+    --color-accent-collab: #DB2777;
+    --color-brand-blue: #005792;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border: 2px solid #07090E;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+/* Dual-Theme Glassmorphism Classes */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-panel {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+    background: #FFFFFF;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+.dark .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: none;
+}
+.glass-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.dark .glass-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-input {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #0F172A;
+    transition: all 0.2s ease;
+}
+.dark .glass-input {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #F8FAFC;
+}
+.glass-input:focus {
+    outline: none;
+    border-color: #0284C7;
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
+}
+.dark .glass-input:focus {
+    border-color: #0EA5E9;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.25);
+}
+
+/* Subtle Grid Backgrounds */
+.bg-grid-pattern {
+    background-size: 36px 36px;
+    background-image: 
+        linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+.dark .bg-grid-pattern {
+    background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Dynamic Gradient text */
+.text-gradient-cyan-violet {
+    background: linear-gradient(135deg, #0284C7 0%, #4F46E5 50%, #9333EA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.dark .text-gradient-cyan-violet {
+    background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-gold {
+    background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.dark .text-gradient-gold {
+    background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ── Hero Section Utilities ──────────────────────────────────────────── */
+
+/* Subtle SVG grain noise overlay (pure CSS, GPU composited) */
+.bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 128px 128px;
+}
+
+/* Light shimmer / spotlight sweep used as loading indicator */
+@keyframes shimmer-sweep {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.06) 40%,
+        rgba(255,255,255,0.1) 50%,
+        rgba(255,255,255,0.06) 60%,
+        rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-sweep 2.5s ease-in-out infinite;
+}
+
+/* ── Reduced Motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .animate-shimmer {
+        animation: none;
+    }
+}
+
+.font-etna {
+    font-family: 'Etna Sans Serif', 'Etna', sans-serif;
+}
+
+.font-editorial {
+    font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.font-serif-italic {
+    font-family: 'Playfair Display', 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+}
+
+
