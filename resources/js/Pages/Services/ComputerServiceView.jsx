@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import ServiceTrackerCard from '@/Components/ServiceTrackerCard';
@@ -7,7 +7,7 @@ import {
     Laptop, Monitor, Apple, ArrowRight, Zap, HelpCircle, PhoneCall
 } from 'lucide-react';
 
-export default function ComputerServiceView({ service, initialTicket = null, initialReceiptQuery = '' }) {
+export default function ComputerServiceView({ service, initialTicket = null, initialReceiptQuery = '', galleries = [] }) {
     // Interactive Symptom Diagnostic State (PRD 4.4)
     const [selectedDevice, setSelectedDevice] = useState('laptop');
     const [selectedSymptom, setSelectedSymptom] = useState('overheat');
@@ -18,13 +18,11 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
         { key: 'pc_custom', label: 'PC Rakitan / Workstation', icon: Monitor },
     ];
 
-    const coreServices = [
-        {
-            num: '01',
+    const servicePresets = {
+        software: {
             title: 'Installasi Software',
             badge: 'OS & Aplikasi',
             badgeColor: 'bg-sky-500 text-white shadow-sm',
-            image: '/images/services/service_software.jpg?v=2',
             desc: 'Instalasi sistem operasi dan software resmi dengan optimasi kecepatan penuh, bebas bloatware, dan perlindungan keamanan data.',
             items: [
                 'Fresh Install Windows 10/11 Pro & macOS Sequoia Original',
@@ -34,13 +32,12 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
             ],
             estCost: 'Rp 100.000 - Rp 200.000',
             estTime: '1 - 2 Jam Selesai',
+            image: '/images/services/service_software.jpg',
         },
-        {
-            num: '02',
+        hardware: {
             title: 'Upgrade SSD',
             badge: 'Speed Boost 10x',
             badgeColor: 'bg-amber-500 text-slate-950 font-bold shadow-sm',
-            image: '/images/services/service_ssd.jpg?v=2',
             desc: 'Tingkatkan performa laptop atau PC lemot menjadi super kencang dengan SSD NVMe M.2 Gen4 atau SSD SATA berkualitas tinggi.',
             items: [
                 'Upgrade SSD NVMe Gen3/Gen4 (Kecepatan hingga 7000MB/s)',
@@ -50,13 +47,12 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
             ],
             estCost: 'Rp 150.000 (+ Harga SSD Pilihan)',
             estTime: '1 Jam Langsung Jadi',
+            image: '/images/services/service_ssd.jpg',
         },
-        {
-            num: '03',
+        custom_pc: {
             title: 'Rakit PC (Custom Build)',
             badge: 'Custom Rig & Tuning',
             badgeColor: 'bg-indigo-600 text-white shadow-sm',
-            image: '/images/services/service_pc.jpg?v=2',
             desc: 'Jasa perakitan PC Gaming, Editing Video 4K, Konten Kreator, Arsitektur, dan Workstation AI dengan standar kerapian profesional.',
             items: [
                 'Perakitan Komponen Presisi & Thermal Paste Premium',
@@ -66,13 +62,12 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
             ],
             estCost: 'Rp 250.000 - Rp 450.000',
             estTime: '3 - 5 Jam Selesai',
+            image: '/images/services/service_pc.jpg',
         },
-        {
-            num: '04',
+        sparepart: {
             title: 'Penggantian Part',
             badge: 'Sparepart Original',
             badgeColor: 'bg-emerald-600 text-white shadow-sm',
-            image: '/images/services/service_part.jpg?v=2',
             desc: 'Penggantian komponen hardware laptop dan PC yang rusak atau aus dengan suku cadang original bergaransi resmi toko.',
             items: [
                 'Ganti Layar LCD / IPS Laptop Pecah, Bergaris, atau Blank',
@@ -82,8 +77,43 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
             ],
             estCost: 'Mulai Rp 150.000 (+ Part)',
             estTime: '1 Hari Kerja Selesai',
+            image: '/images/services/service_part.jpg',
         },
-    ];
+    };
+
+    // Strict Dynamic Sync: Catalog cards strictly reflect active galleries in admin!
+    const coreServices = useMemo(() => {
+        if (!galleries || galleries.length === 0) {
+            return Object.keys(servicePresets).map((cat, idx) => ({
+                id: cat,
+                num: String(idx + 1).padStart(2, '0'),
+                ...servicePresets[cat],
+            }));
+        }
+
+        return galleries.map((g, idx) => {
+            const matchedKey = Object.keys(servicePresets).find(k => 
+                g.category === k || 
+                g.slug?.toLowerCase().includes(k) || 
+                g.title?.toLowerCase().includes(k)
+            ) || 'hardware';
+            const preset = servicePresets[matchedKey] || servicePresets.hardware;
+
+            return {
+                id: g.id,
+                num: String(idx + 1).padStart(2, '0'),
+                title: g.title || preset.title,
+                badge: g.exif_metadata_json?.lens || preset.badge,
+                badgeColor: preset.badgeColor,
+                image: g.file_webp_path || preset.image,
+                desc: preset.desc,
+                items: preset.items,
+                estCost: g.exif_metadata_json?.aperture || preset.estCost,
+                estTime: g.exif_metadata_json?.shutter || preset.estTime,
+            };
+        });
+    }, [galleries]);
+
 
     const symptomsMap = {
         laptop: [
@@ -117,7 +147,7 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
             </Head>
 
             {/* Atmosphere: Professional Computer Service Center Layout */}
-            <div className="bg-slate-50 dark:bg-[#120A05] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#120A05] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
                 {/* Hero Header */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6 pb-12 text-center space-y-4">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-xs font-mono tracking-wider font-semibold">
@@ -161,7 +191,7 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
                             Katalog Layanan Servis Komputer & Laptop
                         </span>
                         <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">
-                            4 Layanan Utama Servis Komputer
+                            {coreServices.length} Layanan Utama Servis Komputer
                         </h2>
                         <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-2">
                             Dikerjakan langsung oleh teknisi berpengalaman dengan peralatan diagnostik presisi, suku cadang original, dan garansi pengerjaan tuntas.

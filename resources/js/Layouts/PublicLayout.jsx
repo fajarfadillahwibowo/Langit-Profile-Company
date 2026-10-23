@@ -119,7 +119,7 @@ export default function PublicLayout({ children, activeService = null }) {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#07090E] dark:text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 transition-colors duration-300">
+        <div className="min-h-screen bg-[#EDF9FC] text-slate-900 dark:bg-[#07090E] dark:text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 transition-colors duration-300">
             {/* Ambient Background Glows */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-400/10 dark:bg-cyan-600/10 rounded-full blur-[128px]"></div>
@@ -136,12 +136,12 @@ export default function PublicLayout({ children, activeService = null }) {
             />
 
             {/* Main Content Area */}
-            <main className="flex-1 relative z-10 pt-24 md:pt-28 pb-16">
+            <main className="flex-1 relative z-10 pt-24 md:pt-28 pb-16 bg-[#EDF9FC] dark:bg-transparent">
                 {children}
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#05070B]/90 backdrop-blur-xl transition-colors duration-300">
+            <footer className="relative z-10 border-t border-[#005792]/15 dark:border-white/10 bg-[#EDF9FC]/95 dark:bg-[#05070B]/90 backdrop-blur-xl transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-6 py-14 lg:py-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
                         {/* Col 1: Brand Info */}

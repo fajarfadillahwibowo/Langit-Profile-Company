@@ -77,7 +77,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* 1. Official WhatsApp Card */}
                         <a
                             href={`https://wa.me/${(contacts.general_phone || '+62 812 3456 7890').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo Studio Langit, saya ingin berkonsultasi mengenai layanan dan proyek...')}`}
@@ -191,36 +191,6 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                             </div>
                         </div>
 
-                        {/* 3. YouTube Card (Upcoming Link) */}
-                        <div className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-red-500/40 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden">
-                            <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-red-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-600/25 group-hover:scale-110 transition-transform">
-                                        <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10 font-bold uppercase tracking-wider">
-                                        Segera Hadir
-                                    </span>
-                                </div>
-
-                                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">YouTube Channel</span>
-                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-0.5">
-                                    Langit Creative
-                                </h3>
-                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                                    Dokumentasi sinematik 4K berdurasi penuh, film pendek, company profile korporat, dan video training divisi edukasi.
-                                </p>
-                            </div>
-
-                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
-                                <span>Tautan channel menyusul</span>
-                                <span className="text-[11px] font-bold text-red-600 dark:text-red-400">YouTube</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

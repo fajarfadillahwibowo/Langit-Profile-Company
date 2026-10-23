@@ -6,6 +6,7 @@ import MultiDeviceMockup from '@/Components/MultiDeviceMockup';
 import WebPerformanceDuel from '@/Components/WebPerformanceDuel';
 import WebArchitectureCockpit from '@/Components/WebArchitectureCockpit';
 import WebSolutionCard3D from '@/Components/WebSolutionCard3D';
+import ScrollingWebDevPillars from '@/Components/ScrollingWebDevPillars';
 import { 
     Terminal, Cpu, Zap, ShieldCheck, Layers, Database,
     ArrowRight, CheckCircle2, Sparkles,
@@ -117,7 +118,7 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
             </Head>
 
             {/* Atmosphere: IDE & Cyber-Architecture Blueprint Layout */}
-            <div className="bg-slate-50 dark:bg-[#060B14] min-h-screen text-slate-800 dark:text-slate-100 bg-grid-pattern -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#060B14] min-h-screen text-slate-800 dark:text-slate-100 bg-grid-pattern -mt-6 pt-6 transition-colors duration-300">
                 {/* Hero Header: Cyber Blueprint & Modern Kinetic Atmosphere */}
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-20 text-center overflow-hidden">
                     {/* Ambient Aurora Glow Layers */}
@@ -308,6 +309,9 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                         </AnimatePresence>
                     </motion.div>
                 </section>
+
+                {/* 3D Stacked Card Scrolling Experience: 7 Pilar Rekayasa Web & Sistem Digital */}
+                <ScrollingWebDevPillars />
 
                 {/* 1. Interactive Multi-Device Mockup Previewer (PRD 4.2) */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12">

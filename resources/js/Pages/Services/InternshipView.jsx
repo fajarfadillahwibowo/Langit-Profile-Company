@@ -68,7 +68,7 @@ const defaultPositions = [
     },
 ];
 
-export default function InternshipView({ service, positions = [] }) {
+export default function InternshipView({ service, positions = [], galleries = [] }) {
     const activePositions = positions && positions.length > 0 ? positions : defaultPositions;
     const [selectedPositionId, setSelectedPositionId] = useState(activePositions[0]?.id || 1);
     
@@ -197,7 +197,7 @@ export default function InternshipView({ service, positions = [] }) {
             </Head>
 
             {/* Atmosphere: Startup Talent & Career Portal with Dual Theme Support */}
-            <div className="bg-slate-50/70 text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen -mt-6 pt-6 transition-colors duration-300 relative overflow-hidden">
+            <div className="bg-[#EDF9FC] text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen -mt-6 pt-6 transition-colors duration-300 relative overflow-hidden">
                 {/* Artistic Volumetric Lighting Blobs */}
                 <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[400px] bg-gradient-to-tr from-[#005792]/20 via-purple-600/15 to-pink-500/10 blur-[130px] rounded-full pointer-events-none -z-0" />
                 <div className="absolute top-[480px] -left-20 w-[400px] h-[400px] bg-[#005792]/10 blur-[100px] rounded-full pointer-events-none -z-0" />
@@ -388,6 +388,34 @@ export default function InternshipView({ service, positions = [] }) {
                     selectedPositionId={selectedPositionId}
                     onSelectPosition={(posId) => setSelectedPositionId(posId)}
                 />
+
+                {/* 4 Foto Dokumentasi Aktivitas & Fasilitas Magang (Konsisten dengan Backend Admin Galeri) */}
+                {galleries && galleries.length > 0 && (
+                    <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12 border-t border-slate-200/80 dark:border-white/10">
+                        <div className="text-center max-w-2xl mx-auto mb-8">
+                            <span className="text-xs font-mono uppercase tracking-wider text-purple-600 dark:text-purple-400 font-semibold block mb-1">
+                                Kultur & Pengalaman Magang Riil
+                            </span>
+                            <h3 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
+                                Suasana Onsite & Proyek Produksi Komersial
+                            </h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                            {galleries.map((item) => (
+                                <div key={item.id} className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-md">
+                                    <div className="relative aspect-[4/3] overflow-hidden">
+                                        <img src={item.file_webp_path} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                                    </div>
+                                    <div className="p-3.5 bg-white dark:bg-[#0c1322]">
+                                        <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 uppercase font-semibold">{item.category}</span>
+                                        <h4 className="font-heading font-bold text-xs text-slate-900 dark:text-white mt-1 line-clamp-1">{item.title}</h4>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* 3. Direct Application Form with CV Upload */}
                 <section id="form-pendaftaran" className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">

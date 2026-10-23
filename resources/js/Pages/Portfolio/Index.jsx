@@ -93,7 +93,7 @@ export default function PortfolioIndex({ galleries = [] }) {
                 </div>
 
                 {/* NEW FEATURE: 2-Row Kinetic Marquee Stream (Inspired by biz.ailene.id Program Overview) */}
-                <div ref={marqueeRef} className="rounded-3xl border border-slate-200/90 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] shadow-sm overflow-hidden">
+                <div ref={marqueeRef} className="rounded-3xl border border-[#005792]/15 dark:border-white/10 bg-[#EDF9FC]/60 dark:bg-white/[0.02] shadow-sm overflow-hidden">
                     <KineticPortfolioMarquee
                         galleries={photoGalleries}
                         onSelectItem={setActiveLightboxItem}

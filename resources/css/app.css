@@ -31,6 +31,18 @@
     --color-accent-rental: #0D9488;
     --color-accent-collab: #DB2777;
     --color-brand-blue: #005792;
+    --color-brand-putih: #EDF9FC;
+    --color-brand-white: #EDF9FC;
+    --color-langit-white: #EDF9FC;
+    --color-langit-light: #EDF9FC;
+}
+
+/* Base Body Background */
+body {
+    background-color: #EDF9FC;
+}
+.dark body {
+    background-color: #07090E;
 }
 
 /* Custom Scrollbar */
@@ -131,6 +143,17 @@
 }
 .dark .text-gradient-cyan-violet {
     background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-langit {
+    background: linear-gradient(135deg, #005792 0%, #0284C7 50%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.dark .text-gradient-langit {
+    background: linear-gradient(135deg, #38BDF8 0%, #60A5FA 50%, #93C5FD 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

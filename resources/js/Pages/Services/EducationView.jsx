@@ -5,7 +5,7 @@ import EducationTrack3DCards from '@/Components/EducationTrack3DCards';
 import InteractiveEducationHub from '@/Components/InteractiveEducationHub';
 import { GraduationCap, ArrowRight } from 'lucide-react';
 
-export default function EducationView({ service, courses = [] }) {
+export default function EducationView({ service, courses = [], galleries = [] }) {
     return (
         <PublicLayout activeService="langit-education">
             <Head>
@@ -14,7 +14,7 @@ export default function EducationView({ service, courses = [] }) {
             </Head>
 
             {/* Atmosphere: Modern Academy & Learning Hub Layout */}
-            <div className="bg-slate-50 dark:bg-[#04100D] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#04100D] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
                 {/* Hero Header */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6 pb-12 text-center space-y-4">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-mono tracking-wider">
@@ -55,6 +55,51 @@ export default function EducationView({ service, courses = [] }) {
 
                 {/* Interactive Studio Lab, Curriculum & Career Compass Hub (No Price Figures) */}
                 <InteractiveEducationHub courses={courses} />
+
+                {/* 4 Foto Fasilitas Studio Lab & Suasana Belajar (Konsisten dengan Backend Admin Galeri) */}
+                {galleries && galleries.length > 0 && (
+                    <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                        <div className="text-center max-w-3xl mx-auto mb-10">
+                            <span className="text-xs font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold block mb-1">
+                                Fasilitas & Lingkungan Belajar Nyata
+                            </span>
+                            <h2 className="font-heading font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white">
+                                Suasana Studio Lab & Perakitan Praktik Langsung
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-2">
+                                Setiap peserta didik mendapatkan meja kerja pribadi dengan instrumen dan software berstandar industri.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                            {galleries.map((item) => (
+                                <div 
+                                    key={item.id}
+                                    className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-md flex flex-col"
+                                >
+                                    <div className="relative aspect-[4/3] overflow-hidden">
+                                        <img 
+                                            src={item.file_webp_path} 
+                                            alt={item.title} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                                    </div>
+                                    <div className="p-4 bg-white dark:bg-[#081512] flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold uppercase">
+                                                {item.category || 'Studio Lab'}
+                                            </span>
+                                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white mt-1 leading-snug">
+                                                {item.title}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
         </PublicLayout>
     );

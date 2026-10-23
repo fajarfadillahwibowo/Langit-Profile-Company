@@ -218,7 +218,7 @@ export default function CollaborationView({ service }) {
             </Head>
 
             {/* Main Outer Container with Dynamic Atmosphere */}
-            <div className="relative min-h-screen bg-slate-50 text-slate-800 dark:bg-[#080206] dark:text-slate-100 overflow-hidden transition-colors duration-300">
+            <div className="relative min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#080206] dark:text-slate-100 overflow-hidden transition-colors duration-300">
                 {/* Ambient Blurred Glowing Blobs & Dot Grid Pattern */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[650px] pointer-events-none overflow-hidden z-0">
                     <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-rose-500/10 dark:bg-rose-600/15 rounded-full blur-[140px]" />

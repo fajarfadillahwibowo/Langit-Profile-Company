@@ -30,7 +30,7 @@ export default function LightboxModal({ item, onClose }) {
                 <div className="lg:w-1/3 p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-white/10 bg-slate-50/90 dark:bg-[#0C101A]/80">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 uppercase font-semibold">
+                            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#005792]/15 text-[#005792] dark:text-[#38BDF8] border border-[#005792]/30 uppercase font-semibold">
                                 {item.category}
                             </span>
                             <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -49,7 +49,7 @@ export default function LightboxModal({ item, onClose }) {
                         {/* EXIF Data Grid */}
                         <div className="space-y-3 font-mono text-xs">
                             <div className="p-3 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 flex items-center gap-3 shadow-sm dark:shadow-none">
-                                <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <Camera className="w-4 h-4 text-[#005792] dark:text-[#38BDF8] shrink-0" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] text-slate-500 uppercase">Camera Body</span>
                                     <span className="text-slate-800 dark:text-slate-200 font-semibold">{exif.camera || 'Sony Cinema Line'}</span>
@@ -106,7 +106,7 @@ export default function LightboxModal({ item, onClose }) {
                             href="https://wa.me/6281234567891?text=Halo%20Admin%20Langit,%20saya%20tertarik%20dengan%20gaya%20visual%20karya%20foto%20ini"
                             target="_blank"
                             rel="noreferrer"
-                            className="px-3.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-semibold transition-colors"
+                            className="px-3.5 py-1.5 rounded-lg bg-[#005792] hover:bg-[#004270] text-white text-xs font-semibold transition-colors shadow-sm"
                         >
                             Konsultasikan Shoot Serupa
                         </a>

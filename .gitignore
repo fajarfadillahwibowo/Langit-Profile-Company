@@ -31,3 +31,4 @@ pin_page*.html
 pinterest_pin*.html
 scratch_parse_pin.*
 extract_media.ps1
+update_comp.ps1

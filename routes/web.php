@@ -1,14 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\PortfolioController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\ConsultationController;
-use App\Http\Controllers\InteractiveActionController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\ConsultationController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InteractiveActionController;
+use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ServiceController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,30 +55,44 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AdminAuthController::class, 'login']);
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+});
+
+// Fallback named route for standard Laravel auth redirection
+Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
+
+Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
+
         // Computer Service Tickets
         Route::post('/tickets', [AdminDashboardController::class, 'createTicket'])->name('tickets.create');
         Route::put('/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('tickets.update-status');
-        
+
         // Rental Equipment & Bookings
         Route::put('/rentals/{id}/status', [AdminDashboardController::class, 'updateRentalBookingStatus'])->name('rentals.update-status');
         Route::put('/equipments/{id}', [AdminDashboardController::class, 'updateEquipment'])->name('equipments.update');
-        
+
         // Galleries & Photos
         Route::post('/galleries', [AdminDashboardController::class, 'createGallery'])->name('galleries.create');
+        Route::put('/galleries/{id}', [AdminDashboardController::class, 'updateGallery'])->name('galleries.update');
+        Route::post('/galleries/{id}/update', [AdminDashboardController::class, 'updateGallery'])->name('galleries.update-post');
         Route::delete('/galleries/{id}', [AdminDashboardController::class, 'deleteGallery'])->name('galleries.delete');
-        
+
         // Internships
         Route::put('/internships/{id}/status', [AdminDashboardController::class, 'updateApplicationStatus'])->name('internships.update-status');
-        
+
         // Consultations
         Route::put('/consultations/{id}/status', [AdminDashboardController::class, 'updateConsultationStatus'])->name('consultations.update-status');
-        
+
         // Collaborations (Kemitraan & Proposal Kerja Sama)
         Route::put('/collaborations/{id}/status', [AdminDashboardController::class, 'updateCollaborationStatus'])->name('collaborations.update-status');
         Route::delete('/collaborations/{id}', [AdminDashboardController::class, 'deleteCollaboration'])->name('collaborations.delete');
+
+        // Admin Profile Management & Live Camera / Upload Avatar
+        Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/avatar', [AdminProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+        Route::delete('/profile/avatar', [AdminProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     });
 });

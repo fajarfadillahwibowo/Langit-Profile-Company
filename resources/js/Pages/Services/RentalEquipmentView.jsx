@@ -32,12 +32,26 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
     const [loadingCheckout, setLoadingCheckout] = useState(false);
     const [checkoutResult, setCheckoutResult] = useState(null);
 
-    const categories = [
-        { key: 'all', label: 'Semua Alat' },
-        { key: 'proyektor', label: '1. Proyektor & Screen' },
-        { key: 'tv', label: '2. TV & Standing Bracket' },
-        { key: 'drone', label: '3. Drone & Aerial 4K' },
-    ];
+    const categories = useMemo(() => {
+        const uniqueCats = Array.from(new Set(equipments.map(e => e.category).filter(Boolean)));
+        const catLabels = {
+            proyektor: 'Proyektor & Screen',
+            drone: 'Drone & Aerial 4K',
+            audio: 'Audio & Wireless Mic',
+            lighting: 'Studio Lighting & LED',
+            kamera: 'Kamera & Lensa',
+            tv: 'TV & Standing Bracket',
+        };
+        const list = [{ key: 'all', label: `Semua Alat (${equipments.length})` }];
+        uniqueCats.forEach((cat) => {
+            const count = equipments.filter(e => e.category === cat).length;
+            list.push({
+                key: cat,
+                label: `${catLabels[cat] || cat.toUpperCase()} (${count})`,
+            });
+        });
+        return list;
+    }, [equipments]);
 
     const filteredEquipments = equipments.filter(item => {
         const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
@@ -156,7 +170,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
             </Head>
 
             {/* Atmosphere: Equipment Rental Marketplace & Catalog Layout */}
-            <div className="bg-slate-50 dark:bg-[#051110] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#051110] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
                 {/* Hero Header */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6 pb-12 text-center space-y-4">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-300 text-xs font-mono tracking-wider">
