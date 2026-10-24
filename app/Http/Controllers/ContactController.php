@@ -11,8 +11,13 @@ class ContactController extends Controller
     {
         return Inertia::render('Contact/Index', [
             'contacts' => [
-                'general_email' => 'halo@langit.id',
-                'general_phone' => '+62 812 3456 7890',
+                'general_email' => 'langitbelitang@gmail.com',
+                'general_phone' => '+62 822-4614-2791',
+                'whatsapp' => '+62 822-4614-2791',
+                'tiktok_url' => 'https://www.tiktok.com/@langit.creative1?_r=1&_t=ZS-9An84b3f2BC',
+                'tiktok_handle' => '@langit.creative1',
+                'instagram_url' => 'https://www.instagram.com/langit.creative?cplk=MTcxN3d5aXB1c2hkMQ==',
+                'instagram_handle' => '@langit.creative',
                 'address' => 'Langit Office, Jl. Irigasi Bk 10, Tugu Harum, Kec. Belitang Madang Raya, Kabupaten Ogan Komering Ulu Timur, Sumatera Selatan 32382',
                 'google_maps_url' => 'https://maps.app.goo.gl/tiByDRcJAGqN7gjm8?g_st=iw',
                 'coordinates' => ['lat' => -4.0177, 'lng' => 104.6644],
@@ -22,10 +27,10 @@ class ContactController extends Controller
                     'sunday' => 'Emergency Service Only (Call)',
                 ],
                 'division_contacts' => [
-                    ['division' => 'Creative & Visual', 'pic' => 'Admin Visual', 'phone' => '+62 812 3456 7891', 'tag' => 'Photo / Video / Drone'],
-                    ['division' => 'Web & Engineering', 'pic' => 'Admin Tech', 'phone' => '+62 812 3456 7892', 'tag' => 'Software & Website'],
-                    ['division' => 'Rental Gear & Studio', 'pic' => 'Admin Rental', 'phone' => '+62 812 3456 7893', 'tag' => 'Sewa Kamera & Lampu'],
-                    ['division' => 'Computer Lab', 'pic' => 'Teknisi Lab', 'phone' => '+62 812 3456 7894', 'tag' => 'Servis & Diagnostik'],
+                    ['division' => 'Creative & Visual', 'pic' => 'Admin Visual', 'phone' => '+62 822-4614-2791', 'tag' => 'Photo / Video / Drone'],
+                    ['division' => 'Web & Engineering', 'pic' => 'Admin Tech', 'phone' => '+62 822-4614-2791', 'tag' => 'Software & Website'],
+                    ['division' => 'Rental Gear & Studio', 'pic' => 'Admin Rental', 'phone' => '+62 822-4614-2791', 'tag' => 'Sewa Kamera & Lampu'],
+                    ['division' => 'Computer Lab', 'pic' => 'Teknisi Lab', 'phone' => '+62 822-4614-2791', 'tag' => 'Servis & Diagnostik'],
                 ]
             ],
             'faqs' => [

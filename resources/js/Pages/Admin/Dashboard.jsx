@@ -8,7 +8,7 @@ import {
     Phone, Mail, Calendar, Clock, AlertCircle, CheckCircle2, ShieldCheck,
     Search, Layers, ArrowUpRight, FileText, Download, Eye, Building2, User, Filter,
     Sun, Moon, ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play
 } from 'lucide-react';
 
 export default function AdminDashboard({
@@ -106,6 +106,35 @@ export default function AdminDashboard({
     const [previewPhotoUrl, setPreviewPhotoUrl] = useState('');
     const [editInputMode, setEditInputMode] = useState('url'); // 'url', 'upload', 'preset'
     const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
+
+    // Dedicated Before / After Color Grading Modal State
+    const [beforeAfterModalOpen, setBeforeAfterModalOpen] = useState(false);
+    const [beforeAfterData, setBeforeAfterData] = useState({
+        before_file_path: '',
+        after_file_path: '',
+        before_label: 'Sony S-Log3 RAW Flat',
+        after_label: 'Langit Cinema Grade (Kodak 2383)',
+        title: 'Cinema Color Grading Master Showcase',
+    });
+    const [beforePhotoFile, setBeforePhotoFile] = useState(null);
+    const [afterPhotoFile, setAfterPhotoFile] = useState(null);
+    const [beforeInputMode, setBeforeInputMode] = useState('url'); // 'url', 'upload'
+    const [afterInputMode, setAfterInputMode] = useState('url'); // 'url', 'upload'
+    const [isSubmittingBeforeAfter, setIsSubmittingBeforeAfter] = useState(false);
+
+    // Dedicated Showreel Video Showcase Modal State
+    const [showreelModalOpen, setShowreelModalOpen] = useState(false);
+    const [showreelData, setShowreelData] = useState({
+        video_url: '',
+        poster_url: '',
+        title: 'Visual Sinematik Kelas Dunia.',
+        subtitle: 'Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.',
+    });
+    const [videoFile, setVideoFile] = useState(null);
+    const [posterFile, setPosterFile] = useState(null);
+    const [videoInputMode, setVideoInputMode] = useState('upload'); // 'upload', 'url'
+    const [posterInputMode, setPosterInputMode] = useState('url'); // 'url', 'upload'
+    const [isSubmittingShowreel, setIsSubmittingShowreel] = useState(false);
 
     // 7 Real Sub-Sidebar Items matching the authentic services of Langit
     const serviceNavItems = [
@@ -261,6 +290,15 @@ export default function AdminDashboard({
         const cats = Array.from(new Set(baseList.map(g => g.category).filter(Boolean)));
         return cats;
     }, [galleries, selectedGalleryService, services]);
+
+    // Active Before/After and Showreel items
+    const currentBeforeAfterItem = useMemo(() => {
+        return galleries.find(g => g.media_type === 'before_after') || null;
+    }, [galleries]);
+
+    const currentShowreelItem = useMemo(() => {
+        return galleries.find(g => g.media_type === 'video' || g.category === 'showreel') || null;
+    }, [galleries]);
 
     const formatRupiah = (val) => {
         if (!val) return 'Rp 0';
@@ -456,6 +494,82 @@ export default function AdminDashboard({
         }));
         setPreviewPhotoUrl(preset.url);
         setEditFilePhoto(null);
+    };
+
+    // Open Before/After Modal
+    const openBeforeAfterModal = () => {
+        const item = currentBeforeAfterItem;
+        setBeforeAfterData({
+            before_file_path: item?.before_file_path || 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80',
+            after_file_path: item?.file_webp_path || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80',
+            before_label: item?.exif_metadata_json?.before_label || 'Sony S-Log3 RAW Flat',
+            after_label: item?.exif_metadata_json?.after_label || 'Langit Cinema Grade (Kodak 2383)',
+            title: item?.title || 'Cinema Color Grading Master Showcase',
+        });
+        setBeforePhotoFile(null);
+        setAfterPhotoFile(null);
+        setBeforeAfterModalOpen(true);
+    };
+
+    const handleBeforeAfterSubmit = (e) => {
+        e.preventDefault();
+        setIsSubmittingBeforeAfter(true);
+        const formData = new FormData();
+        if (beforePhotoFile) formData.append('before_photo', beforePhotoFile);
+        if (beforeAfterData.before_file_path) formData.append('before_file_path', beforeAfterData.before_file_path);
+        if (afterPhotoFile) formData.append('after_photo', afterPhotoFile);
+        if (beforeAfterData.after_file_path) formData.append('after_file_path', beforeAfterData.after_file_path);
+        formData.append('title', beforeAfterData.title || 'Cinema Color Grading Master Showcase');
+        formData.append('before_label', beforeAfterData.before_label || 'Sony S-Log3 RAW Flat');
+        formData.append('after_label', beforeAfterData.after_label || 'Langit Cinema Grade (Kodak 2383)');
+
+        router.post('/admin/galleries/before-after', formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onFinish: () => setIsSubmittingBeforeAfter(false),
+            onSuccess: () => {
+                setBeforeAfterModalOpen(false);
+                setBeforePhotoFile(null);
+                setAfterPhotoFile(null);
+            }
+        });
+    };
+
+    // Open Showreel Modal
+    const openShowreelModal = () => {
+        const item = currentShowreelItem;
+        setShowreelData({
+            video_url: item?.video_url || '',
+            poster_url: item?.file_webp_path || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80',
+            title: item?.title || 'Visual Sinematik Kelas Dunia.',
+            subtitle: 'Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.',
+        });
+        setVideoFile(null);
+        setPosterFile(null);
+        setShowreelModalOpen(true);
+    };
+
+    const handleShowreelSubmit = (e) => {
+        e.preventDefault();
+        setIsSubmittingShowreel(true);
+        const formData = new FormData();
+        if (videoFile) formData.append('video_file', videoFile);
+        if (showreelData.video_url) formData.append('video_url', showreelData.video_url);
+        if (posterFile) formData.append('poster_photo', posterFile);
+        if (showreelData.poster_url) formData.append('poster_url', showreelData.poster_url);
+        if (showreelData.title) formData.append('title', showreelData.title);
+        if (showreelData.subtitle) formData.append('subtitle', showreelData.subtitle);
+
+        router.post('/admin/galleries/showreel', formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onFinish: () => setIsSubmittingShowreel(false),
+            onSuccess: () => {
+                setShowreelModalOpen(false);
+                setVideoFile(null);
+                setPosterFile(null);
+            }
+        });
     };
 
     return (
@@ -1233,6 +1347,146 @@ export default function AdminDashboard({
                                 </span>
                             </div>
                         </div>
+
+                        {/* SPECIAL HIGHLIGHT CARDS: Showreel Video & Before/After Slider (Photography & Videography) */}
+                        {(selectedGalleryService === 'photography-videography' || selectedGalleryService === 'all') && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {/* Card 1: Video Showreel Showcase */}
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/40 to-slate-950 border border-amber-500/30 dark:border-amber-500/20 shadow-xl flex flex-col justify-between space-y-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                                                <Film className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-wider border border-amber-500/30">
+                                                        Header Video Showcase
+                                                    </span>
+                                                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                        Cinema Showreel
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white mt-0.5">
+                                                    {currentShowreelItem?.title || "Visual Sinematik Kelas Dunia."}
+                                                </h4>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={openShowreelModal}
+                                            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-transform active:scale-95 cursor-pointer shrink-0"
+                                        >
+                                            <Upload className="w-3.5 h-3.5" />
+                                            <span>Upload Video dari PC</span>
+                                        </button>
+                                    </div>
+
+                                    <div className="relative rounded-2xl overflow-hidden aspect-[21/9] bg-black/60 border border-white/10 flex items-center justify-center group">
+                                        {currentShowreelItem?.video_url ? (
+                                            <video
+                                                src={currentShowreelItem.video_url}
+                                                poster={currentShowreelItem.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80"}
+                                                controls
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <>
+                                                <img
+                                                    src={currentShowreelItem?.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80"}
+                                                    alt="Showreel Poster"
+                                                    className="w-full h-full object-cover opacity-60"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center pointer-events-none">
+                                                    <div className="w-10 h-10 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-lg mb-1">
+                                                        <Play className="w-5 h-5 fill-slate-950 ml-0.5" />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-white">Video Showreel Aktif di Website</span>
+                                                    <span className="text-[10px] text-slate-300">Klik "Upload Video dari PC" untuk mengganti</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
+                                        <span className="truncate max-w-[280px]">
+                                            Status: <strong className="text-slate-700 dark:text-slate-200">{currentShowreelItem?.video_url ? 'File Video Kustom Aktif' : 'Default Cinematic Demo Reel'}</strong>
+                                        </span>
+                                        <span className="text-amber-500 font-semibold font-mono">
+                                            Format: MP4, MOV, WebM
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Card 2: Interactive Before / After Color Grading */}
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-slate-900/40 to-slate-950 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xl flex flex-col justify-between space-y-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                                                <SlidersHorizontal className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-mono font-bold uppercase tracking-wider border border-indigo-500/30">
+                                                        Before / After Slider
+                                                    </span>
+                                                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                        DaVinci Color Science
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white mt-0.5">
+                                                    {currentBeforeAfterItem?.title || "Interactive Before / After Color Grading"}
+                                                </h4>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={openBeforeAfterModal}
+                                            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-400 hover:to-sky-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/20 transition-transform active:scale-95 cursor-pointer shrink-0"
+                                        >
+                                            <RefreshCw className="w-3.5 h-3.5" />
+                                            <span>Ganti Foto Before / After</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Split Preview */}
+                                    <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden aspect-[21/9] bg-black/60 border border-white/10 p-1">
+                                        <div className="relative rounded-xl overflow-hidden bg-slate-900">
+                                            <img
+                                                src={currentBeforeAfterItem?.before_file_path || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80"}
+                                                alt="Before RAW Flat"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 text-[9px] font-mono text-amber-300 backdrop-blur-md">
+                                                {currentBeforeAfterItem?.exif_metadata_json?.before_label || "RAW Flat (Before)"}
+                                            </span>
+                                        </div>
+                                        <div className="relative rounded-xl overflow-hidden bg-slate-900">
+                                            <img
+                                                src={currentBeforeAfterItem?.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80"}
+                                                alt="After Cinema Grade"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <span className="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-md bg-black/70 text-[9px] font-mono text-cyan-300 backdrop-blur-md">
+                                                {currentBeforeAfterItem?.exif_metadata_json?.after_label || "Cinema Grade (After)"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
+                                        <span>
+                                            Status: <strong className="text-emerald-500 font-semibold">Tampil Aktif di Website</strong>
+                                        </span>
+                                        <span className="text-indigo-400 font-medium">
+                                            Upload Foto dari PC / Tautan URL
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Gallery Cards Grid */}
                         {filteredGalleries.length === 0 ? (
@@ -2398,6 +2652,490 @@ export default function AdminDashboard({
                                 Tutup Detail
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Kelola Foto Before / After Color Grading */}
+            {beforeAfterModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-4xl w-full bg-white dark:bg-[#090D16] border border-indigo-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            type="button"
+                            onClick={() => setBeforeAfterModalOpen(false)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                                <SlidersHorizontal className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Kelola Foto Before / After Color Grading
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Ganti foto RAW Flat (Sisi Kiri) dan foto Cinema Grade (Sisi Kanan) pada slider interaktif DaVinci Resolve.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleBeforeAfterSubmit} className="space-y-6">
+                            {/* Judul Showcase */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                    Judul Komponen Before / After
+                                </label>
+                                <input
+                                    type="text"
+                                    value={beforeAfterData.title}
+                                    onChange={(e) => setBeforeAfterData({ ...beforeAfterData, title: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-indigo-500"
+                                    placeholder="Interactive Before / After Color Grading"
+                                />
+                            </div>
+
+                            {/* Dual Column: Kiri (Before) & Kanan (After) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* KIRI: FOTO BEFORE (RAW FLAT) */}
+                                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-amber-500/30 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-500 dark:text-amber-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-amber-500/30">
+                                            Sisi Kiri: Foto Before (RAW Flat)
+                                        </span>
+                                        <div className="flex rounded-lg bg-slate-200 dark:bg-white/10 p-0.5 text-[10px] font-semibold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setBeforeInputMode('upload')}
+                                                className={`px-2 py-1 rounded-md transition-colors ${beforeInputMode === 'upload' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                            >
+                                                Upload PC
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBeforeInputMode('url')}
+                                                className={`px-2 py-1 rounded-md transition-colors ${beforeInputMode === 'url' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                            >
+                                                Link URL
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                            Label Badge Foto Kiri:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={beforeAfterData.before_label}
+                                            onChange={(e) => setBeforeAfterData({ ...beforeAfterData, before_label: e.target.value })}
+                                            placeholder="Sony S-Log3 RAW Flat"
+                                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 font-mono"
+                                        />
+                                    </div>
+
+                                    {beforeInputMode === 'upload' ? (
+                                        <div className="space-y-2">
+                                            <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                                Pilih Foto RAW Flat dari Komputer:
+                                            </label>
+                                            <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 cursor-pointer transition-all">
+                                                <Upload className="w-6 h-6 text-amber-500 mb-1" />
+                                                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                                    {beforePhotoFile ? beforePhotoFile.name : 'Pilih file gambar (.jpg, .png, .webp)'}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 10MB</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            setBeforePhotoFile(file);
+                                                            setBeforeAfterData({ ...beforeAfterData, before_file_path: URL.createObjectURL(file) });
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                                Tautan URL Foto Kiri:
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={beforeAfterData.before_file_path}
+                                                onChange={(e) => setBeforeAfterData({ ...beforeAfterData, before_file_path: e.target.value })}
+                                                placeholder="https://images.unsplash.com/..."
+                                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 font-mono"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Preview Box */}
+                                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black/60 border border-slate-200 dark:border-white/10 flex items-center justify-center">
+                                        {beforeAfterData.before_file_path ? (
+                                            <img
+                                                src={beforeAfterData.before_file_path}
+                                                alt="Preview Before"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-slate-500">Belum ada preview foto kiri</span>
+                                        )}
+                                        <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/80 text-[10px] font-mono text-amber-300">
+                                            {beforeAfterData.before_label || 'Preview Sisi Kiri'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* KANAN: FOTO AFTER (CINEMA GRADE) */}
+                                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-cyan-500/30 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-500 dark:text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-cyan-500/30">
+                                            Sisi Kanan: Foto After (Cinema Grade)
+                                        </span>
+                                        <div className="flex rounded-lg bg-slate-200 dark:bg-white/10 p-0.5 text-[10px] font-semibold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAfterInputMode('upload')}
+                                                className={`px-2 py-1 rounded-md transition-colors ${afterInputMode === 'upload' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                            >
+                                                Upload PC
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAfterInputMode('url')}
+                                                className={`px-2 py-1 rounded-md transition-colors ${afterInputMode === 'url' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                            >
+                                                Link URL
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                            Label Badge Foto Kanan:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={beforeAfterData.after_label}
+                                            onChange={(e) => setBeforeAfterData({ ...beforeAfterData, after_label: e.target.value })}
+                                            placeholder="Langit Cinema Grade (Kodak 2383)"
+                                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 font-mono"
+                                        />
+                                    </div>
+
+                                    {afterInputMode === 'upload' ? (
+                                        <div className="space-y-2">
+                                            <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                                Pilih Foto Cinema Grade dari Komputer:
+                                            </label>
+                                            <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-cyan-500/40 hover:border-cyan-500 bg-cyan-500/5 cursor-pointer transition-all">
+                                                <Upload className="w-6 h-6 text-cyan-500 mb-1" />
+                                                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                                    {afterPhotoFile ? afterPhotoFile.name : 'Pilih file gambar (.jpg, .png, .webp)'}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 10MB</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            setAfterPhotoFile(file);
+                                                            setBeforeAfterData({ ...beforeAfterData, after_file_path: URL.createObjectURL(file) });
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                                Tautan URL Foto Kanan:
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={beforeAfterData.after_file_path}
+                                                onChange={(e) => setBeforeAfterData({ ...beforeAfterData, after_file_path: e.target.value })}
+                                                placeholder="https://images.unsplash.com/..."
+                                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 font-mono"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Preview Box */}
+                                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black/60 border border-slate-200 dark:border-white/10 flex items-center justify-center">
+                                        {beforeAfterData.after_file_path ? (
+                                            <img
+                                                src={beforeAfterData.after_file_path}
+                                                alt="Preview After"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-slate-500">Belum ada preview foto kanan</span>
+                                        )}
+                                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-[10px] font-mono text-cyan-300">
+                                            {beforeAfterData.after_label || 'Preview Sisi Kanan'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setBeforeAfterModalOpen(false)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingBeforeAfter}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-400 hover:to-sky-400 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingBeforeAfter ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingBeforeAfter ? 'Menyimpan ke Server...' : 'Simpan & Publikasikan ke Website'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Upload Video Showreel Cinema & Poster */}
+            {showreelModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-3xl w-full bg-white dark:bg-[#090D16] border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            type="button"
+                            onClick={() => setShowreelModalOpen(false)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                                <Film className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Upload Video Showreel Cinema & Poster
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Upload video sinematik (.MP4, .MOV, .WebM) langsung dari komputer Anda untuk diputar di bagian header showreel.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleShowreelSubmit} className="space-y-5">
+                            {/* Judul Showcase Header */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Judul Showcase Header:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={showreelData.title}
+                                        onChange={(e) => setShowreelData({ ...showreelData, title: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                        placeholder="Visual Sinematik Kelas Dunia."
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Deskripsi Subtitle Header:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={showreelData.subtitle}
+                                        onChange={(e) => setShowreelData({ ...showreelData, subtitle: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                        placeholder="Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi..."
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Section: File Video */}
+                            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-amber-500/30 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Video className="w-4 h-4 text-amber-500" />
+                                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                            File Video Showreel (Dengan Audio)
+                                        </span>
+                                    </div>
+                                    <div className="flex rounded-lg bg-slate-200 dark:bg-white/10 p-0.5 text-[10px] font-semibold">
+                                        <button
+                                            type="button"
+                                            onClick={() => setVideoInputMode('upload')}
+                                            className={`px-2.5 py-1 rounded-md transition-colors ${videoInputMode === 'upload' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                        >
+                                            Upload dari PC
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setVideoInputMode('url')}
+                                            className={`px-2.5 py-1 rounded-md transition-colors ${videoInputMode === 'url' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                        >
+                                            Link URL
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {videoInputMode === 'upload' ? (
+                                    <div className="space-y-2">
+                                        <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 cursor-pointer transition-all">
+                                            <Upload className="w-8 h-8 text-amber-500 mb-2 animate-bounce" />
+                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 text-center">
+                                                {videoFile ? videoFile.name : 'Pilih File Video dari Komputer (.mp4, .mov, .webm, .mkv)'}
+                                            </span>
+                                            <span className="text-xs text-slate-500 mt-1">
+                                                Mendukung file video sinematik hingga 100MB (Otomatis disimpan di server lokal website)
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="video/mp4,video/webm,video/quicktime,video/x-matroska"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setVideoFile(file);
+                                                        setShowreelData({ ...showreelData, video_url: URL.createObjectURL(file) });
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                            Masukkan Tautan URL Video:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={showreelData.video_url}
+                                            onChange={(e) => setShowreelData({ ...showreelData, video_url: e.target.value })}
+                                            placeholder="https://commondatastorage.googleapis.com/... atau /uploads/videos/..."
+                                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 font-mono"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Video Live Preview */}
+                                {showreelData.video_url && (
+                                    <div className="space-y-1.5 pt-2">
+                                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                            Pratinjau Video (Player Preview):
+                                        </span>
+                                        <div className="relative rounded-xl overflow-hidden bg-black aspect-video max-h-56">
+                                            <video
+                                                src={showreelData.video_url}
+                                                controls
+                                                playsInline
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Section: Thumbnail / Poster Video */}
+                            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <ImageIcon className="w-4 h-4 text-cyan-500" />
+                                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                            Foto Poster / Thumbnail Video (Sebelum Play)
+                                        </span>
+                                    </div>
+                                    <div className="flex rounded-lg bg-slate-200 dark:bg-white/10 p-0.5 text-[10px] font-semibold">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosterInputMode('upload')}
+                                            className={`px-2.5 py-1 rounded-md transition-colors ${posterInputMode === 'upload' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                        >
+                                            Upload PC
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosterInputMode('url')}
+                                            className={`px-2.5 py-1 rounded-md transition-colors ${posterInputMode === 'url' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-300'}`}
+                                        >
+                                            Link URL
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {posterInputMode === 'upload' ? (
+                                    <label className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-cyan-500/40 hover:border-cyan-500 bg-cyan-500/5 cursor-pointer transition-all">
+                                        <Upload className="w-5 h-5 text-cyan-500 mb-1" />
+                                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                            {posterFile ? posterFile.name : 'Pilih poster gambar (.jpg, .png, .webp)'}
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setPosterFile(file);
+                                                    setShowreelData({ ...showreelData, poster_url: URL.createObjectURL(file) });
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={showreelData.poster_url}
+                                        onChange={(e) => setShowreelData({ ...showreelData, poster_url: e.target.value })}
+                                        placeholder="https://images.unsplash.com/..."
+                                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 font-mono"
+                                    />
+                                )}
+
+                                {showreelData.poster_url && (
+                                    <div className="relative aspect-[21/9] rounded-xl overflow-hidden bg-black/60 max-h-36">
+                                        <img
+                                            src={showreelData.poster_url}
+                                            alt="Preview Poster"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowreelModalOpen(false)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingShowreel}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingShowreel ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingShowreel ? 'Mengupload Video...' : 'Simpan & Upload Video Showreel'}</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

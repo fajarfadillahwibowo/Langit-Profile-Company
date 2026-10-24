@@ -25,11 +25,16 @@ class ServiceController extends Controller
         $galleries = Gallery::where('service_id', $service?->id)->get();
         $beforeAfter = Gallery::where('service_id', $service?->id)->where('media_type', 'before_after')->first()
             ?: Gallery::where('media_type', 'before_after')->first();
+        $showreel = Gallery::where('service_id', $service?->id)
+            ->where(function ($q) {
+                $q->where('media_type', 'video')->orWhere('category', 'showreel');
+            })->first();
 
         return Inertia::render('Services/PhotoVideoView', [
             'service' => $service,
             'galleries' => $galleries,
             'beforeAfter' => $beforeAfter,
+            'showreel' => $showreel,
         ]);
     }
 

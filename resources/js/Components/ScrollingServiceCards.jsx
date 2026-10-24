@@ -302,24 +302,17 @@ export default function ScrollingServiceCards({ services = [] }) {
     return (
         <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 lg:py-24">
             {/* Header info */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-                <div>
-                    <div className="flex items-center gap-2 text-[#005792] dark:text-[#38BDF8] font-mono text-[11px] uppercase tracking-widest mb-2 font-bold">
-                        <span className="w-2 h-2 rounded-full bg-[#005792] dark:bg-[#38BDF8] animate-pulse" />
-                        <span>3D VIP Membership Pass & Integrated Divisions</span>
-                    </div>
-                    <h2 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-slate-900 dark:text-white tracking-tight">
-                        Tujuh Divisi
-                        <span className="block text-[#005792] dark:text-[#38BDF8]">
-                            Layanan <span className="font-editorial italic font-normal tracking-normal text-[#005792] dark:text-[#38BDF8]">Terintegrasi</span>
-                        </span>
-                    </h2>
+            <div className="mb-10">
+                <div className="flex items-center gap-2 text-[#005792] dark:text-[#38BDF8] font-mono text-[11px] uppercase tracking-widest mb-2 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#005792] dark:bg-[#38BDF8] animate-pulse" />
+                    <span>3D VIP Membership Pass & Integrated Divisions</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm leading-relaxed">
-                        Tiap divisi dikemas dalam kartu 3D bertekstur VIP. Arahkan kursor untuk melihat pendaran cahaya dinamis dan efek kemiringan giroskopis.
-                    </p>
-                </div>
+                <h2 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-slate-900 dark:text-white tracking-tight">
+                    Tujuh Divisi
+                    <span className="block text-[#005792] dark:text-[#38BDF8]">
+                        Layanan <span className="font-editorial italic font-normal tracking-normal text-[#005792] dark:text-[#38BDF8]">Terintegrasi</span>
+                    </span>
+                </h2>
             </div>
 
             {/* 3D VIP CARDS GRID (Clean, Accessible & Vibrant, Sesuai Referensi Gambar) */}

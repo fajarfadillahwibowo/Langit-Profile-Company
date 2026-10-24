@@ -576,7 +576,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                                 </div>
 
                                                 <a
-                                                    href={`https://wa.me/6281234567892?text=${encodeURIComponent(`Halo Langit Education, saya telah mencoba kuis rekomendasi kelas dan tertarik untuk konsultasi silabus serta jadwal batch baru program: ${res.title}.`)}`}
+                                                    href={`https://wa.me/6282246142791?text=${encodeURIComponent(`Halo Langit Education, saya telah mencoba kuis rekomendasi kelas dan tertarik untuk konsultasi silabus serta jadwal batch baru program: ${res.title}.`)}`}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-transform hover:scale-105 active:scale-95 shrink-0"

@@ -226,6 +226,34 @@ class AdminDashboardController extends Controller
             $filePath = '/uploads/galleries/'.$filename;
         }
 
+        $beforeFilePath = $gallery->before_file_path;
+        if ($request->hasFile('before_file_photo')) {
+            $file = $request->file('before_file_photo');
+            $dest = public_path('uploads/galleries');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'before_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $beforeFilePath = '/uploads/galleries/'.$filename;
+        } elseif (isset($validated['before_file_path'])) {
+            $beforeFilePath = $validated['before_file_path'];
+        }
+
+        $videoUrl = $gallery->video_url;
+        if ($request->hasFile('file_video')) {
+            $file = $request->file('file_video');
+            $dest = public_path('uploads/videos');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'video_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $videoUrl = '/uploads/videos/'.$filename;
+        } elseif ($request->filled('video_url')) {
+            $videoUrl = $request->video_url;
+        }
+
         $exif = $gallery->exif_metadata_json ?? [];
         if (isset($validated['camera'])) {
             $exif['camera'] = $validated['camera'];
@@ -249,7 +277,8 @@ class AdminDashboardController extends Controller
             'category' => $validated['category'],
             'media_type' => $validated['media_type'],
             'file_webp_path' => $filePath,
-            'before_file_path' => $validated['before_file_path'] ?? $gallery->before_file_path,
+            'before_file_path' => $beforeFilePath,
+            'video_url' => $videoUrl,
             'exif_metadata_json' => $exif,
         ]);
 
@@ -276,6 +305,169 @@ class AdminDashboardController extends Controller
         }
 
         return back()->with('success', "Foto galeri '{$gallery->title}' berhasil diperbarui / diganti!");
+    }
+
+    /**
+     * Dedicated Action: Update Before / After Color Grading Photos
+     */
+    public function updateBeforeAfter(Request $request)
+    {
+        $validated = $request->validate([
+            'before_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'before_file_path' => 'nullable|string',
+            'after_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'after_file_path' => 'nullable|string',
+            'title' => 'nullable|string|max:255',
+            'before_label' => 'nullable|string|max:100',
+            'after_label' => 'nullable|string|max:100',
+        ]);
+
+        $service = Service::where('slug', 'photography-videography')->first();
+        $gallery = Gallery::where('service_id', $service?->id)->where('media_type', 'before_after')->first()
+            ?: Gallery::where('media_type', 'before_after')->first();
+
+        if (! $gallery) {
+            $gallery = new Gallery();
+            $gallery->service_id = $service?->id;
+            $gallery->title = 'Cinema Color Grading Master Showcase';
+            $gallery->slug = 'cinema-color-grading-master-showcase';
+            $gallery->category = 'company_profile';
+            $gallery->media_type = 'before_after';
+            $gallery->file_webp_path = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80';
+            $gallery->before_file_path = 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80';
+            $gallery->is_featured = true;
+        }
+
+        // Process Before Photo
+        if ($request->hasFile('before_photo')) {
+            $file = $request->file('before_photo');
+            $dest = public_path('uploads/galleries');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'before_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $gallery->before_file_path = '/uploads/galleries/'.$filename;
+        } elseif (! empty($validated['before_file_path'])) {
+            $gallery->before_file_path = $validated['before_file_path'];
+        }
+
+        // Process After Photo
+        if ($request->hasFile('after_photo')) {
+            $file = $request->file('after_photo');
+            $dest = public_path('uploads/galleries');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'after_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $gallery->file_webp_path = '/uploads/galleries/'.$filename;
+        } elseif (! empty($validated['after_file_path'])) {
+            $gallery->file_webp_path = $validated['after_file_path'];
+        }
+
+        if (! empty($validated['title'])) {
+            $gallery->title = $validated['title'];
+        }
+
+        $exif = $gallery->exif_metadata_json ?? [];
+        if (! empty($validated['before_label'])) {
+            $exif['before_label'] = $validated['before_label'];
+        }
+        if (! empty($validated['after_label'])) {
+            $exif['after_label'] = $validated['after_label'];
+        }
+        $gallery->exif_metadata_json = $exif;
+
+        $gallery->save();
+
+        return back()->with('success', 'Foto Before / After Color Grading berhasil diperbarui dan aktif di website!');
+    }
+
+    /**
+     * Dedicated Action: Update Cinema Showcase Showreel Video & Poster
+     */
+    public function updateShowreel(Request $request)
+    {
+        $validated = $request->validate([
+            'video_file' => 'nullable|file|mimes:mp4,mov,webm,mkv|max:102400', // max 100MB
+            'video_url' => 'nullable|string',
+            'poster_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'poster_url' => 'nullable|string',
+            'title' => 'nullable|string|max:255',
+            'subtitle' => 'nullable|string',
+        ]);
+
+        $service = Service::where('slug', 'photography-videography')->first();
+        $gallery = Gallery::where('service_id', $service?->id)
+            ->where(function ($q) {
+                $q->where('media_type', 'video')->orWhere('category', 'showreel');
+            })->first();
+
+        if (! $gallery) {
+            $gallery = new Gallery();
+            $gallery->service_id = $service?->id;
+            $gallery->title = 'Cinema & Darkroom Showcase Showreel';
+            $gallery->slug = 'cinema-showreel-showcase';
+            $gallery->category = 'showreel';
+            $gallery->media_type = 'video';
+            $gallery->file_webp_path = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80';
+            $gallery->is_featured = true;
+        }
+
+        // Process Video File or URL
+        if ($request->hasFile('video_file')) {
+            $file = $request->file('video_file');
+            $dest = public_path('uploads/videos');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'showreel_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $gallery->video_url = '/uploads/videos/'.$filename;
+        } elseif (! empty($validated['video_url'])) {
+            $gallery->video_url = $validated['video_url'];
+        }
+
+        // Process Poster File or URL
+        if ($request->hasFile('poster_photo')) {
+            $file = $request->file('poster_photo');
+            $dest = public_path('uploads/galleries');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'poster_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $gallery->file_webp_path = '/uploads/galleries/'.$filename;
+        } elseif (! empty($validated['poster_url'])) {
+            $gallery->file_webp_path = $validated['poster_url'];
+        }
+
+        if (! empty($validated['title'])) {
+            $gallery->title = $validated['title'];
+        }
+
+        $gallery->save();
+
+        // Also sync to service hero_config_json if exists
+        if ($service) {
+            $config = $service->hero_config_json ?? [];
+            if ($gallery->video_url) {
+                $config['showreel_video'] = $gallery->video_url;
+            }
+            if ($gallery->file_webp_path) {
+                $config['showreel_poster'] = $gallery->file_webp_path;
+            }
+            if (! empty($validated['title'])) {
+                $config['showreel_title'] = $validated['title'];
+            }
+            if (! empty($validated['subtitle'])) {
+                $config['showreel_subtitle'] = $validated['subtitle'];
+            }
+            $service->update(['hero_config_json' => $config]);
+        }
+
+        return back()->with('success', 'Video Showreel Cinema berhasil diupload & aktif di website!');
     }
 
     /**

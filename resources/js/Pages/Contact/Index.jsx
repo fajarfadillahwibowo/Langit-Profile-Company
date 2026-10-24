@@ -66,21 +66,21 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                         <div>
                             <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
                                 <Sparkles className="w-4 h-4" />
-                                <span>OFFICIAL SOCIAL MEDIA ECOSYSTEM</span>
+                                <span>OFFICIAL SOCIAL MEDIA & DIRECT CHANNELS</span>
                             </div>
                             <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
-                                Media Sosial Resmi Langit
+                                Saluran Komunikasi & Media Sosial Resmi
                             </h2>
                         </div>
                         <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md">
-                            Hubungi layanan WhatsApp terpusat, ikuti karya terbaru, reel sinematik 4K, dan update behind-the-scenes langsung di kanal resmi kami.
+                            Hubungi layanan WhatsApp resmi, surel terpusat, serta ikuti update visual, portofolio dan video kreatif di media sosial kami.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* 1. Official WhatsApp Card */}
                         <a
-                            href={`https://wa.me/${(contacts.general_phone || '+62 812 3456 7890').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo Studio Langit, saya ingin berkonsultasi mengenai layanan dan proyek...')}`}
+                            href={`https://wa.me/${(contacts.general_phone || '+62 822-4614-2791').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo Studio Langit, saya ingin berkonsultasi mengenai layanan dan proyek...')}`}
                             target="_blank"
                             rel="noreferrer"
                             className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden"
@@ -101,26 +101,102 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
 
                                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">WhatsApp Official</span>
-                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                    {contacts.general_phone || '+62 812 3456 7890'}
+                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                    {contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791'}
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                                    Konsultasi cepat, reservasi layanan foto & video, info sewa alat, jadwal servis, dan tanya jawab langsung dengan customer care Langit.
+                                    Konsultasi cepat, reservasi layanan foto & video, info sewa alat, jadwal servis, dan CS studio.
                                 </p>
                             </div>
 
                             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                 <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                                    <span>Chat WhatsApp Resmi</span>
+                                    <span>Chat WhatsApp</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </span>
                                 <span className="text-[11px] font-mono opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
                             </div>
                         </a>
 
-                        {/* 2. Instagram Card (Active Link) */}
+                        {/* 2. TikTok Card (Active Real Link) */}
                         <a
-                            href="https://www.instagram.com/langit.creative?cplk=MTcxN3d5aXB1c2hkMQ=="
+                            href={contacts.tiktok_url || "https://www.tiktok.com/@langit.creative1?_r=1&_t=ZS-9An84b3f2BC"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-cyan-500/50 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-cyan-500/15 via-rose-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-900 to-black text-white flex items-center justify-center shadow-lg shadow-black/25 group-hover:scale-110 transition-transform border border-slate-700/50">
+                                        <svg className="w-6 h-6 text-cyan-400 fill-current" viewBox="0 0 24 24">
+                                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.11V9.32a6.34 6.34 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.58a8.28 8.28 0 0 0 4.84 1.56V6.69z"/>
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                        Aktif
+                                    </span>
+                                </div>
+
+                                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">TikTok Official</span>
+                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                                    {contacts.tiktok_handle || '@langit.creative1'}
+                                </h3>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                                    Video vertikal sinematik, konten edukasi teknologi, tips drone & kamera, dan tren visual terbaru.
+                                </p>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-bold text-cyan-600 dark:text-cyan-400">
+                                <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                                    <span>Buka Profil TikTok</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </span>
+                                <span className="text-[11px] font-mono opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
+                            </div>
+                        </a>
+
+                        {/* 3. Official Email Card */}
+                        <a
+                            href={`mailto:${contacts.general_email || 'langitbelitang@gmail.com'}`}
+                            className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-indigo-500/50 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-indigo-500/15 via-blue-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-110 transition-transform">
+                                        <Mail className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                        Email Resmi
+                                    </span>
+                                </div>
+
+                                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">Email Korespondensi</span>
+                                <h3 className="font-heading font-bold text-base xl:text-lg text-slate-900 dark:text-white mt-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors break-all">
+                                    {contacts.general_email || 'langitbelitang@gmail.com'}
+                                </h3>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                                    Pengajuan proposal resmi B2B, surat kedinasan kampus/sekolah, faktur, dan korespondensi formal.
+                                </p>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                                    <span>Kirim Surel Email</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </span>
+                                <span className="text-[11px] font-mono opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
+                            </div>
+                        </a>
+
+                        {/* 4. Instagram Card */}
+                        <a
+                            href={contacts.instagram_url || "https://www.instagram.com/langit.creative?cplk=MTcxN3d5aXB1c2hkMQ=="}
                             target="_blank"
                             rel="noreferrer"
                             className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-pink-500/50 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden"
@@ -143,55 +219,73 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
 
                                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">Instagram Official</span>
-                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                                    @langit.creative
+                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                                    {contacts.instagram_handle || '@langit.creative'}
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                                    Galeri foto harian, portofolio wedding & cinema reel, showcase color grading, dan behind-the-scenes photoshoot studio.
+                                    Galeri foto harian, portofolio wedding & cinema reel, showcase color grading, dan behind the scenes studio.
                                 </p>
                             </div>
 
                             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-bold text-rose-600 dark:text-rose-400">
                                 <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                                    <span>Buka Instagram Profil</span>
+                                    <span>Buka Profil Instagram</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </span>
                                 <span className="text-[11px] font-mono opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
                             </div>
                         </a>
+                    </div>
 
-                        {/* 2. TikTok Card (Upcoming Link) */}
-                        <div className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-cyan-500/40 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden">
-                            <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-cyan-500/10 via-pink-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-lg shadow-black/20 group-hover:scale-110 transition-transform border border-slate-700/50">
-                                        <svg className="w-6 h-6 text-cyan-400 fill-current" viewBox="0 0 24 24">
-                                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.11V9.32a6.34 6.34 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.58a8.28 8.28 0 0 0 4.84 1.56V6.69z"/>
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10 font-bold uppercase tracking-wider">
-                                        Segera Hadir
+                    {/* Direct Division Hotlines */}
+                    {contacts.division_contacts && contacts.division_contacts.length > 0 && (
+                        <div className="pt-6 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <div>
+                                    <span className="text-[10px] font-mono tracking-wider uppercase text-cyan-600 dark:text-cyan-400 font-bold block">
+                                        DIRECT DIVISION HOTLINES
                                     </span>
+                                    <h3 className="font-heading font-bold text-lg sm:text-xl text-slate-900 dark:text-white">
+                                        Kontak WhatsApp Langsung Per Divisi
+                                    </h3>
                                 </div>
-
-                                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">TikTok Official</span>
-                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-0.5">
-                                    @langit.creative
-                                </h3>
-                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                                    Video vertikal pendek, tips praktis editing & drone, mini vlog tim produksi, dan tutorial kreatif singkat.
-                                </p>
+                                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                                    Terhubung langsung ke PIC spesialis divisi
+                                </span>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
-                                <span>Tautan akun menyusul</span>
-                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">TikTok</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {contacts.division_contacts.map((div, idx) => (
+                                    <a
+                                        key={idx}
+                                        href={`https://wa.me/${(div.phone || contacts.general_phone || '+62 822-4614-2791').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${div.pic} (${div.division}) Studio Langit, saya ingin berkonsultasi mengenai ${div.tag}...`)}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-lg transition-all group flex flex-col justify-between"
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 font-bold uppercase">
+                                                    {div.tag}
+                                                </span>
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            </div>
+                                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                                {div.division}
+                                            </h4>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                                PIC: <span className="font-medium text-slate-700 dark:text-slate-300">{div.pic}</span>
+                                            </p>
+                                        </div>
+                                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                                            <span>{div.phone || '+62 822-4614-2791'}</span>
+                                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </a>
+                                ))}
                             </div>
                         </div>
-
-                    </div>
+                    )}
                 </div>
 
                 {/* 3. Interactive Studio Map & Operational Hours with Live Status (PRD 5.2) */}
@@ -233,21 +327,33 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
                             </div>
 
-                            <div className="pt-2 text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                            <div className="pt-2 text-xs text-slate-600 dark:text-slate-400 space-y-2.5">
                                 <a
                                     href={contacts.google_maps_url || "https://maps.app.goo.gl/tiByDRcJAGqN7gjm8?g_st=iw"}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex items-start gap-2 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors group"
+                                    className="flex items-start gap-2.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors group"
                                     title="Buka Lokasi Langit Office di Google Maps"
                                 >
                                     <MapPin className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                                     <span className="leading-relaxed group-hover:underline">{contacts.address}</span>
                                 </a>
-                                <p className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                                    <span>{contacts.general_email}</span>
-                                </p>
+                                <a
+                                    href={`https://wa.me/${(contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791').replace(/[^0-9]/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"
+                                >
+                                    <Phone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <span className="group-hover:underline font-mono">{contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791'}</span>
+                                </a>
+                                <a
+                                    href={`mailto:${contacts.general_email || 'langitbelitang@gmail.com'}`}
+                                    className="flex items-center gap-2.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                                >
+                                    <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <span className="group-hover:underline">{contacts.general_email || 'langitbelitang@gmail.com'}</span>
+                                </a>
                             </div>
                         </div>
                     </div>

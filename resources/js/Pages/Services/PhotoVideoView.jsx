@@ -1,17 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
 import BeforeAfterSlider from '@/Components/BeforeAfterSlider';
 import { 
-    Camera, Video, Play, SlidersHorizontal, Disc, Aperture, Eye,
+    Camera, Video, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc, Aperture, Eye,
     ArrowRight, CheckCircle2, Sparkles, Filter, ShieldCheck, Film
 } from 'lucide-react';
 
-export default function PhotoVideoView({ service, galleries = [], beforeAfter = null }) {
+export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
     const [showreelPlaying, setShowreelPlaying] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const videoRef = useRef(null);
+
+    const activeVideoUrl = showreel?.video_url 
+        || service?.hero_config_json?.showreel_video 
+        || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+    const activePosterUrl = showreel?.file_webp_path 
+        || service?.hero_config_json?.showreel_poster 
+        || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80";
+
+    const togglePlayShowreel = () => {
+        if (!videoRef.current) return;
+        if (showreelPlaying) {
+            videoRef.current.pause();
+            setShowreelPlaying(false);
+        } else {
+            videoRef.current.play().then(() => {
+                setShowreelPlaying(true);
+            }).catch(() => {
+                setShowreelPlaying(true);
+            });
+        }
+    };
+
+    const toggleMute = (e) => {
+        e.stopPropagation();
+        if (!videoRef.current) return;
+        videoRef.current.muted = !videoRef.current.muted;
+        setIsMuted(videoRef.current.muted);
+    };
 
     const categories = [
         { key: 'all', label: 'Semua Karya' },
@@ -96,60 +127,96 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
 
             {/* Atmosphere styling: Dual Theme Support */}
             <div className="bg-amber-50/20 text-slate-900 dark:bg-[#050507] dark:text-slate-100 min-h-screen -mt-6 pt-6 transition-colors duration-300">
-                {/* 1. Full-Screen Showreel Header */}
+                {/* 1. Full-Screen Showreel Header with Real Video Playback */}
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 pb-16">
                     <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 aspect-[16/9] md:aspect-[21/9] flex items-center justify-center group">
-                        {/* Background Video Reel Still */}
-                        <img 
-                            src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80" 
-                            alt="Langit Cinema Showreel" 
-                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
+                        
+                        {/* Real HTML5 Video Player */}
+                        <video 
+                            ref={videoRef}
+                            src={activeVideoUrl}
+                            poster={activePosterUrl}
+                            muted={isMuted}
+                            playsInline
+                            loop
+                            onPlay={() => setShowreelPlaying(true)}
+                            onPause={() => setShowreelPlaying(false)}
+                            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+                                showreelPlaying ? 'opacity-100 z-10' : 'opacity-60 z-0 group-hover:scale-105'
+                            }`}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-black/40 to-black/30"></div>
 
-                        {/* Centered Play Button & Typography */}
-                        <div className="relative z-10 text-center max-w-3xl px-6 space-y-4">
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono uppercase tracking-widest font-bold">
+                        {/* Dark Gradient Overlay (fades out when video is playing for full immersion) */}
+                        <div className={`absolute inset-0 transition-opacity duration-500 ${
+                            showreelPlaying ? 'bg-gradient-to-t from-slate-950/80 via-transparent to-black/40 z-10 pointer-events-none' : 'bg-gradient-to-t from-slate-950 via-black/40 to-black/30 z-1 pointer-events-none'
+                        }`}></div>
+
+                        {/* Centered Play Button & Typography (shown when paused or hovering) */}
+                        <div className={`relative z-20 text-center max-w-3xl px-6 space-y-4 transition-all duration-500 ${
+                            showreelPlaying ? 'opacity-0 hover:opacity-100 group-hover:opacity-100 pointer-events-auto' : 'opacity-100 pointer-events-auto'
+                        }`}>
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono uppercase tracking-widest font-bold backdrop-blur-md">
                                 <Film className="w-3.5 h-3.5" />
                                 <span>Cinema & Darkroom Showcase</span>
                             </div>
 
-                            <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
+                            <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight drop-shadow-lg">
                                 Visual <span className="font-editorial italic font-normal text-amber-300 tracking-wide">Sinematik</span> Kelas Dunia.
                             </h1>
 
-                            <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+                            <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto leading-relaxed drop-shadow">
                                 Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.
                             </p>
 
                             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                                 <button
-                                    onClick={() => setShowreelPlaying(!showreelPlaying)}
-                                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95"
+                                    onClick={togglePlayShowreel}
+                                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                                 >
-                                    <Play className="w-4 h-4 fill-slate-950" />
-                                    <span>{showreelPlaying ? 'Pause Showreel' : 'Play Full Reel with Audio'}</span>
+                                    {showreelPlaying ? (
+                                        <>
+                                            <Pause className="w-4 h-4 fill-slate-950" />
+                                            <span>Pause Showreel</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="w-4 h-4 fill-slate-950" />
+                                            <span>Play Full Reel with Audio</span>
+                                        </>
+                                    )}
                                 </button>
                                 
                                 <Link
                                     href="/konsultasi"
-                                    className="px-5 py-3 rounded-xl bg-white/15 hover:bg-white/20 text-white border border-white/20 text-sm font-bold transition-colors"
+                                    className="px-5 py-3 rounded-xl bg-white/15 hover:bg-white/20 text-white border border-white/20 text-sm font-bold transition-colors backdrop-blur-md"
                                 >
                                     Booking Jadwal Shoot
                                 </Link>
                             </div>
                         </div>
 
+                        {/* Top-Right Audio Mute / Unmute Floating Control */}
                         {showreelPlaying && (
-                            <div className="absolute bottom-4 left-6 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-400 text-xs font-mono animate-pulse">
-                                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                                <span>Showreel Audio Stream: 48kHz 24-bit Hi-Fi</span>
+                            <button
+                                onClick={toggleMute}
+                                title={isMuted ? 'Nyalakan Audio' : 'Bisukan Audio'}
+                                className="absolute top-5 right-5 z-30 p-2.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 cursor-pointer shadow-lg"
+                            >
+                                {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-amber-400" />}
+                            </button>
+                        )}
+
+                        {/* Bottom Floating Hi-Fi Audio & Video Status Badge */}
+                        {showreelPlaying && (
+                            <div className="absolute bottom-4 left-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-400 text-xs font-mono animate-pulse backdrop-blur-md">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                                <span>Playing Video Reel • Hi-Fi Audio Stream</span>
                             </div>
                         )}
                     </div>
                 </section>
 
-                {/* 2. Interactive Before/After Color Grading Slider */}
+                {/* 2. Interactive Before/After Color Grading Slider (Dynamic from Backend) */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
@@ -165,10 +232,10 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                     </div>
 
                     <BeforeAfterSlider
-                        beforeImg="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80"
-                        afterImg="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80"
-                        beforeLabel="Sony S-Log3 RAW Flat"
-                        afterLabel="Langit Cinema Grade (Kodak 2383)"
+                        beforeImg={beforeAfter?.before_file_path || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80"}
+                        afterImg={beforeAfter?.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80"}
+                        beforeLabel={beforeAfter?.exif_metadata_json?.before_label || "Sony S-Log3 RAW Flat"}
+                        afterLabel={beforeAfter?.exif_metadata_json?.after_label || "Langit Cinema Grade (Kodak 2383)"}
                     />
                 </section>
 

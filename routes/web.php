@@ -74,6 +74,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/equipments/{id}', [AdminDashboardController::class, 'updateEquipment'])->name('equipments.update');
 
         // Galleries & Photos
+        Route::post('/galleries/before-after', [AdminDashboardController::class, 'updateBeforeAfter'])->name('galleries.before-after');
+        Route::post('/galleries/showreel', [AdminDashboardController::class, 'updateShowreel'])->name('galleries.showreel');
         Route::post('/galleries', [AdminDashboardController::class, 'createGallery'])->name('galleries.create');
         Route::put('/galleries/{id}', [AdminDashboardController::class, 'updateGallery'])->name('galleries.update');
         Route::post('/galleries/{id}/update', [AdminDashboardController::class, 'updateGallery'])->name('galleries.update-post');

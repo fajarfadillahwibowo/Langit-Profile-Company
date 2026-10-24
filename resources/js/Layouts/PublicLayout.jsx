@@ -160,13 +160,21 @@ export default function PublicLayout({ children, activeService = null }) {
                             </p>
                             <div className="flex flex-wrap items-center gap-2.5 pt-2">
                                 <a 
-                                    href="https://wa.me/6281234567890" 
+                                    href="https://wa.me/6282246142791" 
                                     target="_blank" 
                                     rel="noreferrer"
-                                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-xs font-mono text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 transition-colors shadow-sm font-semibold"
+                                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 transition-colors shadow-sm font-semibold"
                                 >
                                     <Phone className="w-3.5 h-3.5" />
                                     <span>WhatsApp</span>
+                                </a>
+                                <a 
+                                    href="https://www.tiktok.com/@langit.creative1?_r=1&_t=ZS-9An84b3f2BC" 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-cyan-500/10 border border-slate-200 dark:border-white/10 text-xs font-mono text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 transition-colors shadow-sm font-semibold"
+                                >
+                                    <span>TikTok</span>
                                 </a>
                                 <a 
                                     href="https://www.instagram.com/langit.creative?cplk=MTcxN3d5aXB1c2hkMQ==" 
@@ -232,10 +240,22 @@ export default function PublicLayout({ children, activeService = null }) {
                                     <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                                     <span>Senin - Jumat: 09:00 - 18:00 WIB<br/>Sabtu: 10:00 - 16:00 WIB</span>
                                 </p>
-                                <p className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                                    <span>halo@langit.id</span>
-                                </p>
+                                <a 
+                                    href="https://wa.me/6282246142791" 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"
+                                >
+                                    <Phone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <span className="font-mono group-hover:underline">+62 822-4614-2791</span>
+                                </a>
+                                <a 
+                                    href="mailto:langitbelitang@gmail.com"
+                                    className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                                >
+                                    <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <span className="group-hover:underline">langitbelitang@gmail.com</span>
+                                </a>
                             </div>
                         </div>
                     </div>

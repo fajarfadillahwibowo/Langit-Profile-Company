@@ -288,7 +288,7 @@ export default function CollaborationView({ service }) {
                             </a>
 
                             <a
-                                href="https://wa.me/6281234567890?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
+                                href="https://wa.me/6282246142791?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-sm font-semibold shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -716,7 +716,7 @@ export default function CollaborationView({ service }) {
 
                         <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
                             <a
-                                href="https://wa.me/6281234567890?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
+                                href="https://wa.me/6282246142791?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
                                 target="_blank"
                                 rel="noreferrer"
                                 className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
@@ -725,7 +725,7 @@ export default function CollaborationView({ service }) {
                                 <span>WhatsApp Partnership</span>
                             </a>
                             <a
-                                href="mailto:partnership@langit.id"
+                                href="mailto:langitbelitang@gmail.com"
                                 className="px-5 py-3 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-xs font-semibold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
                             >
                                 <Mail className="w-4 h-4 text-rose-500" />

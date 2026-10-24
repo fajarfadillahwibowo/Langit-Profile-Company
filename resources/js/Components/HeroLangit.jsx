@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { Link } from '@inertiajs/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-    Camera, ArrowRight, Play, Layers,
+    Camera, ArrowRight, Play, Code, GraduationCap,
 } from 'lucide-react';
+import Hero3DCinemaStage from '@/Components/Hero3DCinemaStage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -131,39 +132,47 @@ export default function HeroLangit() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400" />
                             </span>
-                            LANGIT DIGITAL ECOSYSTEM &nbsp;·&nbsp; EST. 2022
+                            LANGIT DIGITAL SOLUTION &nbsp;·&nbsp; EST. 2026
                         </div>
 
                         {/* Giant editorial headline */}
-                        <div className="hlg-title-group">
-                            <h1 className="font-heading font-black leading-[0.92] tracking-tighter">
+                        <div className="hlg-title-group space-y-1 sm:space-y-2">
+                            <h1 className="tracking-tight select-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                 <span
-                                    className="hlg-line block text-white"
-                                    style={{ fontSize: 'clamp(52px,9vw,108px)' }}
+                                    className="hlg-line block font-extrabold text-white tracking-[-0.035em] leading-[1.02]"
+                                    style={{ fontSize: 'clamp(46px, 7.5vw, 90px)' }}
                                 >
                                     Satu
                                 </span>
                                 <span
-                                    className="hlg-line block"
+                                    className="hlg-line block font-extrabold tracking-[-0.035em] leading-[1.02]"
                                     style={{
-                                        fontSize: 'clamp(52px,9vw,108px)',
-                                        background: 'linear-gradient(135deg, #38BDF8 0%, #818CF8 48%, #C084FC 100%)',
+                                        fontSize: 'clamp(46px, 7.5vw, 90px)',
+                                        background: 'linear-gradient(135deg, #FFFFFF 15%, #BAE6FD 45%, #38BDF8 75%, #00A8CC 100%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         backgroundClip: 'text',
+                                        filter: 'drop-shadow(0 4px 28px rgba(56, 189, 248, 0.28))',
                                     }}
                                 >
                                     Ekosistem,
                                 </span>
                                 <span
-                                    className="hlg-line block"
-                                    style={{ fontSize: 'clamp(36px,6.2vw,78px)', color: 'rgba(255,255,255,0.52)' }}
+                                    className="hlg-line block font-semibold text-slate-100/90 tracking-[-0.025em] leading-[1.08] mt-1 sm:mt-2"
+                                    style={{ fontSize: 'clamp(30px, 4.8vw, 58px)' }}
                                 >
                                     Tujuh Layanan
                                 </span>
                                 <span
-                                    className="hlg-line block font-editorial italic font-normal tracking-wide text-cyan-200/80"
-                                    style={{ fontSize: 'clamp(40px,7vw,88px)' }}
+                                    className="hlg-line block font-extrabold tracking-[-0.025em] leading-[1.08]"
+                                    style={{
+                                        fontSize: 'clamp(30px, 4.8vw, 58px)',
+                                        background: 'linear-gradient(135deg, #38BDF8 0%, #22D3EE 45%, #E0F2FE 100%)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text',
+                                        filter: 'drop-shadow(0 2px 20px rgba(6, 182, 212, 0.22))',
+                                    }}
                                 >
                                     Presisi Digital.
                                 </span>
@@ -172,13 +181,12 @@ export default function HeroLangit() {
 
                         {/* Description */}
                         <p
-                            className="hlg-desc text-base sm:text-lg max-w-xl leading-relaxed"
-                            style={{ color: '#94A3B8' }}
+                            className="hlg-desc text-base sm:text-lg max-w-xl leading-relaxed text-slate-300"
                         >
-                            Platform terpadu untuk{' '}
-                            <strong className="text-white font-semibold">produksi visual sinematik</strong>,
-                            arsitektur software premium, lab hardware, dan inkubasi talenta —
-                            semuanya dalam satu ekosistem adaptif.
+                            Studio kreatif dan solusi digital yang berfokus pada layanan{' '}
+                            <strong className="text-white font-semibold">fotografi & videografi profesional</strong>,{' '}
+                            <strong className="text-white font-semibold">pembuatan website modern</strong>, serta{' '}
+                            <strong className="text-white font-semibold">program internship</strong> kreatif dan teknologi.
                         </p>
 
                         {/* CTA Buttons */}
@@ -212,139 +220,9 @@ export default function HeroLangit() {
 
                     </div>
 
-                    {/* RIGHT: VISUAL PANEL */}
-                    <div className="hlg-right lg:col-span-5 relative h-[460px] lg:h-[560px]">
-
-                        {/* Main image */}
-                        <div
-                            className="absolute inset-8 rounded-3xl overflow-hidden"
-                            style={{
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                boxShadow: '0 35px 90px rgba(0,0,0,0.65)',
-                            }}
-                        >
-                            <img
-                                src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80"
-                                alt="Langit Sinema & Visual Production"
-                                className="w-full h-full object-cover"
-                                loading="eager"
-                            />
-                            <div
-                                className="absolute inset-0"
-                                style={{ background: 'linear-gradient(to top, rgba(0,25,50,0.9) 0%, transparent 55%)' }}
-                            />
-
-                            {/* Caption */}
-                            <div className="absolute bottom-5 left-5 right-14">
-                                <span
-                                    className="text-xs font-editorial italic tracking-wider block"
-                                    style={{ color: '#FBBF24' }}
-                                >
-                                    Sinema & Visual Narrative
-                                </span>
-                                <h4 className="text-sm font-bold text-white mt-0.5">
-                                    Langit Visual Production
-                                </h4>
-                            </div>
-
-                            {/* Play button */}
-                            <Link
-                                href="/layanan/photography-videography"
-                                className="absolute top-5 right-5 w-11 h-11 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110 active:scale-95"
-                                style={{
-                                    background: 'rgba(255,255,255,0.14)',
-                                    backdropFilter: 'blur(16px)',
-                                    border: '1px solid rgba(255,255,255,0.22)',
-                                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                                }}
-                            >
-                                <Play className="w-4 h-4 fill-white translate-x-0.5" />
-                            </Link>
-                        </div>
-
-                        {/* Floating badge — top-left: Studio projects */}
-                        <div
-                            className="hlg-float absolute top-2 left-2 rounded-2xl p-3.5 shadow-2xl"
-                            style={{
-                                background: 'rgba(0,30,58,0.92)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <div
-                                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                    style={{ background: 'rgba(217,119,6,0.18)' }}
-                                >
-                                    <Camera className="w-4 h-4" style={{ color: '#FBBF24' }} />
-                                </div>
-                                <div>
-                                    <div className="text-[10px] font-mono" style={{ color: '#64748B' }}>Sinema Studio</div>
-                                    <div className="text-xs font-bold text-white">240+ Projects</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Floating badge — bottom-left: Rating */}
-                        <div
-                            className="hlg-float absolute bottom-2 left-2 rounded-2xl p-3.5 shadow-2xl"
-                            style={{
-                                background: 'rgba(0,30,58,0.92)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <div
-                                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                    style={{ background: 'rgba(16,185,129,0.18)' }}
-                                >
-                                    <span className="font-mono font-black text-xs" style={{ color: '#4ADE80' }}>99%</span>
-                                </div>
-                                <div>
-                                    <div className="text-[10px] font-mono" style={{ color: '#64748B' }}>Client Satisfaction</div>
-                                    <div className="text-xs font-bold text-white">★ 5.0 Rating</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Floating badge — top-right: Live status */}
-                        <div
-                            className="hlg-float absolute top-12 -right-2 rounded-2xl px-3.5 py-2.5 shadow-2xl"
-                            style={{
-                                background: 'rgba(0,30,58,0.92)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            <div className="flex items-center gap-1.5">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                                </span>
-                                <span className="text-[11px] font-mono font-semibold" style={{ color: '#4ADE80' }}>
-                                    Studio Open
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Floating badge — bottom-right: Stack */}
-                        <div
-                            className="hlg-float absolute bottom-12 -right-2 rounded-2xl px-3.5 py-2.5 shadow-2xl"
-                            style={{
-                                background: 'rgba(0,30,58,0.92)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            <div className="text-[10px] font-mono leading-relaxed">
-                                <div className="text-white font-bold text-[11px] mb-0.5 flex items-center gap-1">
-                                    <Layers className="w-3 h-3 text-cyan-400" />
-                                    Enterprise Stack
-                                </div>
-                                <div style={{ color: '#64748B' }}>Laravel 13 + React SPA</div>
-                            </div>
-                        </div>
+                    {/* RIGHT: VISUAL PANEL (3D Cinema Camera & Web System Stage) */}
+                    <div className="hlg-right lg:col-span-5 relative overflow-visible">
+                        <Hero3DCinemaStage />
                     </div>
                 </div>
 

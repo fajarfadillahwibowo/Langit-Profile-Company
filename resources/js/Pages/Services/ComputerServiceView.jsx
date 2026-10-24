@@ -370,7 +370,7 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
                                     </p>
                                     <div className="pt-2 flex items-center gap-3">
                                         <a
-                                            href={`https://wa.me/6281234567894?text=${encodeURIComponent(`Halo Teknisi Langit, saya ingin konsultasi servis ${selectedDevice} dengan kendala: ${currentSymptomData.title}`)}`}
+                                            href={`https://wa.me/6282246142791?text=${encodeURIComponent(`Halo Teknisi Langit, saya ingin konsultasi servis ${selectedDevice} dengan kendala: ${currentSymptomData.title}`)}`}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-transform active:scale-95"

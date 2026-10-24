@@ -41,7 +41,7 @@ export default function WebPriceEstimator({ components = [] }) {
             .join('\n');
 
         const message = `Halo Tim Web Langit,\nSaya baru saja mencoba Kalkulator Estimasi Proyek di website dengan pilihan fitur berikut:\n\n${selectedTitles}\n\n*Estimasi Total:* ${formatRupiah(totalPrice)}\n*Estimasi Pengerjaan:* ~${totalDays} Hari Kerja\n\nSaya ingin berkonsultasi lebih lanjut untuk detail pengerjaan. Terima kasih!`;
-        return `https://wa.me/6281234567892?text=${encodeURIComponent(message)}`;
+        return `https://wa.me/6282246142791?text=${encodeURIComponent(message)}`;
     };
 
     return (

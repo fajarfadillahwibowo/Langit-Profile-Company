@@ -226,7 +226,7 @@ export default function PortfolioIndex({ galleries = [] }) {
 
                     <div className="flex flex-wrap items-center gap-3 shrink-0">
                         <a
-                            href="https://wa.me/6281234567890?text=Halo%20Langit,%20saya%20tertarik%20dengan%20portofolio%20karya%20foto%20dan%20video"
+                            href="https://wa.me/6282246142791?text=Halo%20Langit,%20saya%20tertarik%20dengan%20portofolio%20karya%20foto%20dan%20video"
                             target="_blank"
                             rel="noreferrer"
                             className="px-4 py-2.5 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/15 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-xs font-semibold flex items-center gap-2 shadow-sm transition-colors"
