@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import PublicLayout from '@/Layouts/PublicLayout';
 import InteractiveInternshipCards from '@/Components/InteractiveInternshipCards';
 import { 
-    Sparkles, Briefcase, GraduationCap, Clock, MapPin, Upload,
-    CheckCircle2, ArrowRight, Star, Award, Loader2, Check, X, FileText,
-    MessageSquare, Key, Camera
+    Sparkles, Upload, CheckCircle2, ArrowRight,
+    Award, Loader2, FileText, MessageSquare, Key, Camera
 } from 'lucide-react';
 
 const defaultPositions = [

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { ShieldCheck, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/Components/ThemeToggle';
 
 export default function AdminLogin() {

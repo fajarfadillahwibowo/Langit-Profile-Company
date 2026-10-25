@@ -3,8 +3,8 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { 
-    PackageCheck, ShoppingBag, Calendar, Plus, Minus, Trash2,
-    ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, X, Check, Loader2, Sparkles
+    PackageCheck, ShoppingBag, Plus, Minus, Trash2,
+    ArrowRight, X, Check, Loader2, Sparkles
 } from 'lucide-react';
 
 export default function RentalEquipmentView({ service, equipments = [] }) {

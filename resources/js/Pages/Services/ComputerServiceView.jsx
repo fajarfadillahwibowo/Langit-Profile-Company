@@ -3,8 +3,8 @@ import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import ServiceTrackerCard from '@/Components/ServiceTrackerCard';
 import { 
-    Cpu, Activity, Wrench, Clock, ShieldCheck, CheckCircle2,
-    Laptop, Monitor, Apple, ArrowRight, Zap, HelpCircle, PhoneCall
+    Activity, Wrench, Clock, CheckCircle2,
+    Laptop, Monitor, Apple, ArrowRight, PhoneCall
 } from 'lucide-react';
 
 export default function ComputerServiceView({ service, initialTicket = null, initialReceiptQuery = '', galleries = [] }) {

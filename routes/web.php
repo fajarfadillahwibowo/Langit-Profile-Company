@@ -68,9 +68,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Computer Service Tickets
         Route::post('/tickets', [AdminDashboardController::class, 'createTicket'])->name('tickets.create');
         Route::put('/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('tickets.update-status');
+        Route::put('/tickets/{id}', [AdminDashboardController::class, 'updateTicket'])->name('tickets.update');
+        Route::delete('/tickets/{id}', [AdminDashboardController::class, 'deleteTicket'])->name('tickets.delete');
 
         // Rental Equipment & Bookings
         Route::put('/rentals/{id}/status', [AdminDashboardController::class, 'updateRentalBookingStatus'])->name('rentals.update-status');
+        Route::put('/rentals/{id}', [AdminDashboardController::class, 'updateRentalBooking'])->name('rentals.update');
+        Route::delete('/rentals/{id}', [AdminDashboardController::class, 'deleteRentalBooking'])->name('rentals.delete');
         Route::put('/equipments/{id}', [AdminDashboardController::class, 'updateEquipment'])->name('equipments.update');
 
         // Galleries & Photos
@@ -83,12 +87,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Internships
         Route::put('/internships/{id}/status', [AdminDashboardController::class, 'updateApplicationStatus'])->name('internships.update-status');
+        Route::put('/internships/{id}', [AdminDashboardController::class, 'updateInternshipApplication'])->name('internships.update');
+        Route::delete('/internships/{id}', [AdminDashboardController::class, 'deleteInternshipApplication'])->name('internships.delete');
 
         // Consultations
         Route::put('/consultations/{id}/status', [AdminDashboardController::class, 'updateConsultationStatus'])->name('consultations.update-status');
+        Route::put('/consultations/{id}', [AdminDashboardController::class, 'updateConsultation'])->name('consultations.update');
+        Route::delete('/consultations/{id}', [AdminDashboardController::class, 'deleteConsultation'])->name('consultations.delete');
 
         // Collaborations (Kemitraan & Proposal Kerja Sama)
         Route::put('/collaborations/{id}/status', [AdminDashboardController::class, 'updateCollaborationStatus'])->name('collaborations.update-status');
+        Route::put('/collaborations/{id}', [AdminDashboardController::class, 'updateCollaboration'])->name('collaborations.update');
         Route::delete('/collaborations/{id}', [AdminDashboardController::class, 'deleteCollaboration'])->name('collaborations.delete');
 
         // Admin Profile Management & Live Camera / Upload Avatar

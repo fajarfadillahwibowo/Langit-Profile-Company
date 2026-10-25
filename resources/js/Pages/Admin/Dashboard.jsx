@@ -5,10 +5,9 @@ import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
-    Phone, Mail, Calendar, Clock, AlertCircle, CheckCircle2, ShieldCheck,
-    Search, Layers, ArrowUpRight, FileText, Download, Eye, Building2, User, Filter,
-    Sun, Moon, ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play
+    Phone, Calendar, FileText, Download, Eye, Filter,
+    ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock
 } from 'lucide-react';
 
 export default function AdminDashboard({
@@ -57,6 +56,29 @@ export default function AdminDashboard({
     // Collaboration Detail & Filter State
     const [selectedCollabDetail, setSelectedCollabDetail] = useState(null);
     const [collabFilter, setCollabFilter] = useState('all');
+
+    // Realtime Clock Ticker for relative times (ticks every second)
+    const [currentTime, setCurrentTime] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Detail Modal States for All Tables
+    const [selectedTicketDetail, setSelectedTicketDetail] = useState(null);
+    const [selectedRentalDetail, setSelectedRentalDetail] = useState(null);
+    const [selectedInternshipDetail, setSelectedInternshipDetail] = useState(null);
+    const [selectedConsultationDetail, setSelectedConsultationDetail] = useState(null);
+
+    // Edit Modal States for All Tables
+    const [editingTicket, setEditingTicket] = useState(null);
+    const [editingRental, setEditingRental] = useState(null);
+    const [editingInternship, setEditingInternship] = useState(null);
+    const [editingConsultation, setEditingConsultation] = useState(null);
+    const [editingCollaboration, setEditingCollaboration] = useState(null);
+    const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
     // New Ticket Modal State
     const [ticketModalOpen, setTicketModalOpen] = useState(false);
@@ -342,6 +364,146 @@ export default function AdminDashboard({
         }
     };
 
+    const handleDeleteTicket = (id) => {
+        if (confirm('Yakin ingin menghapus nota servis komputer ini?')) {
+            router.delete(`/admin/tickets/${id}`, { preserveScroll: true });
+        }
+    };
+
+    const handleDeleteRental = (id) => {
+        if (confirm('Yakin ingin menghapus pesanan sewa alat ini?')) {
+            router.delete(`/admin/rentals/${id}`, { preserveScroll: true });
+        }
+    };
+
+    const handleDeleteInternship = (id) => {
+        if (confirm('Yakin ingin menghapus data pelamar magang ini?')) {
+            router.delete(`/admin/internships/${id}`, { preserveScroll: true });
+        }
+    };
+
+    const handleDeleteConsultation = (id) => {
+        if (confirm('Yakin ingin menghapus tiket jadwal konsultasi ini?')) {
+            router.delete(`/admin/consultations/${id}`, { preserveScroll: true });
+        }
+    };
+
+    const formatTimestamp = (dateString) => {
+        if (!dateString) return '-';
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }) + ' WIB';
+    };
+
+    const formatTimeAgo = (dateString) => {
+        if (!dateString) return '-';
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return '-';
+        const diffInSeconds = Math.max(0, Math.floor((currentTime - d.getTime()) / 1000));
+        
+        if (diffInSeconds < 3) return 'baru saja';
+        if (diffInSeconds < 60) return `${diffInSeconds} detik yang lalu`;
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes} menit yang lalu`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours} jam yang lalu`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) return `${diffInDays} hari yang lalu`;
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) return `${diffInMonths} bulan yang lalu`;
+        
+        const diffInYears = Math.floor(diffInDays / 365);
+        return `${diffInYears} tahun yang lalu`;
+    };
+
+    const formatRelativeTime = (item) => {
+        if (!item) return '-';
+        const isEdited = item.updated_at && item.created_at && (new Date(item.updated_at).getTime() - new Date(item.created_at).getTime() > 1000);
+        const prefix = isEdited ? 'Diedit ' : 'Dibuat ';
+        const timestamp = isEdited ? item.updated_at : (item.created_at || item.updated_at);
+        return prefix + formatTimeAgo(timestamp);
+    };
+
+    const handleUpdateTicketSubmit = (e) => {
+        e.preventDefault();
+        if (!editingTicket) return;
+        setIsSubmittingEdit(true);
+        router.put(`/admin/tickets/${editingTicket.id}`, editingTicket, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingTicket(null);
+                setIsSubmittingEdit(false);
+            },
+            onError: () => setIsSubmittingEdit(false),
+        });
+    };
+
+    const handleUpdateRentalSubmit = (e) => {
+        e.preventDefault();
+        if (!editingRental) return;
+        setIsSubmittingEdit(true);
+        router.put(`/admin/rentals/${editingRental.id}`, editingRental, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingRental(null);
+                setIsSubmittingEdit(false);
+            },
+            onError: () => setIsSubmittingEdit(false),
+        });
+    };
+
+    const handleUpdateInternshipSubmit = (e) => {
+        e.preventDefault();
+        if (!editingInternship) return;
+        setIsSubmittingEdit(true);
+        router.put(`/admin/internships/${editingInternship.id}`, editingInternship, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingInternship(null);
+                setIsSubmittingEdit(false);
+            },
+            onError: () => setIsSubmittingEdit(false),
+        });
+    };
+
+    const handleUpdateConsultationSubmit = (e) => {
+        e.preventDefault();
+        if (!editingConsultation) return;
+        setIsSubmittingEdit(true);
+        router.put(`/admin/consultations/${editingConsultation.id}`, editingConsultation, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingConsultation(null);
+                setIsSubmittingEdit(false);
+            },
+            onError: () => setIsSubmittingEdit(false),
+        });
+    };
+
+    const handleUpdateCollaborationSubmit = (e) => {
+        e.preventDefault();
+        if (!editingCollaboration) return;
+        setIsSubmittingEdit(true);
+        router.put(`/admin/collaborations/${editingCollaboration.id}`, editingCollaboration, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingCollaboration(null);
+                setIsSubmittingEdit(false);
+            },
+            onError: () => setIsSubmittingEdit(false),
+        });
+    };
+
     const getCollabTypeInfo = (type) => {
         switch (type) {
             case 'media_partner':
@@ -573,14 +735,14 @@ export default function AdminDashboard({
     };
 
     return (
-        <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
+        <div className="h-screen h-[100dvh] overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
             <Head title="Admin CMS Executive Dashboard — Langit" />
 
-            {/* Sidebar Navigation */}
-            <aside className="w-64 border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25">
-                <div className="space-y-6">
+            {/* Sidebar Navigation - Fixed height in viewport, only content scrolls */}
+            <aside className="w-64 h-full border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
+                <div className="flex-1 min-h-0 flex flex-col space-y-5">
                     {/* Header Logo — Brand Logo Identik Halaman Publik */}
-                    <Link href="/" className="block px-2 group">
+                    <Link href="/" className="block px-2 group shrink-0">
                         <div className="flex items-center gap-1.5">
                             <span 
                                 className="font-etna font-bold text-3xl tracking-tight text-white flex items-center gap-1.5 leading-none transition-all duration-300 group-hover:text-cyan-200"
@@ -595,8 +757,8 @@ export default function AdminDashboard({
                         </span>
                     </Link>
 
-                    {/* Nav Items */}
-                    <nav className="space-y-1.5 text-xs font-medium">
+                    {/* Nav Items - Scrollable independently if items exceed viewport */}
+                    <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll">
                         <button
                             onClick={() => setActiveTab('overview')}
                             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
@@ -802,8 +964,8 @@ export default function AdminDashboard({
                     </nav>
                 </div>
 
-                {/* Footer Actions */}
-                <div className="pt-4 border-t border-white/20 space-y-2">
+                {/* Footer Actions - Pinned at bottom of sidebar viewport */}
+                <div className="pt-3 border-t border-white/20 space-y-1.5 shrink-0">
                     <Link
                         href="/"
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors"
@@ -824,8 +986,8 @@ export default function AdminDashboard({
                 </div>
             </aside>
 
-            {/* Main Content Dashboard */}
-            <main className="flex-1 min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
+            {/* Main Content Dashboard - Scrolls independently */}
+            <main className="flex-1 h-full min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#005792]/15 dark:border-white/10">
                     <div>
@@ -964,6 +1126,7 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-2.5 px-3 w-12 text-center">No</th>
                                             <th className="py-2.5 px-3">No. Tiket</th>
                                             <th className="py-2.5 px-3">Klien & Instansi</th>
                                             <th className="py-2.5 px-3">Topik</th>
@@ -971,41 +1134,85 @@ export default function AdminDashboard({
                                             <th className="py-2.5 px-3">Jadwal</th>
                                             <th className="py-2.5 px-3">Status</th>
                                             <th className="py-2.5 px-3">Follow-Up</th>
+                                            <th className="py-2.5 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {recentConsultations.map((c) => (
-                                            <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
-                                                <td className="py-3 px-3 font-bold text-cyan-600 dark:text-cyan-400">{c.ticket_code}</td>
-                                                <td className="py-3 px-3">
-                                                    <span className="font-bold text-slate-900 dark:text-white block">{c.client_name}</span>
-                                                    <span className="text-[10px] text-slate-500">{c.company_or_institution || '-'}</span>
-                                                </td>
-                                                <td className="py-3 px-3 text-slate-700 dark:text-slate-200">{c.service_topic}</td>
-                                                <td className="py-3 px-3">
-                                                    <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[10px]">
-                                                        {c.meeting_method === 'online_meet' ? 'Online Meet' : 'Studio'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-3 text-slate-600 dark:text-slate-400">{c.preferred_date} ({c.preferred_time})</td>
-                                                <td className="py-3 px-3">
-                                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[10px]">
-                                                        {c.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-3">
-                                                    <a
-                                                        href={`https://wa.me/${c.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${c.client_name}, kami dari Langit mengonfirmasi tiket konsultasi ${c.ticket_code}`)}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center gap-1 w-fit font-semibold"
-                                                    >
-                                                        <Phone className="w-3 h-3" />
-                                                        <span>WA</span>
-                                                    </a>
+                                        {recentConsultations.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="9" className="py-8 text-center text-slate-500 font-medium">
+                                                    Belum ada jadwal konsultasi terbaru yang masuk.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            recentConsultations.map((c, idx) => (
+                                                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3 px-3 font-bold text-cyan-600 dark:text-cyan-400">{c.ticket_code}</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{c.client_name}</span>
+                                                        <span className="text-[10px] text-slate-500">{c.company_or_institution || '-'}</span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-slate-700 dark:text-slate-200">{c.service_topic}</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[10px]">
+                                                            {c.meeting_method === 'online_meet' ? 'Online Meet' : 'Studio'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">{c.preferred_date} ({c.preferred_time})</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[10px]">
+                                                            {c.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3">
+                                                        <a
+                                                            href={`https://wa.me/${c.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${c.client_name}, kami dari Langit mengonfirmasi tiket konsultasi ${c.ticket_code}`)}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center gap-1 w-fit font-semibold"
+                                                        >
+                                                            <Phone className="w-3 h-3" />
+                                                            <span>WA</span>
+                                                        </a>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedConsultationDetail(c)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingConsultation({ ...c })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Tiket Konsultasi"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteConsultation(c.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(c)}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -1027,6 +1234,7 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-2.5 px-3 w-12 text-center">No</th>
                                             <th className="py-2.5 px-3">Instansi / Perusahaan</th>
                                             <th className="py-2.5 px-3">PIC Penanggung Jawab</th>
                                             <th className="py-2.5 px-3">Skema Kemitraan</th>
@@ -1034,13 +1242,15 @@ export default function AdminDashboard({
                                             <th className="py-2.5 px-3">Status</th>
                                             <th className="py-2.5 px-3">Proposal</th>
                                             <th className="py-2.5 px-3">Follow-Up</th>
+                                            <th className="py-2.5 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {collaborations.slice(0, 5).map((c) => {
+                                        {collaborations.slice(0, 5).map((c, idx) => {
                                             const typeInfo = getCollabTypeInfo(c.collab_type);
                                             return (
-                                                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
+                                                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
                                                     <td className="py-3 px-3">
                                                         <span className="font-bold text-slate-900 dark:text-white block">{c.organization_name}</span>
                                                         <span className="text-[10px] text-slate-500 font-medium">{c.email}</span>
@@ -1090,12 +1300,46 @@ export default function AdminDashboard({
                                                             <span>WA</span>
                                                         </a>
                                                     </td>
+                                                    <td className="py-3 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedCollabDetail(c)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingCollaboration({ ...c })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Proposal Kerja Sama"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteCollaboration(c.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(c)}</span>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
                                         {collaborations.length === 0 && (
                                             <tr>
-                                                <td colSpan="7" className="py-6 text-center text-slate-500 font-medium">
+                                                <td colSpan="9" className="py-6 text-center text-slate-500 font-medium">
                                                     Belum ada berkas proposal kerja sama yang masuk.
                                                 </td>
                                             </tr>
@@ -1135,47 +1379,92 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-3 px-3 w-12 text-center">No</th>
                                             <th className="py-3 px-3">Nota Servis</th>
                                             <th className="py-3 px-3">Pelanggan</th>
                                             <th className="py-3 px-3">Perangkat</th>
                                             <th className="py-3 px-3">Keluhan</th>
                                             <th className="py-3 px-3">Tahap Perbaikan (Update Live)</th>
                                             <th className="py-3 px-3">Biaya</th>
+                                            <th className="py-3 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {serviceTickets.map((t) => (
-                                            <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-3.5 px-3 font-bold text-orange-600 dark:text-orange-400 tracking-wide">{t.receipt_number}</td>
-                                                <td className="py-3.5 px-3">
-                                                    <span className="font-bold text-slate-900 dark:text-white block">{t.customer_name}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{t.whatsapp}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <span className="text-slate-800 dark:text-slate-200 block font-semibold">{t.device_brand_model}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{t.device_type}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3 max-w-xs truncate text-slate-600 dark:text-slate-400 font-medium">{t.problem_reported}</td>
-                                                <td className="py-3.5 px-3">
-                                                    {/* Pipeline Status Selector */}
-                                                    <select
-                                                        value={t.status}
-                                                        onChange={(e) => handleUpdateTicketStatus(t.id, e.target.value)}
-                                                        className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-orange-500/40 text-orange-700 dark:text-orange-300 font-bold text-xs uppercase focus:outline-none"
-                                                    >
-                                                        <option value="received">Diterima & Diagnosa</option>
-                                                        <option value="waiting_part">Menunggu Sparepart</option>
-                                                        <option value="repairing">Dalam Perbaikan</option>
-                                                        <option value="qc_testing">Uji Fungsi (QC)</option>
-                                                        <option value="ready">Siap Diambil</option>
-                                                        <option value="completed">Selesai / Diambil</option>
-                                                    </select>
-                                                </td>
-                                                <td className="py-3.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                                                    {formatRupiah(t.final_cost || t.estimated_cost)}
+                                        {serviceTickets.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="8" className="py-8 text-center text-slate-500 font-medium">
+                                                    Belum ada nota tiket servis komputer.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            serviceTickets.map((t, idx) => (
+                                                <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3.5 px-3 font-bold text-orange-600 dark:text-orange-400 tracking-wide">{t.receipt_number}</td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{t.customer_name}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{t.whatsapp}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{t.device_brand_model}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{t.device_type}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 max-w-xs truncate text-slate-600 dark:text-slate-400 font-medium">{t.problem_reported}</td>
+                                                    <td className="py-3.5 px-3">
+                                                        {/* Pipeline Status Selector */}
+                                                        <select
+                                                            value={t.status}
+                                                            onChange={(e) => handleUpdateTicketStatus(t.id, e.target.value)}
+                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-orange-500/40 text-orange-700 dark:text-orange-300 font-bold text-xs uppercase focus:outline-none"
+                                                        >
+                                                            <option value="received">Diterima & Diagnosa</option>
+                                                            <option value="waiting_part">Menunggu Sparepart</option>
+                                                            <option value="repairing">Dalam Perbaikan</option>
+                                                            <option value="qc_testing">Uji Fungsi (QC)</option>
+                                                            <option value="ready">Siap Diambil</option>
+                                                            <option value="completed">Selesai / Diambil</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                                                        {formatRupiah(t.final_cost || t.estimated_cost)}
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedTicketDetail(t)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(t.updated_at || t.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingTicket({ ...t })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Nota Servis"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteTicket(t.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(t.created_at)} | Diperbarui: ${formatTimestamp(t.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(t)}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -1192,46 +1481,91 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-3 px-3 w-12 text-center">No</th>
                                             <th className="py-3 px-3">Kode Booking</th>
                                             <th className="py-3 px-3">Penyewa</th>
                                             <th className="py-3 px-3">Durasi</th>
                                             <th className="py-3 px-3">Item Sewa</th>
                                             <th className="py-3 px-3">Total Biaya</th>
                                             <th className="py-3 px-3">Status Booking</th>
+                                            <th className="py-3 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {rentalBookings.map((b) => (
-                                            <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">{b.booking_code}</td>
-                                                <td className="py-3 px-3">
-                                                    <span className="font-bold text-slate-900 dark:text-white block">{b.customer_name}</span>
-                                                    <span className="text-[10px] text-slate-500">{b.whatsapp} • {b.identity_card_type}</span>
-                                                </td>
-                                                <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
-                                                    {b.total_days} Hari ({b.start_date} s/d {b.end_date})
-                                                </td>
-                                                <td className="py-3 px-3 text-slate-600 dark:text-slate-400 max-w-xs truncate">
-                                                    {(b.rented_items_json || []).map(i => `${i.name} (${i.qty}x)`).join(', ')}
-                                                </td>
-                                                <td className="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                                                    {formatRupiah(b.total_price)}
-                                                </td>
-                                                <td className="py-3 px-3">
-                                                    <select
-                                                        value={b.status}
-                                                        onChange={(e) => handleUpdateRentalStatus(b.id, e.target.value)}
-                                                        className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-teal-500/40 text-teal-700 dark:text-teal-300 font-bold text-xs uppercase focus:outline-none"
-                                                    >
-                                                        <option value="pending">Pending Approval</option>
-                                                        <option value="approved">Approved</option>
-                                                        <option value="picked_up">Picked Up (Alat Dibawa)</option>
-                                                        <option value="returned">Returned (Dikembalikan)</option>
-                                                        <option value="cancelled">Cancelled</option>
-                                                    </select>
+                                        {rentalBookings.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="8" className="py-8 text-center text-slate-500 font-medium">
+                                                    Belum ada daftar pesanan sewa alat.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            rentalBookings.map((b, idx) => (
+                                                <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">{b.booking_code}</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{b.customer_name}</span>
+                                                        <span className="text-[10px] text-slate-500">{b.whatsapp} • {b.identity_card_type}</span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
+                                                        {b.total_days} Hari ({b.start_date} s/d {b.end_date})
+                                                    </td>
+                                                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                                                        {(b.rented_items_json || []).map(i => `${i.name} (${i.qty}x)`).join(', ')}
+                                                    </td>
+                                                    <td className="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                                                        {formatRupiah(b.total_price)}
+                                                    </td>
+                                                    <td className="py-3 px-3">
+                                                        <select
+                                                            value={b.status}
+                                                            onChange={(e) => handleUpdateRentalStatus(b.id, e.target.value)}
+                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-teal-500/40 text-teal-700 dark:text-teal-300 font-bold text-xs uppercase focus:outline-none"
+                                                        >
+                                                            <option value="pending">Pending Approval</option>
+                                                            <option value="approved">Approved</option>
+                                                            <option value="picked_up">Picked Up (Alat Dibawa)</option>
+                                                            <option value="returned">Returned (Dikembalikan)</option>
+                                                            <option value="cancelled">Cancelled</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedRentalDetail(b)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(b.updated_at || b.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingRental({ ...b })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Pesanan Sewa"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteRental(b.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(b.created_at)} | Diperbarui: ${formatTimestamp(b.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(b)}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -1637,80 +1971,125 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-3 px-3 w-12 text-center">No</th>
                                             <th className="py-3 px-3">Nama Pelamar</th>
                                             <th className="py-3 px-3">Instansi & Jurusan</th>
                                             <th className="py-3 px-3">Posisi</th>
                                             <th className="py-3 px-3">Berkas CV & Portofolio</th>
                                             <th className="py-3 px-3">Status Review</th>
                                             <th className="py-3 px-3">Kontak</th>
+                                            <th className="py-3 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {internshipApplications.map((app) => (
-                                            <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-3.5 px-3">
-                                                    <span className="font-bold text-slate-900 dark:text-white block">{app.full_name}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{app.email}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <span className="text-slate-800 dark:text-slate-200 block font-semibold">{app.institution_name}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{app.major}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3 text-purple-700 dark:text-purple-300 font-bold">
-                                                    {app.position?.title || 'Divisi Terkait'}
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <div className="flex items-center gap-2">
-                                                        {app.cv_pdf_path ? (
-                                                            <a
-                                                                href={app.cv_pdf_path}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:underline text-[10px] font-semibold"
-                                                            >
-                                                                Buka CV PDF
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
-                                                        )}
-                                                        {app.portfolio_url && (
-                                                            <a
-                                                                href={app.portfolio_url}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="text-cyan-600 dark:text-cyan-400 hover:underline text-[10px] font-semibold"
-                                                            >
-                                                                Portofolio ↗
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <select
-                                                        value={app.status}
-                                                        onChange={(e) => handleUpdateInternshipStatus(app.id, e.target.value)}
-                                                        className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 font-bold text-xs uppercase focus:outline-none"
-                                                    >
-                                                        <option value="submitted">Submitted</option>
-                                                        <option value="reviewed">Reviewed</option>
-                                                        <option value="interview">Interview</option>
-                                                        <option value="accepted">Accepted (Diterima)</option>
-                                                        <option value="rejected">Rejected</option>
-                                                    </select>
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <a
-                                                        href={`https://wa.me/${app.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${app.full_name}, kami dari Langit mengonfirmasi lamaran magang Anda.`)}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center gap-1 w-fit font-semibold"
-                                                    >
-                                                        <Phone className="w-3 h-3" />
-                                                        <span>WA</span>
-                                                    </a>
+                                        {internshipApplications.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="8" className="py-8 text-center text-slate-500 font-medium">
+                                                    Belum ada berkas pelamar program magang.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            internshipApplications.map((app, idx) => (
+                                                <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{app.full_name}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{app.email}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{app.institution_name}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{app.major}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-purple-700 dark:text-purple-300 font-bold">
+                                                        {app.position?.title || 'Divisi Terkait'}
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <div className="flex items-center gap-2">
+                                                            {app.cv_pdf_path ? (
+                                                                <a
+                                                                    href={app.cv_pdf_path}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:underline text-[10px] font-semibold"
+                                                                >
+                                                                    Buka CV PDF
+                                                                </a>
+                                                            ) : (
+                                                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
+                                                            )}
+                                                            {app.portfolio_url && (
+                                                                <a
+                                                                    href={app.portfolio_url}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="text-cyan-600 dark:text-cyan-400 hover:underline text-[10px] font-semibold"
+                                                                >
+                                                                    Portofolio ↗
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <select
+                                                            value={app.status}
+                                                            onChange={(e) => handleUpdateInternshipStatus(app.id, e.target.value)}
+                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 font-bold text-xs uppercase focus:outline-none"
+                                                        >
+                                                            <option value="submitted">Submitted</option>
+                                                            <option value="reviewed">Reviewed</option>
+                                                            <option value="interview">Interview</option>
+                                                            <option value="accepted">Accepted (Diterima)</option>
+                                                            <option value="rejected">Rejected</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <a
+                                                            href={`https://wa.me/${app.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${app.full_name}, kami dari Langit mengonfirmasi lamaran magang Anda.`)}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center gap-1 w-fit font-semibold"
+                                                        >
+                                                            <Phone className="w-3 h-3" />
+                                                            <span>WA</span>
+                                                        </a>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedInternshipDetail(app)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(app.updated_at || app.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingInternship({ ...app })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Data Pelamar Magang"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteInternship(app.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(app.created_at)} | Diperbarui: ${formatTimestamp(app.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(app)}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -1727,47 +2106,92 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-3 px-3 w-12 text-center">No</th>
                                             <th className="py-3 px-3">Tiket</th>
                                             <th className="py-3 px-3">Klien & Instansi</th>
                                             <th className="py-3 px-3">Topik & Brief</th>
                                             <th className="py-3 px-3">Jadwal & Metode</th>
                                             <th className="py-3 px-3">Budget</th>
                                             <th className="py-3 px-3">Status</th>
+                                            <th className="py-3 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
-                                        {recentConsultations.map((c) => (
-                                            <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-3.5 px-3 font-bold text-cyan-600 dark:text-cyan-400 tracking-wide">{c.ticket_code}</td>
-                                                <td className="py-3.5 px-3">
-                                                    <span className="font-bold text-slate-900 dark:text-white block">{c.client_name}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{c.company_or_institution} • {c.whatsapp}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3 max-w-xs">
-                                                    <span className="text-cyan-700 dark:text-cyan-300 font-semibold block">{c.service_topic}</span>
-                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium">{c.project_brief || '-'}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <span className="text-slate-800 dark:text-slate-200 block font-semibold">{c.preferred_date}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">{c.preferred_time} • {c.meeting_method}</span>
-                                                </td>
-                                                <td className="py-3.5 px-3 text-amber-600 dark:text-amber-300 font-semibold">
-                                                    {c.budget_estimation || '-'}
-                                                </td>
-                                                <td className="py-3.5 px-3">
-                                                    <select
-                                                        value={c.status}
-                                                        onChange={(e) => handleUpdateConsultationStatus(c.id, e.target.value)}
-                                                        className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs uppercase focus:outline-none"
-                                                    >
-                                                        <option value="scheduled">Scheduled</option>
-                                                        <option value="completed">Completed</option>
-                                                        <option value="rescheduled">Rescheduled</option>
-                                                        <option value="cancelled">Cancelled</option>
-                                                    </select>
+                                        {recentConsultations.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="8" className="py-8 text-center text-slate-500 font-medium">
+                                                    Belum ada tiket jadwal konsultasi klien.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            recentConsultations.map((c, idx) => (
+                                                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3.5 px-3 font-bold text-cyan-600 dark:text-cyan-400 tracking-wide">{c.ticket_code}</td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{c.client_name}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{c.company_or_institution} • {c.whatsapp}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 max-w-xs">
+                                                        <span className="text-cyan-700 dark:text-cyan-300 font-semibold block">{c.service_topic}</span>
+                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium">{c.project_brief || '-'}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{c.preferred_date}</span>
+                                                        <span className="text-[10px] text-slate-500 font-medium">{c.preferred_time} • {c.meeting_method}</span>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-amber-600 dark:text-amber-300 font-semibold">
+                                                        {c.budget_estimation || '-'}
+                                                    </td>
+                                                    <td className="py-3.5 px-3">
+                                                        <select
+                                                            value={c.status}
+                                                            onChange={(e) => handleUpdateConsultationStatus(c.id, e.target.value)}
+                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs uppercase focus:outline-none"
+                                                        >
+                                                            <option value="scheduled">Scheduled</option>
+                                                            <option value="completed">Completed</option>
+                                                            <option value="rescheduled">Rescheduled</option>
+                                                            <option value="cancelled">Cancelled</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={() => setSelectedConsultationDetail(c)}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                                <span>Detail</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingConsultation({ ...c })}
+                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                title="Edit Tiket Konsultasi"
+                                                            >
+                                                                <Edit3 className="w-3.5 h-3.5" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteConsultation(c.id)}
+                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
+                                                                title="Hapus Data"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                        >
+                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                            <span>{formatRelativeTime(c)}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -1816,27 +2240,29 @@ export default function AdminDashboard({
                                 <table className="w-full text-left text-xs font-sans">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
+                                            <th className="py-3 px-3 w-12 text-center">No</th>
                                             <th className="py-3 px-3">Instansi / Perusahaan</th>
                                             <th className="py-3 px-3">PIC Penanggung Jawab</th>
                                             <th className="py-3 px-3">Skema Kerja Sama</th>
                                             <th className="py-3 px-3">Target Tanggal</th>
                                             <th className="py-3 px-3">Berkas Proposal</th>
                                             <th className="py-3 px-3">Status Pipeline</th>
-                                            <th className="py-3 px-3 text-right">Aksi</th>
+                                            <th className="py-3 px-3 text-right">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
                                         {filteredCollaborations.length === 0 ? (
                                             <tr>
-                                                <td colSpan="7" className="py-8 text-center text-slate-500 font-medium">
+                                                <td colSpan="8" className="py-8 text-center text-slate-500 font-medium">
                                                     Belum ada berkas proposal kerja sama dengan filter ini.
                                                 </td>
                                             </tr>
                                         ) : (
-                                            filteredCollaborations.map((c) => {
+                                            filteredCollaborations.map((c, idx) => {
                                                 const typeInfo = getCollabTypeInfo(c.collab_type);
                                                 return (
                                                     <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                        <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
                                                         <td className="py-3.5 px-3">
                                                             <span className="font-bold text-slate-900 dark:text-white block text-sm">{c.organization_name}</span>
                                                             <span className="text-[10px] text-slate-500 block font-medium">
@@ -1903,10 +2329,18 @@ export default function AdminDashboard({
                                                                 <button
                                                                     onClick={() => setSelectedCollabDetail(c)}
                                                                     className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                    title="Lihat Detail Lengkap"
+                                                                    title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
                                                                 >
                                                                     <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                                                                     <span>Detail</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setEditingCollaboration({ ...c })}
+                                                                    className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
+                                                                    title="Edit Proposal Kerja Sama"
+                                                                >
+                                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                                    <span>Edit</span>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteCollaboration(c.id)}
@@ -1915,6 +2349,13 @@ export default function AdminDashboard({
                                                                 >
                                                                     <Trash2 className="w-3.5 h-3.5" />
                                                                 </button>
+                                                            </div>
+                                                            <div
+                                                                className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
+                                                                title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                            >
+                                                                <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
+                                                                <span>{formatRelativeTime(c)}</span>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -2531,8 +2972,11 @@ export default function AdminDashboard({
                                     {selectedCollabDetail.organization_name}
                                 </h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                    Pengajuan Kerja Sama #{selectedCollabDetail.id} • Diterima {selectedCollabDetail.created_at ? new Date(selectedCollabDetail.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                    Pengajuan Kerja Sama #{selectedCollabDetail.id} • Diterima: {formatTimestamp(selectedCollabDetail.created_at)}
                                 </p>
+                                <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                    Terakhir Diperbarui / Dilihat: {formatTimestamp(selectedCollabDetail.updated_at || selectedCollabDetail.created_at)}
+                                </span>
                             </div>
                         </div>
 
@@ -2647,6 +3091,529 @@ export default function AdminDashboard({
 
                             <button
                                 onClick={() => setSelectedCollabDetail(null)}
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                            >
+                                Tutup Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Computer Service Ticket Detail */}
+            {selectedTicketDetail && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            onClick={() => setSelectedTicketDetail(null)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-500 dark:text-orange-400 shrink-0">
+                                <Cpu className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Nota Servis {selectedTicketDetail.receipt_number}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Diterima: {formatTimestamp(selectedTicketDetail.created_at)}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                    Terakhir Diperbarui / Dilihat: {formatTimestamp(selectedTicketDetail.updated_at || selectedTicketDetail.created_at)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Meta Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 text-xs font-sans">
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nama Pelanggan</span>
+                                <span className="text-slate-900 dark:text-white font-bold text-sm block mt-0.5">{selectedTicketDetail.customer_name}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nomor WhatsApp</span>
+                                <a
+                                    href={`https://wa.me/${selectedTicketDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedTicketDetail.customer_name}, kami dari Langit mengonfirmasi perkembangan servis laptop/komputer Anda (${selectedTicketDetail.receipt_number}).`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline block mt-0.5 flex items-center gap-1 font-semibold"
+                                >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{selectedTicketDetail.whatsapp}</span>
+                                </a>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Tipe Perangkat</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">{selectedTicketDetail.device_type}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Merek & Model Perangkat</span>
+                                <span className="text-slate-900 dark:text-white block mt-0.5 font-bold">{selectedTicketDetail.device_brand_model}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Total Biaya Servis</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm block mt-0.5">
+                                    {formatRupiah(selectedTicketDetail.final_cost || selectedTicketDetail.estimated_cost)}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Status Pengerjaan</span>
+                                <div className="mt-1">
+                                    <select
+                                        value={selectedTicketDetail.status}
+                                        onChange={(e) => {
+                                            handleUpdateTicketStatus(selectedTicketDetail.id, e.target.value);
+                                            setSelectedTicketDetail({ ...selectedTicketDetail, status: e.target.value, updated_at: new Date().toISOString() });
+                                        }}
+                                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-orange-500/40 text-orange-700 dark:text-orange-300 font-bold text-xs uppercase focus:outline-none"
+                                    >
+                                        <option value="received">Diterima & Diagnosa</option>
+                                        <option value="waiting_part">Menunggu Sparepart</option>
+                                        <option value="repairing">Dalam Perbaikan</option>
+                                        <option value="qc_testing">Uji Fungsi (QC)</option>
+                                        <option value="ready">Siap Diambil</option>
+                                        <option value="completed">Selesai / Diambil</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Keluhan / Kerusakan */}
+                        <div className="space-y-2">
+                            <h4 className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
+                                Keluhan Masalah / Kerusakan:
+                            </h4>
+                            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                {selectedTicketDetail.problem_reported || 'Tidak ada catatan keluhan khusus.'}
+                            </div>
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <a
+                                href={`https://wa.me/${selectedTicketDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedTicketDetail.customer_name}, perihal nota servis komputer #${selectedTicketDetail.receipt_number} saat ini berstatus: ${selectedTicketDetail.status}.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+                            >
+                                <Phone className="w-4 h-4" />
+                                <span>Hubungi Pelanggan via WhatsApp</span>
+                            </a>
+
+                            <button
+                                onClick={() => setSelectedTicketDetail(null)}
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                            >
+                                Tutup Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Rental Booking Detail */}
+            {selectedRentalDetail && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-teal-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            onClick={() => setSelectedRentalDetail(null)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-500 dark:text-teal-400 shrink-0">
+                                <PackageCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Pesanan Sewa {selectedRentalDetail.booking_code}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Dipesan: {formatTimestamp(selectedRentalDetail.created_at)}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                    Terakhir Diperbarui / Dilihat: {formatTimestamp(selectedRentalDetail.updated_at || selectedRentalDetail.created_at)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Meta Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 text-xs font-sans">
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nama Penyewa</span>
+                                <span className="text-slate-900 dark:text-white font-bold text-sm block mt-0.5">{selectedRentalDetail.customer_name}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nomor WhatsApp</span>
+                                <a
+                                    href={`https://wa.me/${selectedRentalDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedRentalDetail.customer_name}, kami dari Langit mengonfirmasi booking sewa alat ${selectedRentalDetail.booking_code}.`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline block mt-0.5 flex items-center gap-1 font-semibold"
+                                >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{selectedRentalDetail.whatsapp}</span>
+                                </a>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Kartu Identitas Jaminan</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">
+                                    {selectedRentalDetail.identity_card_type} {selectedRentalDetail.identity_card_number ? `(${selectedRentalDetail.identity_card_number})` : ''}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Periode Sewa</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">
+                                    {selectedRentalDetail.total_days} Hari ({selectedRentalDetail.start_date} s/d {selectedRentalDetail.end_date})
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Total Biaya Sewa</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm block mt-0.5">
+                                    {formatRupiah(selectedRentalDetail.total_price)}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Status Booking</span>
+                                <div className="mt-1">
+                                    <select
+                                        value={selectedRentalDetail.status}
+                                        onChange={(e) => {
+                                            handleUpdateRentalStatus(selectedRentalDetail.id, e.target.value);
+                                            setSelectedRentalDetail({ ...selectedRentalDetail, status: e.target.value, updated_at: new Date().toISOString() });
+                                        }}
+                                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-teal-500/40 text-teal-700 dark:text-teal-300 font-bold text-xs uppercase focus:outline-none"
+                                    >
+                                        <option value="pending">Pending Approval</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="picked_up">Picked Up (Alat Dibawa)</option>
+                                        <option value="returned">Returned (Dikembalikan)</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Daftar Alat / Equipment yang Disewa */}
+                        <div className="space-y-2">
+                            <h4 className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
+                                Rincian Item Alat Sinema / Kamera yang Disewa:
+                            </h4>
+                            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-2">
+                                {(selectedRentalDetail.rented_items_json || []).length === 0 ? (
+                                    <p className="text-xs text-slate-500 italic">Tidak ada rincian item alat spesifik tertera.</p>
+                                ) : (
+                                    (selectedRentalDetail.rented_items_json || []).map((item, idx) => (
+                                        <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-slate-200/60 dark:border-white/5 last:border-none">
+                                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                                {item.name || item.title || 'Alat Sinema'}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold">
+                                                {item.qty || 1} Unit
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <a
+                                href={`https://wa.me/${selectedRentalDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedRentalDetail.customer_name}, perihal pesanan sewa alat #${selectedRentalDetail.booking_code} saat ini berstatus: ${selectedRentalDetail.status}.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+                            >
+                                <Phone className="w-4 h-4" />
+                                <span>Hubungi Penyewa via WhatsApp</span>
+                            </a>
+
+                            <button
+                                onClick={() => setSelectedRentalDetail(null)}
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                            >
+                                Tutup Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Internship Application Detail */}
+            {selectedInternshipDetail && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-purple-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            onClick={() => setSelectedInternshipDetail(null)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-500 dark:text-purple-400 shrink-0">
+                                <GraduationCap className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Lamaran Magang: {selectedInternshipDetail.full_name}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Diajukan: {formatTimestamp(selectedInternshipDetail.created_at)}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                    Terakhir Diperbarui / Dilihat: {formatTimestamp(selectedInternshipDetail.updated_at || selectedInternshipDetail.created_at)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Meta Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 text-xs font-sans">
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Instansi / Sekolah / Kampus</span>
+                                <span className="text-slate-900 dark:text-white font-bold text-sm block mt-0.5">{selectedInternshipDetail.institution_name}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Jurusan / Program Studi</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">{selectedInternshipDetail.major}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Posisi Magang yang Dilamar</span>
+                                <span className="text-purple-600 dark:text-purple-400 font-bold block mt-0.5">
+                                    {selectedInternshipDetail.position?.title || 'Divisi Terkait'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Alamat Email</span>
+                                <a href={`mailto:${selectedInternshipDetail.email}`} className="text-rose-600 dark:text-rose-400 hover:underline block mt-0.5 font-semibold">
+                                    {selectedInternshipDetail.email}
+                                </a>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nomor WhatsApp</span>
+                                <a
+                                    href={`https://wa.me/${selectedInternshipDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedInternshipDetail.full_name}, kami dari Langit mengonfirmasi lamaran magang Anda.`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline block mt-0.5 flex items-center gap-1 font-semibold"
+                                >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{selectedInternshipDetail.whatsapp}</span>
+                                </a>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Status Review</span>
+                                <div className="mt-1">
+                                    <select
+                                        value={selectedInternshipDetail.status}
+                                        onChange={(e) => {
+                                            handleUpdateInternshipStatus(selectedInternshipDetail.id, e.target.value);
+                                            setSelectedInternshipDetail({ ...selectedInternshipDetail, status: e.target.value, updated_at: new Date().toISOString() });
+                                        }}
+                                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 font-bold text-xs uppercase focus:outline-none"
+                                    >
+                                        <option value="submitted">Submitted</option>
+                                        <option value="reviewed">Reviewed</option>
+                                        <option value="interview">Interview</option>
+                                        <option value="accepted">Accepted (Diterima)</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Berkas CV & Portofolio */}
+                        <div className="space-y-3">
+                            <h4 className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
+                                Berkas CV & Tautan Portofolio:
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {selectedInternshipDetail.cv_pdf_path ? (
+                                    <a
+                                        href={selectedInternshipDetail.cv_pdf_path}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-3 p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition-colors"
+                                    >
+                                        <FileText className="w-5 h-5 shrink-0" />
+                                        <div>
+                                            <span className="font-bold text-xs block">Lihat Berkas CV (.PDF)</span>
+                                            <span className="text-[10px] text-slate-500 block">Klik untuk membuka dokumen CV</span>
+                                        </div>
+                                    </a>
+                                ) : (
+                                    <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-400 italic">
+                                        Tidak melampirkan file CV PDF
+                                    </div>
+                                )}
+
+                                {selectedInternshipDetail.portfolio_url ? (
+                                    <a
+                                        href={selectedInternshipDetail.portfolio_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-3 p-3.5 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 transition-colors"
+                                    >
+                                        <ExternalLink className="w-5 h-5 shrink-0" />
+                                        <div>
+                                            <span className="font-bold text-xs block">Tautan Portofolio Karya ↗</span>
+                                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{selectedInternshipDetail.portfolio_url}</span>
+                                        </div>
+                                    </a>
+                                ) : (
+                                    <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-400 italic">
+                                        Tidak melampirkan URL portofolio
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <a
+                                href={`https://wa.me/${selectedInternshipDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedInternshipDetail.full_name}, kami dari Langit mengonfirmasi lamaran magang Anda untuk posisi ${selectedInternshipDetail.position?.title || 'Divisi Terkait'}.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+                            >
+                                <Phone className="w-4 h-4" />
+                                <span>Hubungi Pelamar via WhatsApp</span>
+                            </a>
+
+                            <button
+                                onClick={() => setSelectedInternshipDetail(null)}
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                            >
+                                Tutup Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Consultation Ticket Detail */}
+            {selectedConsultationDetail && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                        <button
+                            onClick={() => setSelectedConsultationDetail(null)}
+                            className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-500 dark:text-cyan-400 shrink-0">
+                                <Ticket className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
+                                    Tiket Konsultasi {selectedConsultationDetail.ticket_code}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    Dibuat: {formatTimestamp(selectedConsultationDetail.created_at)}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                    Terakhir Diperbarui / Dilihat: {formatTimestamp(selectedConsultationDetail.updated_at || selectedConsultationDetail.created_at)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Meta Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 text-xs font-sans">
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nama Klien</span>
+                                <span className="text-slate-900 dark:text-white font-bold text-sm block mt-0.5">{selectedConsultationDetail.client_name}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Instansi / Perusahaan</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">{selectedConsultationDetail.company_or_institution || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nomor WhatsApp</span>
+                                <a
+                                    href={`https://wa.me/${selectedConsultationDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedConsultationDetail.client_name}, kami dari Langit mengonfirmasi tiket konsultasi ${selectedConsultationDetail.ticket_code}.`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline block mt-0.5 flex items-center gap-1 font-semibold"
+                                >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{selectedConsultationDetail.whatsapp}</span>
+                                </a>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Topik Layanan</span>
+                                <span className="text-cyan-700 dark:text-cyan-300 font-bold block mt-0.5">{selectedConsultationDetail.service_topic}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Jadwal & Waktu Konsultasi</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-semibold">
+                                    {selectedConsultationDetail.preferred_date} ({selectedConsultationDetail.preferred_time})
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Metode Pertemuan</span>
+                                <span className="text-slate-800 dark:text-slate-200 block mt-0.5 font-medium">
+                                    {selectedConsultationDetail.meeting_method === 'online_meet' ? 'Online Google Meet' : 'Tatap Muka di Studio Langit'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Estimasi Budget</span>
+                                <span className="text-amber-600 dark:text-amber-300 font-bold block mt-0.5">
+                                    {selectedConsultationDetail.budget_estimation || 'Fleksibel / Diskusi'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-slate-500 block text-[10px] uppercase font-semibold">Status Tiket</span>
+                                <div className="mt-1">
+                                    <select
+                                        value={selectedConsultationDetail.status}
+                                        onChange={(e) => {
+                                            handleUpdateConsultationStatus(selectedConsultationDetail.id, e.target.value);
+                                            setSelectedConsultationDetail({ ...selectedConsultationDetail, status: e.target.value, updated_at: new Date().toISOString() });
+                                        }}
+                                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs uppercase focus:outline-none"
+                                    >
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="rescheduled">Rescheduled</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Brief Proyek */}
+                        <div className="space-y-2">
+                            <h4 className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
+                                Catatan Brief Kebutuhan Proyek:
+                            </h4>
+                            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                {selectedConsultationDetail.project_brief || 'Tidak ada catatan brief khusus.'}
+                            </div>
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <a
+                                href={`https://wa.me/${selectedConsultationDetail.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${selectedConsultationDetail.client_name}, kami dari Langit ingin mendiskusikan jadwal konsultasi #${selectedConsultationDetail.ticket_code} pada tanggal ${selectedConsultationDetail.preferred_date}.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+                            >
+                                <Phone className="w-4 h-4" />
+                                <span>Hubungi Klien via WhatsApp</span>
+                            </a>
+
+                            <button
+                                onClick={() => setSelectedConsultationDetail(null)}
                                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
                             >
                                 Tutup Detail
@@ -3133,6 +4100,820 @@ export default function AdminDashboard({
                                 >
                                     <RefreshCw className={`w-4 h-4 ${isSubmittingShowreel ? 'animate-spin' : ''}`} />
                                     <span>{isSubmittingShowreel ? 'Mengupload Video...' : 'Simpan & Upload Video Showreel'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Modal: Edit Computer Service Ticket */}
+            {editingTicket && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                    <Edit3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
+                                        Edit Nota Servis Komputer
+                                    </h3>
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 font-bold font-mono">
+                                        #{editingTicket.receipt_number}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingTicket(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateTicketSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nama Pelanggan:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingTicket.customer_name || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, customer_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor WhatsApp:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingTicket.whatsapp || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, whatsapp: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Tipe Perangkat:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingTicket.device_type || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, device_type: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                        placeholder="Contoh: Laptop Windows / MacBook / PC Rig"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Brand & Model Seri:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingTicket.device_brand_model || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, device_brand_model: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                        placeholder="Contoh: Asus ROG Strix G15"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                    Keluhan & Kerusakan Dilaporkan:
+                                </label>
+                                <textarea
+                                    rows="3"
+                                    required
+                                    value={editingTicket.problem_reported || ''}
+                                    onChange={(e) => setEditingTicket({ ...editingTicket, problem_reported: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Status Servis:
+                                    </label>
+                                    <select
+                                        value={editingTicket.status || 'received'}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, status: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-amber-500"
+                                    >
+                                        <option value="received">Diterima & Diagnosa</option>
+                                        <option value="waiting_part">Menunggu Sparepart</option>
+                                        <option value="repairing">Dalam Perbaikan</option>
+                                        <option value="qc_testing">Uji Fungsi (QC)</option>
+                                        <option value="ready">Siap Diambil</option>
+                                        <option value="completed">Selesai / Diambil</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Estimasi Biaya (Rp):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editingTicket.estimated_cost || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, estimated_cost: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Biaya Final Selesai (Rp):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editingTicket.final_cost || ''}
+                                        onChange={(e) => setEditingTicket({ ...editingTicket, final_cost: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingTicket(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingEdit}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingEdit ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Edit Rental Equipment Booking */}
+            {editingRental && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-teal-500/10 text-teal-500 border border-teal-500/20">
+                                    <Edit3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
+                                        Edit Pesanan Sewa Alat
+                                    </h3>
+                                    <p className="text-xs text-teal-600 dark:text-teal-400 font-bold font-mono">
+                                        #{editingRental.booking_code}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingRental(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateRentalSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nama Penyewa:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingRental.customer_name || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, customer_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor WhatsApp:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingRental.whatsapp || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, whatsapp: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Jenis Kartu Identitas:
+                                    </label>
+                                    <select
+                                        value={editingRental.identity_card_type || 'KTP'}
+                                        onChange={(e) => setEditingRental({ ...editingRental, identity_card_type: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    >
+                                        <option value="KTP">KTP Asli</option>
+                                        <option value="SIM">SIM Asli</option>
+                                        <option value="Kartu Mahasiswa">Kartu Mahasiswa (KTM)</option>
+                                        <option value="Paspor">Paspor</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor Identitas (NIK / No. SIM):
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingRental.identity_card_number || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, identity_card_number: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Tanggal Mulai Sewa:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={editingRental.start_date || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, start_date: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Tanggal Selesai Sewa:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={editingRental.end_date || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, end_date: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Total Durasi (Hari):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        required
+                                        value={editingRental.total_days || 1}
+                                        onChange={(e) => setEditingRental({ ...editingRental, total_days: parseInt(e.target.value) || 1 })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Total Biaya Sewa (Rp):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        required
+                                        value={editingRental.total_price || ''}
+                                        onChange={(e) => setEditingRental({ ...editingRental, total_price: parseFloat(e.target.value) || 0 })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-teal-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Status Pemesanan Sewa:
+                                    </label>
+                                    <select
+                                        value={editingRental.status || 'pending'}
+                                        onChange={(e) => setEditingRental({ ...editingRental, status: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-teal-500"
+                                    >
+                                        <option value="pending">Pending Approval</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="picked_up">Picked Up (Alat Dibawa)</option>
+                                        <option value="returned">Returned (Dikembalikan)</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingRental(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingEdit}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingEdit ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Edit Internship Application */}
+            {editingInternship && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                                    <Edit3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
+                                        Edit Data Pelamar Magang
+                                    </h3>
+                                    <p className="text-xs text-purple-600 dark:text-purple-400 font-bold">
+                                        {editingInternship.full_name}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingInternship(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateInternshipSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nama Lengkap Pelamar:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingInternship.full_name || ''}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, full_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Alamat Email:
+                                    </label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={editingInternship.email || ''}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, email: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor WhatsApp:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingInternship.whatsapp || ''}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, whatsapp: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Asal Instansi / Universitas / SMK:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingInternship.institution_name || ''}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, institution_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Program Studi / Jurusan:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingInternship.major || ''}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, major: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Status Review Lamaran:
+                                    </label>
+                                    <select
+                                        value={editingInternship.status || 'submitted'}
+                                        onChange={(e) => setEditingInternship({ ...editingInternship, status: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-purple-500"
+                                    >
+                                        <option value="submitted">Submitted</option>
+                                        <option value="reviewed">Reviewed</option>
+                                        <option value="interview">Interview</option>
+                                        <option value="accepted">Accepted (Diterima)</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingInternship(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingEdit}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingEdit ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Edit Consultation Ticket */}
+            {editingConsultation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                                    <Edit3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
+                                        Edit Tiket Jadwal Konsultasi
+                                    </h3>
+                                    <p className="text-xs text-cyan-600 dark:text-cyan-400 font-bold font-mono">
+                                        #{editingConsultation.ticket_code}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingConsultation(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateConsultationSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nama Klien:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingConsultation.client_name || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, client_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Instansi / Perusahaan:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingConsultation.company_or_institution || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, company_or_institution: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor WhatsApp:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingConsultation.whatsapp || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, whatsapp: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Topik Layanan:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingConsultation.service_topic || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, service_topic: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Jadwal Tanggal:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingConsultation.preferred_date || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, preferred_date: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Pilihan Waktu:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingConsultation.preferred_time || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, preferred_time: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Metode Pertemuan:
+                                    </label>
+                                    <select
+                                        value={editingConsultation.meeting_method || 'online_meet'}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, meeting_method: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    >
+                                        <option value="online_meet">Online Google Meet</option>
+                                        <option value="studio">Tatap Muka di Studio</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Estimasi Budget:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingConsultation.budget_estimation || ''}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, budget_estimation: e.target.value })}
+                                        placeholder="Contoh: Rp 5.000.000 - Rp 10.000.000"
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Status Tiket Konsultasi:
+                                    </label>
+                                    <select
+                                        value={editingConsultation.status || 'scheduled'}
+                                        onChange={(e) => setEditingConsultation({ ...editingConsultation, status: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-cyan-500"
+                                    >
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="rescheduled">Rescheduled</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                    Catatan Brief Kebutuhan Proyek:
+                                </label>
+                                <textarea
+                                    rows="3"
+                                    value={editingConsultation.project_brief || ''}
+                                    onChange={(e) => setEditingConsultation({ ...editingConsultation, project_brief: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-cyan-500"
+                                />
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingConsultation(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingEdit}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingEdit ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Edit Collaboration Proposal */}
+            {editingCollaboration && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                    <Edit3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
+                                        Edit Berkas Proposal Kerja Sama
+                                    </h3>
+                                    <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">
+                                        {editingCollaboration.organization_name}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingCollaboration(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateCollaborationSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nama Instansi / Perusahaan:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingCollaboration.organization_name || ''}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, organization_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        PIC Penanggung Jawab:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingCollaboration.pic_name || ''}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, pic_name: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Email PIC:
+                                    </label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={editingCollaboration.email || ''}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, email: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Nomor WhatsApp PIC:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingCollaboration.whatsapp || ''}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, whatsapp: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Skema Kerja Sama:
+                                    </label>
+                                    <select
+                                        value={editingCollaboration.collab_type || 'media_partner'}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, collab_type: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    >
+                                        <option value="media_partner">Media Partner & Coverage</option>
+                                        <option value="sponsorship">Sponsorship Kegiatan</option>
+                                        <option value="campus_visit">Company Visit / Kuliah Tamu</option>
+                                        <option value="b2b_project">Proyek Kreatif Vendor B2B</option>
+                                        <option value="other">Kemitraan Lainnya</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Target Tanggal Acara:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={editingCollaboration.event_date ? editingCollaboration.event_date.split('T')[0] : ''}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, event_date: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                        Status Pipeline:
+                                    </label>
+                                    <select
+                                        value={editingCollaboration.status || 'new'}
+                                        onChange={(e) => setEditingCollaboration({ ...editingCollaboration, status: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-rose-500"
+                                    >
+                                        <option value="new">Baru Masuk</option>
+                                        <option value="in_discussion">Sedang Diskusi</option>
+                                        <option value="approved">Disetujui</option>
+                                        <option value="declined">Ditolak</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                    Deskripsi Proposal / Catatan Singkat:
+                                </label>
+                                <textarea
+                                    rows="3"
+                                    value={editingCollaboration.description || ''}
+                                    onChange={(e) => setEditingCollaboration({ ...editingCollaboration, description: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-rose-500"
+                                />
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingCollaboration(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingEdit}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white font-bold text-xs shadow-lg shadow-rose-500/25 transition-transform active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isSubmittingEdit ? 'animate-spin' : ''}`} />
+                                    <span>{isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
                                 </button>
                             </div>
                         </form>

@@ -8,8 +8,8 @@ import WebArchitectureCockpit from '@/Components/WebArchitectureCockpit';
 import WebSolutionCard3D from '@/Components/WebSolutionCard3D';
 import ScrollingWebDevPillars from '@/Components/ScrollingWebDevPillars';
 import { 
-    Terminal, Cpu, Zap, ShieldCheck, Layers, Database,
-    ArrowRight, CheckCircle2, Sparkles,
+    Terminal, Zap, ShieldCheck, Layers, Database,
+    ArrowRight, Sparkles,
     Building2, Briefcase, GraduationCap, ShoppingBag, Calendar, Newspaper, Rocket, Server
 } from 'lucide-react';
 

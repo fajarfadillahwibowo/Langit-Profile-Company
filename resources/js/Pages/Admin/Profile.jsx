@@ -4,8 +4,8 @@ import ThemeToggle from '@/Components/ThemeToggle';
 import { 
     User, Camera, Upload, Trash2, Mail, Phone, Lock, Eye, EyeOff,
     Shield, Check, X, ArrowLeft, RefreshCw, Sparkles, AlertCircle,
-    CheckCircle2, Video, VideoOff, SwitchCamera, ExternalLink, LogOut,
-    LayoutDashboard, FileText, Key, CheckCheck, Loader2
+    CheckCircle2, VideoOff, SwitchCamera, ExternalLink, LogOut,
+    LayoutDashboard, Key, CheckCheck, Loader2
 } from 'lucide-react';
 
 export default function Profile({ admin }) {
@@ -292,17 +292,17 @@ export default function Profile({ admin }) {
     }, [activeModal]);
 
     return (
-        <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
+        <div className="h-screen h-[100dvh] overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
             <Head title="Profil Administrator — Langit Back-Office" />
 
             {/* Hidden canvas for taking snapshot */}
             <canvas ref={canvasRef} className="hidden" />
 
-            {/* Sidebar Navigation matching Dashboard */}
-            <aside className="w-64 border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25">
-                <div className="space-y-6">
+            {/* Sidebar Navigation matching Dashboard - Fixed in viewport */}
+            <aside className="w-64 h-full border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
+                <div className="flex-1 min-h-0 flex flex-col space-y-5">
                     {/* Header Logo */}
-                    <Link href="/" className="block px-2 group">
+                    <Link href="/" className="block px-2 group shrink-0">
                         <div className="flex items-center gap-1.5">
                             <span 
                                 className="font-etna font-bold text-3xl tracking-tight text-white flex items-center gap-1.5 leading-none transition-all duration-300 group-hover:text-cyan-200"
@@ -318,7 +318,7 @@ export default function Profile({ admin }) {
                     </Link>
 
                     {/* Nav Items */}
-                    <nav className="space-y-1.5 text-xs font-medium">
+                    <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll">
                         <Link
                             href="/admin/dashboard"
                             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all text-white/90 hover:text-white hover:bg-white/10"
@@ -329,8 +329,8 @@ export default function Profile({ admin }) {
                     </nav>
                 </div>
 
-                {/* Footer Actions */}
-                <div className="pt-4 border-t border-white/20 space-y-2">
+                {/* Footer Actions - Pinned at bottom of sidebar viewport */}
+                <div className="pt-3 border-t border-white/20 space-y-1.5 shrink-0">
                     <Link
                         href="/"
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors"
@@ -351,8 +351,8 @@ export default function Profile({ admin }) {
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="flex-1 min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
+            {/* Main Content Area - Scrolls independently */}
+            <main className="flex-1 h-full min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#005792]/15 dark:border-white/10">
                     <div className="flex items-center gap-3">

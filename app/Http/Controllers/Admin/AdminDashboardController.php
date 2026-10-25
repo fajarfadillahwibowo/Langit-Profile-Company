@@ -561,6 +561,161 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Delete Computer Service Ticket
+     */
+    public function deleteTicket($id)
+    {
+        $ticket = ComputerServiceTicket::findOrFail($id);
+        $ticket->delete();
+
+        return back()->with('success', 'Nota servis komputer berhasil dihapus.');
+    }
+
+    /**
+     * Delete Rental Booking
+     */
+    public function deleteRentalBooking($id)
+    {
+        $booking = RentalBooking::findOrFail($id);
+        $booking->delete();
+
+        return back()->with('success', 'Pesanan sewa alat berhasil dihapus.');
+    }
+
+    /**
+     * Delete Internship Application
+     */
+    public function deleteInternshipApplication($id)
+    {
+        $app = InternshipApplication::findOrFail($id);
+        $app->delete();
+
+        return back()->with('success', 'Data pelamar magang berhasil dihapus.');
+    }
+
+    /**
+     * Delete Consultation Ticket
+     */
+    public function deleteConsultation($id)
+    {
+        $cns = Consultation::findOrFail($id);
+        $cns->delete();
+
+        return back()->with('success', 'Tiket konsultasi berhasil dihapus.');
+    }
+
+    /**
+     * Update Computer Service Ticket Details
+     */
+    public function updateTicket(Request $request, $id)
+    {
+        $ticket = ComputerServiceTicket::findOrFail($id);
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'device_type' => 'required|string|max:255',
+            'device_brand_model' => 'required|string|max:255',
+            'problem_reported' => 'required|string',
+            'status' => 'required|in:received,waiting_part,repairing,qc_testing,ready,completed',
+            'estimated_cost' => 'nullable|numeric',
+            'final_cost' => 'nullable|numeric',
+        ]);
+
+        $ticket->update($validated);
+
+        return back()->with('success', "Nota servis {$ticket->receipt_number} berhasil diperbarui.");
+    }
+
+    /**
+     * Update Rental Equipment Booking Details
+     */
+    public function updateRentalBooking(Request $request, $id)
+    {
+        $booking = RentalBooking::findOrFail($id);
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'identity_card_type' => 'required|string|max:50',
+            'identity_card_number' => 'nullable|string|max:100',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'total_days' => 'required|integer|min:1',
+            'total_price' => 'required|numeric|min:0',
+            'status' => 'required|in:pending,approved,picked_up,returned,cancelled',
+        ]);
+
+        $booking->update($validated);
+
+        return back()->with('success', "Pesanan sewa {$booking->booking_code} berhasil diperbarui.");
+    }
+
+    /**
+     * Update Internship Application Details
+     */
+    public function updateInternshipApplication(Request $request, $id)
+    {
+        $app = InternshipApplication::findOrFail($id);
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'institution_name' => 'required|string|max:255',
+            'major' => 'required|string|max:255',
+            'status' => 'required|in:submitted,reviewed,interview,accepted,rejected',
+        ]);
+
+        $app->update($validated);
+
+        return back()->with('success', "Data pelamar magang {$app->full_name} berhasil diperbarui.");
+    }
+
+    /**
+     * Update Consultation Ticket Details
+     */
+    public function updateConsultation(Request $request, $id)
+    {
+        $cns = Consultation::findOrFail($id);
+        $validated = $request->validate([
+            'client_name' => 'required|string|max:255',
+            'company_or_institution' => 'nullable|string|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'service_topic' => 'required|string|max:255',
+            'preferred_date' => 'required|string',
+            'preferred_time' => 'required|string',
+            'meeting_method' => 'required|in:online_meet,studio',
+            'budget_estimation' => 'nullable|string',
+            'status' => 'required|in:scheduled,completed,rescheduled,cancelled',
+            'project_brief' => 'nullable|string',
+        ]);
+
+        $cns->update($validated);
+
+        return back()->with('success', "Tiket konsultasi {$cns->ticket_code} berhasil diperbarui.");
+    }
+
+    /**
+     * Update Collaboration Proposal Details
+     */
+    public function updateCollaboration(Request $request, $id)
+    {
+        $collab = Collaboration::findOrFail($id);
+        $validated = $request->validate([
+            'organization_name' => 'required|string|max:255',
+            'pic_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'collab_type' => 'required|string|max:100',
+            'event_date' => 'nullable|date',
+            'status' => 'required|in:new,in_discussion,approved,declined',
+            'description' => 'nullable|string',
+        ]);
+
+        $collab->update($validated);
+
+        return back()->with('success', "Proposal kerja sama {$collab->organization_name} berhasil diperbarui.");
+    }
+
+    /**
      * Ensure each real service has genuine showcase galleries matching the live website pages.
      * Note: Kolaborasi does NOT have photos on its page and is strictly excluded.
      */

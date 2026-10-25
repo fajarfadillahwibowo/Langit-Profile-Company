@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import {
-    Camera, ArrowRight, Play, Code, GraduationCap,
-} from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import Hero3DCinemaStage from '@/Components/Hero3DCinemaStage';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -22,21 +20,25 @@ export default function HeroLangit() {
 
             tl.from('.hlg-badge', { opacity: 0, y: -18, duration: 0.7 })
               .from('.hlg-line', {
-                  opacity: 0, y: 90, stagger: 0.11,
-                  duration: 0.85, ease: 'power4.out',
+                  opacity: 0,
+                  y: 90,
+                  stagger: 0.11,
+                  duration: 0.85,
+                  ease: 'power4.out',
               }, '-=0.45')
               .from('.hlg-desc', { opacity: 0, y: 22, duration: 0.65 }, '-=0.5')
               .from('.hlg-cta', {
-                  opacity: 0, y: 16, stagger: 0.1, duration: 0.55,
+                  opacity: 0,
+                  y: 16,
+                  stagger: 0.1,
+                  duration: 0.55,
               }, '-=0.4')
               .from('.hlg-right', {
-                  opacity: 0, x: 55, duration: 0.95, ease: 'power3.out',
-              }, 0.35)
-              .from('.hlg-float', {
-                  opacity: 0, scale: 0.75, stagger: 0.09,
-                  duration: 0.55, ease: 'back.out(1.7)',
-              }, 0.85);
-
+                  opacity: 0,
+                  x: 55,
+                  duration: 0.95,
+                  ease: 'power3.out',
+              }, 0.35);
 
             // ── ScrollTrigger parallax ──────────────────────────────────────
             gsap.to('.hlg-a1', {
@@ -180,9 +182,7 @@ export default function HeroLangit() {
                         </div>
 
                         {/* Description */}
-                        <p
-                            className="hlg-desc text-base sm:text-lg max-w-xl leading-relaxed text-slate-300"
-                        >
+                        <p className="hlg-desc text-base sm:text-lg max-w-xl leading-relaxed text-slate-300">
                             Studio kreatif dan solusi digital yang berfokus pada layanan{' '}
                             <strong className="text-white font-semibold">fotografi & videografi profesional</strong>,{' '}
                             <strong className="text-white font-semibold">pembuatan website modern</strong>, serta{' '}
@@ -217,7 +217,6 @@ export default function HeroLangit() {
                             </Link>
                         </div>
 
-
                     </div>
 
                     {/* RIGHT: VISUAL PANEL (3D Cinema Camera & Web System Stage) */}
@@ -230,5 +229,3 @@ export default function HeroLangit() {
         </section>
     );
 }
-
-

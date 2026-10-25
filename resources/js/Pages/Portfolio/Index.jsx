@@ -4,7 +4,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
 import KineticPortfolioMarquee from '@/Components/KineticPortfolioMarquee';
 import { 
-    Layers, Camera, Sparkles, ArrowRight, Eye, Phone, SlidersHorizontal,
+    Camera, ArrowRight, Eye, Phone, SlidersHorizontal,
     MoveHorizontal, Grid
 } from 'lucide-react';
 

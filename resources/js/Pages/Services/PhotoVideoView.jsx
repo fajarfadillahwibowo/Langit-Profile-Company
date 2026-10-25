@@ -4,8 +4,8 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
 import BeforeAfterSlider from '@/Components/BeforeAfterSlider';
 import { 
-    Camera, Video, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc, Aperture, Eye,
-    ArrowRight, CheckCircle2, Sparkles, Filter, ShieldCheck, Film
+    Camera, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc,
+    ArrowRight, CheckCircle2, Film
 } from 'lucide-react';
 
 export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {

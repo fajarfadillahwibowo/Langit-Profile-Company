@@ -4,8 +4,8 @@ import axios from 'axios';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { 
     Code2, Camera, Cpu, GraduationCap, Handshake, Calendar,
-    Clock, Video, MapPin, CheckCircle2, ArrowRight, ArrowLeft,
-    Sparkles, ShieldCheck, Check, Loader2, Ticket, MessageSquare, PackageCheck
+    Clock, Video, MapPin, ArrowRight, ArrowLeft,
+    Sparkles, Check, Loader2, Ticket, MessageSquare, PackageCheck
 } from 'lucide-react';
 
 export default function ConsultationWizard({ availableTopics = [], availableTimeslots = [] }) {

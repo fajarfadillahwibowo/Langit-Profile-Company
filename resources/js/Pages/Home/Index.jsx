@@ -2,16 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
-import InteractiveBentoCard from '@/Components/InteractiveBentoCard';
 import ScrollingServiceCards from '@/Components/ScrollingServiceCards';
 import HeroLangit from '@/Components/HeroLangit';
 import CircularCarousel from '@/Components/CircularCarousel';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import {
-    Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
-    ChevronRight, Activity, ArrowRight,
-} from 'lucide-react';
+import { Camera, Sparkles, Activity, ArrowRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -61,16 +57,6 @@ export default function HomeIndex({
         return featuredGalleries[activeCarouselIndex] || featuredGalleries[0];
     }, [carouselItems, activeCarouselIndex, featuredGalleries]);
 
-    const serviceAccentMap = {
-        'photography-videography': { color: '#D97706', icon: Camera, badge: 'Cinema & Studio' },
-        'web-development': { color: '#0284C7', icon: Code2, badge: 'Cyber Architecture' },
-        'langit-education': { color: '#059669', icon: GraduationCap, badge: 'Academy' },
-        'computer-service': { color: '#EA580C', icon: Cpu, badge: 'Hardware Lab' },
-        'internship': { color: '#7C3AED', icon: Sparkles, badge: 'Career Hub' },
-        'sewa-alat': { color: '#0D9488', icon: PackageCheck, badge: 'Rental Gear' },
-        'kolaborasi': { color: '#DB2777', icon: Handshake, badge: 'B2B & Campus' },
-    };
-
     useEffect(() => {
         const ctx = gsap.context(() => {
             gsap.utils.toArray('.reveal-header').forEach((el) => {
@@ -102,7 +88,6 @@ export default function HomeIndex({
 
                 {/* 7 SERVICES (Pinterest Reference Scrolling Cards Animation by Abron Studio) */}
                 <ScrollingServiceCards services={services} />
-
 
                 {/* GALLERY / MAHAKARYA VISUAL & SINEMATOGRAFI (CircularCarousel 3D Ring) */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-20 lg:py-24 relative overflow-hidden">

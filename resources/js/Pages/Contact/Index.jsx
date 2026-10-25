@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { 
-    Phone, Mail, MapPin, Clock, MessageSquare, ChevronDown,
-    ShieldCheck, Sparkles, HelpCircle, CheckCircle2, ArrowRight
+    Phone, Mail, MapPin, MessageSquare, ChevronDown,
+    Sparkles, ArrowRight
 } from 'lucide-react';
 
 export default function ContactIndex({ contacts = {}, faqs = [] }) {

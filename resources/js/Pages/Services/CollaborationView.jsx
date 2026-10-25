@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { 
     Handshake, Building2, GraduationCap, Award, Upload, FileText,
-    ArrowRight, CheckCircle2, Check, Loader2, Sparkles, HeartHandshake,
-    ShieldCheck, Zap, Clock, Users, Calendar, Phone, Mail, FileCheck,
-    X, ExternalLink, ChevronRight, MessageSquare, BadgeCheck, AlertCircle
+    ArrowRight, Check, Loader2, Sparkles,
+    ShieldCheck, Zap, Clock, Users, Phone, Mail, FileCheck,
+    X, ChevronRight, BadgeCheck, AlertCircle
 } from 'lucide-react';
 
 export default function CollaborationView({ service }) {
