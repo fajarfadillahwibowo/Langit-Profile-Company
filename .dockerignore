@@ -1,0 +1,43 @@
+# Git & Version Control
+.git/
+.github/
+.gitignore
+
+# Dependencies
+node_modules/
+vendor/
+
+# Local Environment & Secrets
+.env
+.env.backup
+.env.production
+auth.json
+
+# Build & Cache Directories
+.phpunit.cache/
+.phpunit.result.cache
+.editorconfig
+.vscode/
+.idea/
+.cursor/
+.agents/
+.claude/
+.zed/
+
+# Temporary & Scratch Files
+scratch/
+pin_page*.html
+pinterest_pin*.html
+scratch_parse_pin.*
+extract_media.ps1
+update_comp.ps1
+
+# Storage & Logs (will be mounted as volume)
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*.php
+
+# Tests
+tests/
+phpunit.xml
