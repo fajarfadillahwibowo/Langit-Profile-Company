@@ -122,7 +122,6 @@ export default function HomeIndex({
                             {[
                                 { id: 'cylinder', label: 'Cylinder' },
                                 { id: 'orbit', label: 'Orbit' },
-                                { id: 'wheel', label: 'Wheel' },
                                 { id: 'panorama', label: 'Panorama' },
                             ].map(p => (
                                 <button

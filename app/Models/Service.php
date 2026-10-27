@@ -13,6 +13,7 @@ class Service extends Model
 
     protected $casts = [
         'hero_config_json' => 'array',
+        'tags' => 'array',
         'is_active' => 'boolean',
     ];
 

@@ -327,7 +327,7 @@ class AdminDashboardController extends Controller
             ?: Gallery::where('media_type', 'before_after')->first();
 
         if (! $gallery) {
-            $gallery = new Gallery();
+            $gallery = new Gallery;
             $gallery->service_id = $service?->id;
             $gallery->title = 'Cinema Color Grading Master Showcase';
             $gallery->slug = 'cinema-color-grading-master-showcase';
@@ -405,7 +405,7 @@ class AdminDashboardController extends Controller
             })->first();
 
         if (! $gallery) {
-            $gallery = new Gallery();
+            $gallery = new Gallery;
             $gallery->service_id = $service?->id;
             $gallery->title = 'Cinema & Darkroom Showcase Showreel';
             $gallery->slug = 'cinema-showreel-showcase';
@@ -1017,5 +1017,61 @@ class AdminDashboardController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * Update Service (Card Photo, Description, Colors, Badges, etc.)
+     */
+    public function updateService(Request $request, $id)
+    {
+        $service = Service::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'tagline' => 'nullable|string|max:255',
+            'description' => 'required|string',
+            'image_url' => 'nullable|string',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif|max:10240',
+            'accent_color' => 'nullable|string|max:50',
+            'vip_label' => 'nullable|string|max:100',
+            'ribbon_text' => 'nullable|string|max:50',
+            'serial_number' => 'nullable|string|max:50',
+            'tags' => 'nullable',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $imageUrl = ! empty($validated['image_url']) ? $validated['image_url'] : $service->image_url;
+
+        if ($request->hasFile('file_photo')) {
+            $file = $request->file('file_photo');
+            $dest = public_path('uploads/services');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'service_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $imageUrl = '/uploads/services/'.$filename;
+        }
+
+        // Parse tags if sent as string or array
+        $tags = $validated['tags'] ?? $service->tags;
+        if (is_string($tags)) {
+            $tags = array_values(array_filter(array_map('trim', explode(',', $tags))));
+        }
+
+        $service->update([
+            'name' => $validated['name'],
+            'tagline' => $validated['tagline'] ?? $service->tagline,
+            'description' => $validated['description'],
+            'image_url' => $imageUrl,
+            'accent_color' => $validated['accent_color'] ?? $service->accent_color,
+            'vip_label' => $validated['vip_label'] ?? $service->vip_label,
+            'ribbon_text' => $validated['ribbon_text'] ?? $service->ribbon_text,
+            'serial_number' => $validated['serial_number'] ?? $service->serial_number,
+            'tags' => $tags,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $service->is_active,
+        ]);
+
+        return back()->with('success', 'Divisi Layanan "'.$service->name.'" berhasil diperbarui.');
     }
 }

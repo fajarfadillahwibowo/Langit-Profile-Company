@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
+import AdminServiceCardsManager from '@/Components/AdminServiceCardsManager';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
@@ -961,6 +962,27 @@ export default function AdminDashboard({
                                 {recentConsultations.length}
                             </span>
                         </button>
+
+                        <button
+                            onClick={() => setActiveTab('services')}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                                activeTab === 'services'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
+                                <span>7 Divisi Layanan (VIP)</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                activeTab === 'services'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {services.length}
+                            </span>
+                        </button>
                     </nav>
                 </div>
 
@@ -999,6 +1021,7 @@ export default function AdminDashboard({
                             {activeTab === 'internships' && 'Review Pelamar Magang & CV'}
                             {activeTab === 'collaborations' && 'Manajemen Pengajuan Kerja Sama & Kemitraan (B2B)'}
                             {activeTab === 'consultations' && 'Manajemen Tiket Jadwal Konsultasi'}
+                            {activeTab === 'services' && 'Manajemen 7 Divisi Layanan Terintegrasi (VIP Cards)'}
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                             Status Server: Online 200 OK • Laravel 13 • MySQL phpMyAdmin Connected
@@ -2197,6 +2220,11 @@ export default function AdminDashboard({
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* TAB: 7 INTEGRATED DIVISIONS VIP CARDS MANAGER */}
+                {activeTab === 'services' && (
+                    <AdminServiceCardsManager services={services} />
                 )}
 
                 {/* TAB 7: COLLABORATION PROPOSALS (B2B & KEMITRAAN) */}

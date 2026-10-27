@@ -1,18 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
 import BeforeAfterSlider from '@/Components/BeforeAfterSlider';
 import { 
     Camera, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc,
-    ArrowRight, CheckCircle2, Film
+    ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images
 } from 'lucide-react';
 
 export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {
+    const [activeTab, setActiveTab] = useState('services'); // 'services' | 'gallery'
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
-    const [showreelPlaying, setShowreelPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
+    const [showreelPlaying, setShowreelPlaying] = useState(true);
+    const [isMuted, setIsMuted] = useState(true);
     const videoRef = useRef(null);
 
     const activeVideoUrl = showreel?.video_url 
@@ -22,6 +24,35 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
     const activePosterUrl = showreel?.file_webp_path 
         || service?.hero_config_json?.showreel_poster 
         || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80";
+
+    // Guaranteed video autoplay as soon as page is opened/visited
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Browser autoplay policy requires video to be muted initially
+        video.muted = true;
+        setIsMuted(true);
+
+        const tryPlay = () => {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        setShowreelPlaying(true);
+                    })
+                    .catch(() => {
+                        // Retry muted if browser policy blocked
+                        video.muted = true;
+                        video.play()
+                            .then(() => setShowreelPlaying(true))
+                            .catch(() => setShowreelPlaying(false));
+                    });
+            }
+        };
+
+        tryPlay();
+    }, [activeVideoUrl]);
 
     const togglePlayShowreel = () => {
         if (!videoRef.current) return;
@@ -131,30 +162,25 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 pb-16">
                     <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 aspect-[16/9] md:aspect-[21/9] flex items-center justify-center group">
                         
-                        {/* Real HTML5 Video Player */}
+                        {/* Real HTML5 Video Player with Guaranteed Autoplay */}
                         <video 
                             ref={videoRef}
                             src={activeVideoUrl}
                             poster={activePosterUrl}
+                            autoPlay
                             muted={isMuted}
                             playsInline
                             loop
                             onPlay={() => setShowreelPlaying(true)}
                             onPause={() => setShowreelPlaying(false)}
-                            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
-                                showreelPlaying ? 'opacity-100 z-10' : 'opacity-60 z-0 group-hover:scale-105'
-                            }`}
+                            className="absolute inset-0 w-full h-full object-cover transition-all duration-700 opacity-80 z-0 group-hover:scale-102"
                         />
 
-                        {/* Dark Gradient Overlay (fades out when video is playing for full immersion) */}
-                        <div className={`absolute inset-0 transition-opacity duration-500 ${
-                            showreelPlaying ? 'bg-gradient-to-t from-slate-950/80 via-transparent to-black/40 z-10 pointer-events-none' : 'bg-gradient-to-t from-slate-950 via-black/40 to-black/30 z-1 pointer-events-none'
-                        }`}></div>
+                        {/* Dark Gradient Overlay to ensure typography readability while video plays seamlessly */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-black/40 z-10 pointer-events-none" />
 
-                        {/* Centered Play Button & Typography (shown when paused or hovering) */}
-                        <div className={`relative z-20 text-center max-w-3xl px-6 space-y-4 transition-all duration-500 ${
-                            showreelPlaying ? 'opacity-0 hover:opacity-100 group-hover:opacity-100 pointer-events-auto' : 'opacity-100 pointer-events-auto'
-                        }`}>
+                        {/* Centered Typography & Controls (Always clear & readable over the moving video) */}
+                        <div className="relative z-20 text-center max-w-3xl px-6 space-y-4 pointer-events-auto">
                             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono uppercase tracking-widest font-bold backdrop-blur-md">
                                 <Film className="w-3.5 h-3.5" />
                                 <span>Cinema & Darkroom Showcase</span>
@@ -170,54 +196,349 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
 
                             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                                 <button
+                                    type="button"
                                     onClick={togglePlayShowreel}
-                                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                                 >
                                     {showreelPlaying ? (
                                         <>
                                             <Pause className="w-4 h-4 fill-slate-950" />
-                                            <span>Pause Showreel</span>
+                                            <span>Jeda Video (Pause)</span>
                                         </>
                                     ) : (
                                         <>
                                             <Play className="w-4 h-4 fill-slate-950" />
-                                            <span>Play Full Reel with Audio</span>
+                                            <span>Putar Video (Play)</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={toggleMute}
+                                    className="px-4 py-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white border border-white/20 text-sm font-semibold flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
+                                    title={isMuted ? 'Nyalakan Audio' : 'Bisukan Audio'}
+                                >
+                                    {isMuted ? (
+                                        <>
+                                            <VolumeX className="w-4 h-4 text-amber-400" />
+                                            <span>Nyalakan Audio</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Volume2 className="w-4 h-4 text-emerald-400" />
+                                            <span>Bisukan Audio</span>
                                         </>
                                     )}
                                 </button>
                                 
                                 <Link
                                     href="/konsultasi"
-                                    className="px-5 py-3 rounded-xl bg-white/15 hover:bg-white/20 text-white border border-white/20 text-sm font-bold transition-colors backdrop-blur-md"
+                                    className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 text-sm font-bold transition-colors backdrop-blur-md"
                                 >
                                     Booking Jadwal Shoot
                                 </Link>
                             </div>
                         </div>
 
-                        {/* Top-Right Audio Mute / Unmute Floating Control */}
-                        {showreelPlaying && (
-                            <button
-                                onClick={toggleMute}
-                                title={isMuted ? 'Nyalakan Audio' : 'Bisukan Audio'}
-                                className="absolute top-5 right-5 z-30 p-2.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 cursor-pointer shadow-lg"
-                            >
-                                {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-amber-400" />}
-                            </button>
-                        )}
+                        {/* Top-Right Audio Mute / Unmute Floating Pill */}
+                        <button
+                            type="button"
+                            onClick={toggleMute}
+                            title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
+                            className="absolute top-5 right-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-105 cursor-pointer shadow-lg text-xs font-mono"
+                        >
+                            {isMuted ? (
+                                <>
+                                    <VolumeX className="w-3.5 h-3.5 text-amber-400" />
+                                    <span className="hidden sm:inline text-amber-200">Audio: Mute (Klik Suara)</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="hidden sm:inline text-emerald-200">Audio: Nyala</span>
+                                </>
+                            )}
+                        </button>
 
-                        {/* Bottom Floating Hi-Fi Audio & Video Status Badge */}
-                        {showreelPlaying && (
-                            <div className="absolute bottom-4 left-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-400 text-xs font-mono animate-pulse backdrop-blur-md">
-                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                                <span>Playing Video Reel • Hi-Fi Audio Stream</span>
-                            </div>
-                        )}
+                        {/* Bottom-Left Floating Video Autoplay Status Badge */}
+                        <div className="absolute bottom-4 left-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-300 text-xs font-mono backdrop-blur-md">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>{showreelPlaying ? '▶ Auto-Playing Reel' : '⏸ Video Dijeda'} • 4K Cinema Footage</span>
+                        </div>
                     </div>
                 </section>
 
-                {/* 2. Interactive Before/After Color Grading Slider (Dynamic from Backend) */}
-                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12">
+                {/* 2. Unified Showcase: "6 Layanan Utama Visual Studio" & "Galeri Foto Mahakarya Langit" */}
+                <section id="gallery-section" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                    {/* Header & Dynamic Title */}
+                    <div className="text-center max-w-3xl mx-auto mb-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold uppercase tracking-wider mb-3">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Katalog Layanan & Showcase Mahakarya</span>
+                        </div>
+                        <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">
+                            {activeTab === 'services' ? (
+                                <>
+                                    6 Layanan Utama <span className="font-editorial italic font-normal text-amber-600 dark:text-amber-400">Visual Studio</span>
+                                </>
+                            ) : (
+                                <>
+                                    Galeri Foto <span className="font-editorial italic font-normal text-amber-600 dark:text-amber-400">Mahakarya Langit</span>
+                                </>
+                            )}
+                        </h2>
+                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-2 max-w-xl mx-auto">
+                            {activeTab === 'services'
+                                ? 'Pilih jenis dokumentasi yang Anda butuhkan, dikerjakan oleh tim fotografer, videografer, dan pilot drone berpengalaman.'
+                                : 'Koleksi kurasi karya visual resolusi tinggi dengan inspektur metadata kamera (Lensa, Shutter, Aperture, ISO).'
+                            }
+                        </p>
+
+                        {/* Creative & Animative Pill Menu Switcher (Pemisah 2 Menu) */}
+                        <div className="mt-8 flex flex-col items-center">
+                            <div className="relative p-1.5 rounded-full bg-slate-100/95 dark:bg-white/[0.06] backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-amber-500/5 inline-flex items-center gap-1.5 sm:gap-2">
+                                {/* Button 1: 6 Layanan Utama Visual Studio */}
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('services')}
+                                    className={`relative z-10 px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                                        activeTab === 'services'
+                                            ? 'text-slate-950 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                >
+                                    {activeTab === 'services' && (
+                                        <motion.div
+                                            layoutId="activeViewTabPill"
+                                            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 shadow-md shadow-amber-500/30"
+                                            transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10 flex items-center gap-2">
+                                        <Film className={`w-4 h-4 ${activeTab === 'services' ? 'text-slate-950' : 'text-amber-500'}`} />
+                                        <span>6 Layanan Utama Visual Studio</span>
+                                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                                            activeTab === 'services' 
+                                                ? 'bg-black/15 text-slate-950 font-bold' 
+                                                : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                                        }`}>
+                                            6 Divisi
+                                        </span>
+                                    </span>
+                                </button>
+
+                                {/* Button 2: Galeri Foto Mahakarya Langit */}
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('gallery')}
+                                    className={`relative z-10 px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                                        activeTab === 'gallery'
+                                            ? 'text-slate-950 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                >
+                                    {activeTab === 'gallery' && (
+                                        <motion.div
+                                            layoutId="activeViewTabPill"
+                                            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 shadow-md shadow-amber-500/30"
+                                            transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10 flex items-center gap-2">
+                                        <Camera className={`w-4 h-4 ${activeTab === 'gallery' ? 'text-slate-950' : 'text-amber-500'}`} />
+                                        <span>Galeri Foto Mahakarya Langit</span>
+                                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                                            activeTab === 'gallery' 
+                                                ? 'bg-black/15 text-slate-950 font-bold' 
+                                                : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                                        }`}>
+                                            Showcase
+                                        </span>
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Animated bottom track line indicator (inspired by user screenshot's line) */}
+                            <div className="w-56 sm:w-72 h-1 mt-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden relative">
+                                <motion.div
+                                    className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full shadow-sm shadow-amber-500/50"
+                                    animate={{ x: activeTab === 'services' ? '0%' : '100%' }}
+                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Animated View Transition Container */}
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'services' ? (
+                            <motion.div
+                                key="services-view"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {servicePillars.map((pillar) => (
+                                        <div 
+                                            key={pillar.slug}
+                                            onClick={() => {
+                                                setSelectedCategory(pillar.slug);
+                                                setActiveTab('gallery');
+                                            }}
+                                            className="group p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-amber-400/60 hover:shadow-xl hover:shadow-amber-500/10"
+                                        >
+                                            <div>
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                                                        {pillar.num}
+                                                    </span>
+                                                    <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase tracking-widest font-bold group-hover:underline flex items-center gap-1">
+                                                        <span>Buka Galeri</span>
+                                                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                    </span>
+                                                </div>
+
+                                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                                                    {pillar.title}
+                                                </h3>
+
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2.5">
+                                                    {pillar.desc}
+                                                </p>
+
+                                                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 space-y-2">
+                                                    {pillar.features.map((feat, fIdx) => (
+                                                        <div key={fIdx} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                                            <span>{feat}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 pt-4 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedCategory(pillar.slug);
+                                                        setActiveTab('gallery');
+                                                    }}
+                                                    className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <span>Lihat Contoh Hasil</span>
+                                                    <ArrowRight className="w-3.5 h-3.5" />
+                                                </button>
+
+                                                <Link
+                                                    href="/konsultasi"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105"
+                                                >
+                                                    Booking
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="gallery-view"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                {/* Category Filter Pills Bar (styled as in user uploaded screenshot) */}
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-2 text-xs font-mono text-slate-600 dark:text-slate-400">
+                                        <Camera className="w-4 h-4 text-amber-500" />
+                                        <span>Menampilkan <strong>{filteredGalleries.length}</strong> karya • Klik foto untuk inspeksi EXIF</span>
+                                    </div>
+
+                                    {/* Category Filter Pills */}
+                                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-none">
+                                        {categories.map((c) => (
+                                            <button
+                                                key={c.key}
+                                                type="button"
+                                                onClick={() => setSelectedCategory(c.key)}
+                                                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                                                    selectedCategory === c.key
+                                                        ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-extrabold scale-105'
+                                                        : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 hover:border-amber-400/50 shadow-sm'
+                                                }`}
+                                            >
+                                                {c.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Photo Masonry Grid */}
+                                {filteredGalleries.length === 0 ? (
+                                    <div className="py-16 text-center rounded-3xl border border-dashed border-slate-300 dark:border-white/10 p-8">
+                                        <Camera className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+                                        <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">Belum ada foto untuk kategori ini</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Silakan pilih kategori "Semua Karya" untuk melihat portofolio lainnya.</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedCategory('all')}
+                                            className="mt-4 px-4 py-2 rounded-full bg-amber-500 text-slate-950 text-xs font-bold cursor-pointer hover:bg-amber-400 transition-colors"
+                                        >
+                                            Tampilkan Semua Karya
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {filteredGalleries.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => setActiveLightboxItem(item)}
+                                                className="group relative rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-950 cursor-pointer shadow-lg aspect-[4/3]"
+                                            >
+                                                <img
+                                                    src={item.file_webp_path}
+                                                    alt={item.title}
+                                                    loading="lazy"
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-100 transition-opacity p-5 flex flex-col justify-end">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 uppercase font-bold">
+                                                            {item.category}
+                                                        </span>
+                                                        <span className="text-[10px] font-mono text-slate-300">
+                                                            EXIF
+                                                        </span>
+                                                    </div>
+                                                    <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
+                                                        {item.title}
+                                                    </h4>
+                                                    <div className="flex items-center gap-3 text-xs font-mono text-slate-300 mt-1">
+                                                        <span>{item.exif_metadata_json?.camera || 'Sony FX3'}</span>
+                                                        <span>•</span>
+                                                        <span>{item.exif_metadata_json?.aperture || 'f/2.8'}</span>
+                                                        <span>•</span>
+                                                        <span>ISO {item.exif_metadata_json?.iso || '100'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </section>
+
+                {/* 2.5 Interactive Before/After Color Grading Slider (Dynamic from Backend) */}
+                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
                             <SlidersHorizontal className="w-4 h-4" />
@@ -237,159 +558,6 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                         beforeLabel={beforeAfter?.exif_metadata_json?.before_label || "Sony S-Log3 RAW Flat"}
                         afterLabel={beforeAfter?.exif_metadata_json?.after_label || "Langit Cinema Grade (Kodak 2383)"}
                     />
-                </section>
-
-                {/* 2.5 6 Layanan Spesialisasi Photography & Videography */}
-                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
-                    <div className="text-center max-w-2xl mx-auto mb-12">
-                        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 uppercase tracking-wider block mb-1 font-bold">
-                            Layanan Terpadu & Portofolio
-                        </span>
-                        <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">
-                            6 Layanan Utama <span className="font-editorial italic font-normal text-amber-600 dark:text-amber-400">Visual Studio</span>
-                        </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-2">
-                            Pilih jenis dokumentasi yang Anda butuhkan, dikerjakan oleh tim fotografer, videografer, dan pilot drone berpengalaman.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {servicePillars.map((pillar) => (
-                            <div 
-                                key={pillar.slug}
-                                onClick={() => setSelectedCategory(pillar.slug)}
-                                className={`group p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
-                                    selectedCategory === pillar.slug
-                                        ? 'bg-amber-500/10 border-amber-500 shadow-xl shadow-amber-500/10'
-                                        : 'bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-amber-400/60 hover:shadow-lg'
-                                }`}
-                            >
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                                            {pillar.num}
-                                        </span>
-                                        <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 uppercase tracking-widest font-bold">
-                                            Klik Filter Galeri
-                                        </span>
-                                    </div>
-
-                                    <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                                        {pillar.title}
-                                    </h3>
-
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2.5">
-                                        {pillar.desc}
-                                    </p>
-
-                                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 space-y-2">
-                                        {pillar.features.map((feat, fIdx) => (
-                                            <div key={fIdx} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                                                <span>{feat}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-4 flex items-center justify-between">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedCategory(pillar.slug);
-                                            const gal = document.getElementById('gallery-section');
-                                            if (gal) gal.scrollIntoView({ behavior: 'smooth' });
-                                        }}
-                                        className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1"
-                                    >
-                                        <span>Lihat Contoh Hasil</span>
-                                        <ArrowRight className="w-3.5 h-3.5" />
-                                    </button>
-
-                                    <Link
-                                        href="/konsultasi"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105"
-                                    >
-                                        Booking
-                                    </Link>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* 3. Langit Photo Gallery (Masonry Grid + EXIF Inspector) */}
-                <section id="gallery-section" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                        <div>
-                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
-                                <Camera className="w-4 h-4" />
-                                <span>Curated Showcase & EXIF Inspector</span>
-                            </div>
-                            <h2 className="font-heading font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white">
-                                Galeri Foto Mahakarya Langit
-                            </h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                                Klik foto apa pun untuk membuka Lightbox resolusi tinggi dengan inspektur metadata kamera (Lensa, Shutter, Aperture, ISO).
-                            </p>
-                        </div>
-
-                        {/* Category Filter Pills */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0">
-                            {categories.map((c) => (
-                                <button
-                                    key={c.key}
-                                    onClick={() => setSelectedCategory(c.key)}
-                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                                        selectedCategory === c.key
-                                            ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                                            : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 shadow-sm'
-                                    }`}
-                                >
-                                    {c.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Photo Masonry Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredGalleries.map((item) => (
-                            <div
-                                key={item.id}
-                                onClick={() => setActiveLightboxItem(item)}
-                                className="group relative rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-950 cursor-pointer shadow-lg aspect-[4/3]"
-                            >
-                                <img
-                                    src={item.file_webp_path}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                />
-
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-100 transition-opacity p-5 flex flex-col justify-end">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 uppercase font-bold">
-                                            {item.category}
-                                        </span>
-                                        <span className="text-[10px] font-mono text-slate-300">
-                                            EXIF
-                                        </span>
-                                    </div>
-                                    <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
-                                        {item.title}
-                                    </h4>
-                                    <div className="flex items-center gap-3 text-xs font-mono text-slate-300 mt-1">
-                                        <span>{item.exif_metadata_json?.camera || 'Sony FX3'}</span>
-                                        <span>•</span>
-                                        <span>{item.exif_metadata_json?.aperture || 'f/2.8'}</span>
-                                        <span>•</span>
-                                        <span>ISO {item.exif_metadata_json?.iso || '100'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
                 </section>
 
                 {/* 4. Gear & Studio Showcase */}

@@ -27,6 +27,7 @@ Homestead.yaml
 Thumbs.db
 
 # Scratch & temporary files
+/scratch/
 pin_page*.html
 pinterest_pin*.html
 scratch_parse_pin.*

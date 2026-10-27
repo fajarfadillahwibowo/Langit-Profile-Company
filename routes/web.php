@@ -100,6 +100,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/collaborations/{id}', [AdminDashboardController::class, 'updateCollaboration'])->name('collaborations.update');
         Route::delete('/collaborations/{id}', [AdminDashboardController::class, 'deleteCollaboration'])->name('collaborations.delete');
 
+        // Services Management (Kartu 7 Divisi Layanan)
+        Route::put('/services/{id}', [AdminDashboardController::class, 'updateService'])->name('services.update');
+        Route::post('/services/{id}/update', [AdminDashboardController::class, 'updateService'])->name('services.update-post');
+
         // Admin Profile Management & Live Camera / Upload Avatar
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');

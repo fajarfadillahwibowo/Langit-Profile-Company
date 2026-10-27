@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import ThemeToggle from '@/Components/ThemeToggle';
 
 export default function AdminLogin() {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
-        email: 'admin@langit.id',
-        password: 'admin123',
+        email: '',
+        password: '',
         remember: true,
     });
 
@@ -88,7 +89,7 @@ export default function AdminLogin() {
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Administrator</label>
                             <div className="relative">
-                                <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="email"
                                     required
@@ -104,31 +105,37 @@ export default function AdminLogin() {
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Kata Sandi</label>
                             <div className="relative">
-                                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-[#005792] focus:ring-1 focus:ring-[#005792] focus:bg-white dark:focus:bg-slate-900 font-sans transition-colors"
+                                    placeholder="Masukkan kata sandi"
+                                    className="w-full pl-10 pr-11 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-[#005792] focus:ring-1 focus:ring-[#005792] focus:bg-white dark:focus:bg-slate-900 font-sans transition-colors"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors p-1 rounded-lg focus:outline-none cursor-pointer"
+                                    aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
                             </div>
                             {errors.password && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1 font-medium">{errors.password}</p>}
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between font-medium">
-                            <span>Akun Demo Admin:</span>
-                            <span className="text-[#005792] dark:text-cyan-400 font-bold">admin@langit.id / admin123</span>
                         </div>
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full py-3.5 rounded-xl bg-[#005792] hover:bg-[#004270] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-[#005792]/25 transition-all hover:shadow-[#005792]/40 active:scale-[0.99] disabled:opacity-50"
+                            className="w-full py-3.5 rounded-xl bg-[#005792] hover:bg-[#004270] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-[#005792]/25 transition-all hover:shadow-[#005792]/40 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
                         >
-                            <span>Masuk ke Dashboard CMS</span>
-                            <ArrowRight className="w-4 h-4" />
+                            <span>Login</span>
                         </button>
                     </form>
                 </div>
