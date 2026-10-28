@@ -123,13 +123,13 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-20 text-center overflow-hidden">
                     {/* Ambient Aurora Glow Layers */}
                     <div 
-                        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[480px] rounded-full blur-[120px] pointer-events-none -z-10 animate-aurora-1"
+                        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[480px] rounded-full blur-3xl pointer-events-none -z-10 animate-aurora-1"
                         style={{
                             background: 'radial-gradient(circle, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.12) 45%, transparent 70%)'
                         }}
                     />
                     <div 
-                        className="absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full blur-[100px] pointer-events-none -z-10 animate-aurora-2"
+                        className="absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full blur-3xl pointer-events-none -z-10 animate-aurora-2"
                         style={{
                             background: 'radial-gradient(circle, rgba(168,85,247,0.14) 0%, rgba(14,165,233,0.08) 50%, transparent 70%)'
                         }}

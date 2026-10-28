@@ -72,16 +72,19 @@
 .animate-aurora-1 {
     animation: aurora-layer-1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
     will-change: transform;
+    contain: paint;
 }
 
 .animate-aurora-2 {
     animation: aurora-layer-2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
     will-change: transform;
+    contain: paint;
 }
 
 .animate-aurora-3 {
     animation: aurora-layer-3 32s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
     will-change: transform;
+    contain: paint;
 }
 
 .animate-hud-pulse {

@@ -143,8 +143,8 @@ export default function InteractiveInternshipCards({
             {/* Theatrical Light Purple & White Glassmorphic Stage Container */}
             <div className="relative rounded-3xl bg-gradient-to-br from-purple-100/70 via-white/80 to-purple-50/70 dark:from-purple-950/40 dark:via-purple-900/20 dark:to-white/[0.05] backdrop-blur-2xl border border-purple-200/80 dark:border-purple-500/20 shadow-2xl shadow-purple-500/10 p-6 sm:p-10 lg:p-14 overflow-hidden">
                 {/* Background Ambient Glow Spots */}
-                <div className="absolute -top-10 left-1/4 w-80 h-80 bg-purple-300/35 dark:bg-purple-600/20 rounded-full blur-[90px] pointer-events-none" />
-                <div className="absolute -bottom-10 right-1/4 w-96 h-96 bg-white/80 dark:bg-purple-400/15 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -top-10 left-1/4 w-80 h-80 bg-purple-300/35 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 right-1/4 w-96 h-96 bg-white/80 dark:bg-purple-400/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-r from-transparent via-purple-100/40 dark:via-purple-500/5 to-transparent pointer-events-none" />
 
                 {/* Subtitle guidance inside stage */}

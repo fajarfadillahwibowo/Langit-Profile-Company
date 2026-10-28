@@ -117,8 +117,8 @@ const PRESETS = {
 };
 
 const INTRO_LENGTH = { assemble: 1500, rise: 1400, spin: 1800, none: 0 };
-const TILES = 8;
-const OVERLAP = 2.5;
+const TILES = 1;
+const OVERLAP = 0;
 const DRAG_THRESHOLD = 5;
 const SPRING = 118;
 const SETTLE_SPEED = 9;
@@ -869,6 +869,7 @@ const CircularCarousel = ({
             alt=""
             draggable={false}
             decoding="async"
+            loading="lazy"
             style={photoStyle}
           />
           {gone && (

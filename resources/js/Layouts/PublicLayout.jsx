@@ -44,7 +44,7 @@ export default function PublicLayout({ children, activeService = null }) {
         const handleScroll = () => {
             setScrolled(window.scrollY > 30);
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -120,11 +120,11 @@ export default function PublicLayout({ children, activeService = null }) {
 
     return (
         <div className="min-h-screen bg-[#EDF9FC] text-slate-900 dark:bg-[#07090E] dark:text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 transition-colors duration-300">
-            {/* Ambient Background Glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-400/10 dark:bg-cyan-600/10 rounded-full blur-[128px]"></div>
-                <div className="absolute top-1/3 -right-40 w-96 h-96 bg-indigo-400/10 dark:bg-purple-600/10 rounded-full blur-[140px]"></div>
-                <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-emerald-400/10 dark:bg-emerald-600/10 rounded-full blur-[150px]"></div>
+            {/* Ambient Background Glows (Absolute, optimized for silky scroll) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-400/10 dark:bg-cyan-600/10 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/3 -right-40 w-96 h-96 bg-indigo-400/10 dark:bg-purple-600/10 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-emerald-400/10 dark:bg-emerald-600/10 rounded-full blur-3xl"></div>
             </div>
 
             {/* GPU-Accelerated Floating Headbar & Bento Mega-Menu Dropdown */}

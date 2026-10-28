@@ -354,7 +354,7 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                 {/* Ambient Center Aura */}
                 <div 
                     style={{ backgroundColor: `${activeTech.color}25` }}
-                    className="absolute w-72 h-72 rounded-full blur-[100px] pointer-events-none transition-colors duration-500"
+                    className="absolute w-72 h-72 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
                 />
 
                 {/* Arching Cards Container */}

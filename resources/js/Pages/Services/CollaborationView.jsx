@@ -221,9 +221,9 @@ export default function CollaborationView({ service }) {
             <div className="relative min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#080206] dark:text-slate-100 overflow-hidden transition-colors duration-300">
                 {/* Ambient Blurred Glowing Blobs & Dot Grid Pattern */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[650px] pointer-events-none overflow-hidden z-0">
-                    <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-rose-500/10 dark:bg-rose-600/15 rounded-full blur-[140px]" />
-                    <div className="absolute top-20 right-10 w-[420px] h-[420px] bg-purple-500/10 dark:bg-purple-600/15 rounded-full blur-[140px]" />
-                    <div className="absolute top-60 left-10 w-[360px] h-[360px] bg-amber-500/10 dark:bg-amber-600/10 rounded-full blur-[120px]" />
+                    <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-rose-500/10 dark:bg-rose-600/15 rounded-full blur-3xl" />
+                    <div className="absolute top-20 right-10 w-[420px] h-[420px] bg-purple-500/10 dark:bg-purple-600/15 rounded-full blur-3xl" />
+                    <div className="absolute top-60 left-10 w-[360px] h-[360px] bg-amber-500/10 dark:bg-amber-600/10 rounded-full blur-3xl" />
                 </div>
 
                 {/* Subtle Geometric Dot Mesh Overlay */}
@@ -453,7 +453,7 @@ export default function CollaborationView({ service }) {
                     <section id="dropzone-proposal" ref={formRef} className="scroll-mt-24">
                         <div className="relative rounded-3xl bg-white dark:bg-[#10040C]/90 border border-slate-200/90 dark:border-rose-500/30 p-6 sm:p-10 md:p-12 backdrop-blur-2xl shadow-2xl overflow-hidden">
                             {/* Ambient Form Glow */}
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
                             <div className="max-w-3xl mb-8 space-y-2">
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono font-bold tracking-wider">

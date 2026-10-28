@@ -1,19 +1,22 @@
-import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Camera, Code, GraduationCap, Sparkles } from 'lucide-react';
 
 export default function Hero3DCinemaStage() {
-    // 3D Mouse Parallax Tilt state
-    const [rotateX, setRotateX] = useState(0);
-    const [rotateY, setRotateY] = useState(0);
+    // 3D Mouse Parallax Tilt using Framer Motion MotionValues (Zero React Re-renders on mousemove)
+    const rotateX = useMotionValue(0);
+    const rotateY = useMotionValue(0);
+    const springRotateX = useSpring(rotateX, { stiffness: 220, damping: 20 });
+    const springRotateY = useSpring(rotateY, { stiffness: 220, damping: 20 });
     const [isHovered, setIsHovered] = useState(false);
+    const rafId = useRef(null);
 
     // Active view mode: 'dual' (Kamera & Laptop terpisah) | 'camera' (Kamera 3D fokus) | 'laptop' (Laptop 3D fokus)
     const [viewMode, setViewMode] = useState('dual');
 
     const containerRef = useRef(null);
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = useCallback((e) => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -21,19 +24,28 @@ export default function Hero3DCinemaStage() {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
 
-        // Smooth 3D tilt calculation (-9 to +9 degrees)
-        const rotX = -((y - centerY) / centerY) * 9;
-        const rotY = ((x - centerX) / centerX) * 9;
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = requestAnimationFrame(() => {
+            // Smooth 3D tilt calculation (-7.5 to +7.5 degrees)
+            const rotX = -((y - centerY) / centerY) * 7.5;
+            const rotY = ((x - centerX) / centerX) * 7.5;
+            rotateX.set(rotX);
+            rotateY.set(rotY);
+        });
+    }, [rotateX, rotateY]);
 
-        setRotateX(rotX);
-        setRotateY(rotY);
-    };
-
-    const handleMouseLeave = () => {
-        setRotateX(0);
-        setRotateY(0);
+    const handleMouseLeave = useCallback(() => {
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rotateX.set(0);
+        rotateY.set(0);
         setIsHovered(false);
-    };
+    }, [rotateX, rotateY]);
+
+    useEffect(() => {
+        return () => {
+            if (rafId.current) cancelAnimationFrame(rafId.current);
+        };
+    }, []);
 
     return (
         <div 
@@ -46,24 +58,25 @@ export default function Hero3DCinemaStage() {
                 perspective: '1400px',
             }}
         >
-            {/* Ambient Volumetric Glow Spotlights */}
+            {/* Ambient Volumetric Glow Spotlights - Softened for 60fps GPU Compositing */}
             <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full pointer-events-none opacity-35 blur-[100px] transition-all duration-700"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full pointer-events-none opacity-30 blur-3xl pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(99, 102, 241, 0.2) 50%, transparent 75%)',
+                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 75%)',
                 }}
             />
 
             {/* 3D TILT STAGE (Preserve 3D, No Box/Background) */}
             <motion.div
                 animate={{
-                    rotateX,
-                    rotateY,
                     scale: isHovered ? 1.02 : 1,
                 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-                style={{ transformStyle: 'preserve-3d' }}
-                className="relative w-full h-full"
+                style={{ 
+                    rotateX: springRotateX,
+                    rotateY: springRotateY,
+                    transformStyle: 'preserve-3d',
+                }}
+                className="relative w-full h-full will-change-transform"
             >
                 {/* ── TOP CONTROL PILL: Switcher Icon-only (Simpel & Minimalis, Button + Logo Saja Tanpa Kata-kata) ── */}
                 <div 
@@ -267,8 +280,7 @@ export default function Hero3DCinemaStage() {
                     className="absolute top-10 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
                     style={{
                         transform: 'translateZ(95px)',
-                        background: 'rgba(0, 25, 52, 0.94)',
-                        backdropFilter: 'blur(20px)',
+                        background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(245, 158, 11, 0.35)',
                         boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(245,158,11,0.15)',
                     }}
@@ -297,8 +309,7 @@ export default function Hero3DCinemaStage() {
                     className="absolute top-10 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
                     style={{
                         transform: 'translateZ(90px)',
-                        background: 'rgba(0, 25, 52, 0.94)',
-                        backdropFilter: 'blur(20px)',
+                        background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(16, 185, 129, 0.4)',
                         boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(16,185,129,0.18)',
                     }}
@@ -327,8 +338,7 @@ export default function Hero3DCinemaStage() {
                     className="absolute bottom-1 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
                     style={{
                         transform: 'translateZ(95px)',
-                        background: 'rgba(0, 25, 52, 0.94)',
-                        backdropFilter: 'blur(20px)',
+                        background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(14, 165, 233, 0.4)',
                         boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(14,165,233,0.18)',
                     }}
@@ -357,8 +367,7 @@ export default function Hero3DCinemaStage() {
                     className="absolute bottom-1 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
                     style={{
                         transform: 'translateZ(90px)',
-                        background: 'rgba(0, 25, 52, 0.94)',
-                        backdropFilter: 'blur(20px)',
+                        background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(168, 85, 247, 0.35)',
                         boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(168,85,247,0.15)',
                     }}

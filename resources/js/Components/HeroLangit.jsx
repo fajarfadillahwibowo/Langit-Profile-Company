@@ -80,18 +80,18 @@ export default function HeroLangit() {
                 }}
             />
 
-            {/* Aurora blobs */}
+            {/* Aurora blobs - GPU Optimized soft gradients */}
             <div
-                className="hlg-a1 absolute -top-56 left-[18%] w-[720px] h-[720px] rounded-full blur-[130px] pointer-events-none z-0 animate-aurora-1"
-                style={{ background: 'radial-gradient(circle, rgba(0,87,146,0.55) 0%, rgba(0,120,200,0.2) 55%, transparent 100%)' }}
+                className="hlg-a1 absolute -top-56 left-[18%] w-[680px] h-[680px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-1"
+                style={{ background: 'radial-gradient(circle, rgba(0,87,146,0.45) 0%, rgba(0,120,200,0.15) 45%, transparent 70%)' }}
             />
             <div
-                className="hlg-a2 absolute top-[30%] -right-44 w-[640px] h-[640px] rounded-full blur-[150px] pointer-events-none z-0 animate-aurora-2"
-                style={{ background: 'radial-gradient(circle, rgba(0,60,110,0.5) 0%, rgba(0,87,146,0.15) 55%, transparent 100%)' }}
+                className="hlg-a2 absolute top-[30%] -right-44 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-2"
+                style={{ background: 'radial-gradient(circle, rgba(0,60,110,0.4) 0%, rgba(0,87,146,0.12) 45%, transparent 70%)' }}
             />
             <div
-                className="absolute -bottom-44 left-0 w-[520px] h-[520px] rounded-full blur-[120px] pointer-events-none z-0 animate-aurora-3"
-                style={{ background: 'radial-gradient(circle, rgba(0,100,180,0.3) 0%, rgba(0,50,100,0.1) 60%, transparent 100%)' }}
+                className="absolute -bottom-44 left-0 w-[480px] h-[480px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-3"
+                style={{ background: 'radial-gradient(circle, rgba(0,100,180,0.25) 0%, rgba(0,50,100,0.08) 50%, transparent 70%)' }}
             />
 
             {/* Large watermark text */}

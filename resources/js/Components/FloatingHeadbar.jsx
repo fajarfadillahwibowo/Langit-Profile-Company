@@ -130,20 +130,13 @@ export default function FloatingHeadbar({
 
     return (
         <header className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 pointer-events-none transition-all duration-300">
-            <motion.div
-                layout
-                transition={{ 
-                    type: 'spring', 
-                    stiffness: 280, 
-                    damping: 24, 
-                    mass: 0.85 
-                }}
+            <div
                 className={`
-                    pointer-events-auto w-full transition-colors duration-300
+                    pointer-events-auto w-full transition-all duration-300 ease-out
                     rounded-2xl sm:rounded-full border
                     ${scrolled
-                        ? 'max-w-4xl py-2 px-4 sm:px-6 bg-white/90 dark:bg-[#07090E]/90 backdrop-blur-2xl border-[#005792]/40 dark:border-[#005792]/50 shadow-xl shadow-[#005792]/15 dark:shadow-[0_12px_36px_-6px_rgba(0,87,146,0.35)] ring-1 ring-[#005792]/20'
-                        : 'max-w-7xl py-3 sm:py-3.5 px-5 sm:px-8 bg-white/80 dark:bg-[#090D16]/70 backdrop-blur-xl border-[#005792]/30 dark:border-[#005792]/45 shadow-lg shadow-[#005792]/8 dark:shadow-none ring-1 ring-[#005792]/15'
+                        ? 'max-w-4xl py-2 px-4 sm:px-6 bg-white/92 dark:bg-[#07090E]/92 backdrop-blur-md border-[#005792]/40 dark:border-[#005792]/50 shadow-xl shadow-[#005792]/15 dark:shadow-[0_12px_36px_-6px_rgba(0,87,146,0.35)] ring-1 ring-[#005792]/20'
+                        : 'max-w-7xl py-3 sm:py-3.5 px-5 sm:px-8 bg-white/85 dark:bg-[#090D16]/85 backdrop-blur-md border-[#005792]/30 dark:border-[#005792]/45 shadow-lg shadow-[#005792]/8 dark:shadow-none ring-1 ring-[#005792]/15'
                     }
                 `}
             >
@@ -319,7 +312,7 @@ export default function FloatingHeadbar({
                         </button>
                     </div>
                 </div>
-            </motion.div>
+            </div>
 
             {/* 4. BENTO MEGA-MENU DROPDOWN STAGGERED REVEAL */}
             <AnimatePresence>

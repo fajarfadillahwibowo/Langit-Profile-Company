@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { 
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
     ArrowRight, Check, ShieldCheck, Zap
@@ -162,49 +162,65 @@ const PALETTES_BY_SLUG = {
 /* ── INTERACTIVE 3D VIP CARD COMPONENT WITH TOP PHOTO & DISTINCT COLORS ──── */
 
 function VIP3DCard({ card }) {
-    const [rotateX, setRotateX] = useState(0);
-    const [rotateY, setRotateY] = useState(0);
-    const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
+    const cardRef = useRef(null);
+    const rafId = useRef(null);
+    const rotateX = useMotionValue(0);
+    const rotateY = useMotionValue(0);
+    const springRotateX = useSpring(rotateX, { stiffness: 280, damping: 24 });
+    const springRotateY = useSpring(rotateY, { stiffness: 280, damping: 24 });
     const CardIcon = card.icon || Camera;
 
-    const handleMouseMove = (e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
+    const handleMouseMove = useCallback((e) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
 
-        // Subtle 3D tilt angle (-6 to +6 deg)
-        const rotX = -((y - centerY) / centerY) * 6.5;
-        const rotY = ((x - centerX) / centerX) * 6.5;
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = requestAnimationFrame(() => {
+            // Subtle 3D tilt angle (-5.5 to +5.5 deg)
+            const rotX = -((y - centerY) / centerY) * 5.5;
+            const rotY = ((x - centerX) / centerX) * 5.5;
+            rotateX.set(rotX);
+            rotateY.set(rotY);
 
-        setRotateX(rotX);
-        setRotateY(rotY);
-        setGlare({
-            x: (x / rect.width) * 100,
-            y: (y / rect.height) * 100,
-            opacity: 0.32,
+            if (cardRef.current) {
+                cardRef.current.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+                cardRef.current.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+                cardRef.current.style.setProperty('--glare-op', '0.32');
+            }
         });
-    };
+    }, [rotateX, rotateY]);
 
-    const handleMouseLeave = () => {
-        setRotateX(0);
-        setRotateY(0);
-        setGlare({ x: 50, y: 50, opacity: 0 });
-    };
+    const handleMouseLeave = useCallback(() => {
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rotateX.set(0);
+        rotateY.set(0);
+        if (cardRef.current) {
+            cardRef.current.style.setProperty('--glare-op', '0');
+        }
+    }, [rotateX, rotateY]);
+
+    useEffect(() => {
+        return () => {
+            if (rafId.current) cancelAnimationFrame(rafId.current);
+        };
+    }, []);
 
     return (
         <motion.div
+            ref={cardRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            animate={{
-                rotateX,
-                rotateY,
+            style={{ 
+                rotateX: springRotateX,
+                rotateY: springRotateY,
+                transformStyle: 'preserve-3d',
                 transformPerspective: 1000,
             }}
-            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-            style={{ transformStyle: 'preserve-3d' }}
-            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[380px]' : 'min-h-[440px]'}`}
+            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[380px]' : 'min-h-[440px]'} will-change-transform`}
         >
             {/* 3D Physical Embossed Plastic Bevel Highlight & Shadow */}
             <div 
@@ -214,12 +230,12 @@ function VIP3DCard({ card }) {
                 }}
             />
 
-            {/* Specular Glossy Glare Reflection (Tracks cursor) */}
+            {/* Specular Glossy Glare Reflection (Tracks cursor via CSS var, zero re-renders) */}
             <div 
                 className="absolute inset-0 pointer-events-none rounded-[28px] transition-opacity duration-300 z-20"
                 style={{
-                    background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0) 65%)`,
-                    opacity: glare.opacity,
+                    background: `radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,255,255,0.38) 0%, rgba(255,255,255,0) 65%)`,
+                    opacity: 'var(--glare-op, 0)',
                 }}
             />
 
