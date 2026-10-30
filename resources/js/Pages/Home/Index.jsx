@@ -5,11 +5,8 @@ import LightboxModal from '@/Components/LightboxModal';
 import ScrollingServiceCards from '@/Components/ScrollingServiceCards';
 import HeroLangit from '@/Components/HeroLangit';
 import CircularCarousel from '@/Components/CircularCarousel';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Camera, Sparkles, Activity, ArrowRight } from 'lucide-react';
-
-gsap.registerPlugin(ScrollTrigger);
+import { Camera, Sparkles, Activity, ArrowRight, Zap } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function HomeIndex({
     services = [],
@@ -18,10 +15,11 @@ export default function HomeIndex({
     internshipOpenings = [],
     stats = {},
 }) {
+    const { isHd, setQuality, toggleQuality, getOptimizedImage } = useQuality();
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
     const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
     const [carouselPreset, setCarouselPreset] = useState('cylinder');
-    const [isDrifting, setIsDrifting] = useState(true);
+    const [isDrifting, setIsDrifting] = useState(false); // Default OFF for lightweight 60fps performance
     const [isDark, setIsDark] = useState(false);
     const pageRef = useRef(null);
 
@@ -36,11 +34,11 @@ export default function HomeIndex({
         return () => observer.disconnect();
     }, []);
 
-    // Format items for CircularCarousel with Langit photography & cinematic metadata
+    // Format items for CircularCarousel with dynamic resolution scaling based on HD mode
     const carouselItems = useMemo(() => {
         if (featuredGalleries && featuredGalleries.length > 0) {
             return featuredGalleries.map((item) => ({
-                src: item.file_webp_path,
+                src: getOptimizedImage(item.file_webp_path, { sdWidth: 420, hdWidth: 1200 }),
                 alt: item.title,
                 title: item.title,
                 subtitle: `${(item.category || 'CINEMA').replace('_', ' ').toUpperCase()} • ${item.exif_metadata_json?.camera || 'Sony Cinema Line'}`,
@@ -48,7 +46,7 @@ export default function HomeIndex({
             }));
         }
         return undefined;
-    }, [featuredGalleries]);
+    }, [featuredGalleries, getOptimizedImage]);
 
     const currentActiveItem = useMemo(() => {
         if (carouselItems && carouselItems[activeCarouselIndex]) {
@@ -56,25 +54,6 @@ export default function HomeIndex({
         }
         return featuredGalleries[activeCarouselIndex] || featuredGalleries[0];
     }, [carouselItems, activeCarouselIndex, featuredGalleries]);
-
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            gsap.utils.toArray('.reveal-header').forEach((el) => {
-                gsap.from(el, {
-                    opacity: 0, y: 32, duration: 0.7, ease: 'power3.out',
-                    scrollTrigger: { trigger: el, start: 'top 88%' },
-                });
-            });
-
-            gsap.from('.carousel-wrapper', {
-                opacity: 0, y: 35, duration: 0.8, ease: 'power3.out',
-                scrollTrigger: { trigger: '.carousel-wrapper', start: 'top 85%' },
-            });
-
-        }, pageRef);
-
-        return () => ctx.revert();
-    }, []);
 
     return (
         <PublicLayout>
@@ -140,6 +119,21 @@ export default function HomeIndex({
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {/* Quality Switcher Button */}
+                            <button
+                                type="button"
+                                onClick={toggleQuality}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 shadow-sm ${
+                                    isHd
+                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
+                                        : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                                }`}
+                                title="Klik untuk mengubah resolusi tampilan foto (SD Ringan / HD)"
+                            >
+                                {isHd ? <Sparkles className="w-3.5 h-3.5 text-amber-500" /> : <Zap className="w-3.5 h-3.5 text-emerald-500" />}
+                                <span>{isHd ? 'Visual: HD' : 'Visual: SD'}</span>
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={() => setIsDrifting(prev => !prev)}

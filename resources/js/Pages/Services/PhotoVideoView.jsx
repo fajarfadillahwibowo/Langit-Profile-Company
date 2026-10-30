@@ -6,10 +6,12 @@ import LightboxModal from '@/Components/LightboxModal';
 import BeforeAfterSlider from '@/Components/BeforeAfterSlider';
 import { 
     Camera, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc,
-    ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images
+    ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images, Zap
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {
+    const { isHd, toggleQuality, getOptimizedImage } = useQuality();
     const [activeTab, setActiveTab] = useState('services'); // 'services' | 'gallery'
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
@@ -21,9 +23,11 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
         || service?.hero_config_json?.showreel_video 
         || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
-    const activePosterUrl = showreel?.file_webp_path 
+    const rawPoster = showreel?.file_webp_path 
         || service?.hero_config_json?.showreel_poster 
         || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80";
+
+    const activePosterUrl = getOptimizedImage(rawPoster, { sdWidth: 640, hdWidth: 1600 });
 
     // Guaranteed video autoplay as soon as page is opened/visited
     useEffect(() => {
@@ -232,6 +236,30 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                     )}
                                 </button>
                                 
+                                {/* Video HD Quality Toggle Button */}
+                                <button
+                                    type="button"
+                                    onClick={toggleQuality}
+                                    className={`px-4 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer ${
+                                        isHd
+                                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/30'
+                                            : 'bg-black/60 text-emerald-300 border-white/20 hover:bg-black/80'
+                                    }`}
+                                    title="Klik untuk mengubah kualitas video & foto (SD Cepat / HD)"
+                                >
+                                    {isHd ? (
+                                        <>
+                                            <Sparkles className="w-4 h-4" />
+                                            <span>Kualitas: HD Penuh</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Zap className="w-4 h-4 text-emerald-400" />
+                                            <span>Kualitas: SD Cepat</span>
+                                        </>
+                                    )}
+                                </button>
+                                
                                 <Link
                                     href="/konsultasi"
                                     className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 text-sm font-bold transition-colors backdrop-blur-md"
@@ -241,30 +269,46 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             </div>
                         </div>
 
-                        {/* Top-Right Audio Mute / Unmute Floating Pill */}
-                        <button
-                            type="button"
-                            onClick={toggleMute}
-                            title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
-                            className="absolute top-5 right-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-105 cursor-pointer shadow-lg text-xs font-mono"
-                        >
-                            {isMuted ? (
-                                <>
-                                    <VolumeX className="w-3.5 h-3.5 text-amber-400" />
-                                    <span className="hidden sm:inline text-amber-200">Audio: Mute (Klik Suara)</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                                    <span className="hidden sm:inline text-emerald-200">Audio: Nyala</span>
-                                </>
-                            )}
-                        </button>
+                        {/* Top-Right Audio & Quality Floating Pill Controls */}
+                        <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={toggleQuality}
+                                title={isHd ? 'Sedang Kualitas HD. Klik untuk Mode Ringan (SD)' : 'Sedang Mode SD. Klik untuk Resolusi HD'}
+                                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-mono transition-all hover:scale-105 cursor-pointer shadow-lg ${
+                                    isHd
+                                        ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                                        : 'bg-black/70 hover:bg-black/90 text-emerald-300 border-white/20'
+                                }`}
+                            >
+                                {isHd ? <Sparkles className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5 text-emerald-400" />}
+                                <span>{isHd ? 'Mode: HD' : 'Mode: SD'}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={toggleMute}
+                                title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-105 cursor-pointer shadow-lg text-xs font-mono"
+                            >
+                                {isMuted ? (
+                                    <>
+                                        <VolumeX className="w-3.5 h-3.5 text-amber-400" />
+                                        <span className="hidden sm:inline text-amber-200">Audio: Mute</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                                        <span className="hidden sm:inline text-emerald-200">Audio: Nyala</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
 
                         {/* Bottom-Left Floating Video Autoplay Status Badge */}
                         <div className="absolute bottom-4 left-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-300 text-xs font-mono backdrop-blur-md">
                             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                            <span>{showreelPlaying ? '▶ Auto-Playing Reel' : '⏸ Video Dijeda'} • 4K Cinema Footage</span>
+                            <span>{showreelPlaying ? '▶ Auto-Playing Reel' : '⏸ Video Dijeda'} • {isHd ? '4K Cinema Footage (HD)' : 'Mode Ringan (SD Cepat)'}</span>
                         </div>
                     </div>
                 </section>
@@ -502,7 +546,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                                 className="group relative rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-950 cursor-pointer shadow-lg aspect-[4/3]"
                                             >
                                                 <img
-                                                    src={item.file_webp_path}
+                                                    src={getOptimizedImage(item.file_webp_path, { sdWidth: 480, hdWidth: 1400 })}
                                                     alt={item.title}
                                                     loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -539,22 +583,38 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
 
                 {/* 2.5 Interactive Before/After Color Grading Slider (Dynamic from Backend) */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
-                    <div className="mb-6">
-                        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
-                            <SlidersHorizontal className="w-4 h-4" />
-                            <span>DaVinci Resolve Color Science</span>
+                    <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
+                                <SlidersHorizontal className="w-4 h-4" />
+                                <span>DaVinci Resolve Color Science</span>
+                            </div>
+                            <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
+                                Interactive Before / After <span className="font-editorial italic font-normal text-amber-600 dark:text-amber-400">Color Grading</span>
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
+                                Geser garis pemisah untuk melihat bagaimana footage RAW Log diolah menjadi tampilan sinematik dengan profil warna kustom Langit Kodak 2383.
+                            </p>
                         </div>
-                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
-                            Interactive Before / After <span className="font-editorial italic font-normal text-amber-600 dark:text-amber-400">Color Grading</span>
-                        </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                            Geser garis pemisah untuk melihat bagaimana footage RAW Log diolah menjadi tampilan sinematik dengan profil warna kustom Langit Kodak 2383.
-                        </p>
+
+                        {/* HD toggle button for before/after */}
+                        <button
+                            type="button"
+                            onClick={toggleQuality}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 shadow-sm shrink-0 ${
+                                isHd
+                                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
+                                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                            }`}
+                        >
+                            {isHd ? <Sparkles className="w-3.5 h-3.5 text-amber-500" /> : <Zap className="w-3.5 h-3.5 text-emerald-500" />}
+                            <span>{isHd ? 'Resolusi: HD (100%)' : 'Resolusi: SD (Cepat)'}</span>
+                        </button>
                     </div>
 
                     <BeforeAfterSlider
-                        beforeImg={beforeAfter?.before_file_path || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80"}
-                        afterImg={beforeAfter?.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80"}
+                        beforeImg={getOptimizedImage(beforeAfter?.before_file_path || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1400&q=80", { sdWidth: 640, hdWidth: 1400 })}
+                        afterImg={getOptimizedImage(beforeAfter?.file_webp_path || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80", { sdWidth: 640, hdWidth: 1400 })}
                         beforeLabel={beforeAfter?.exif_metadata_json?.before_label || "Sony S-Log3 RAW Flat"}
                         afterLabel={beforeAfter?.exif_metadata_json?.after_label || "Langit Cinema Grade (Kodak 2383)"}
                     />

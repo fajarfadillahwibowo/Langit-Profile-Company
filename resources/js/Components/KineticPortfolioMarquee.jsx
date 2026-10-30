@@ -3,12 +3,14 @@ import {
     Play, Pause, Sparkles, Eye, Camera, Sliders, 
     ArrowDown, Layers, CheckCircle2 
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function KineticPortfolioMarquee({ 
     galleries = [], 
     onSelectItem = () => {},
     onJumpToGrid = () => {}
 }) {
+    const { isHd, getOptimizedImage } = useQuality();
     const [isPaused, setIsPaused] = useState(false);
     const [speedMultiplier, setSpeedMultiplier] = useState(1); // 0.6 = santai, 1 = normal, 1.6 = cepat
 
@@ -89,7 +91,7 @@ export default function KineticPortfolioMarquee({
                 className="group relative shrink-0 h-52 sm:h-64 md:h-72 aspect-[4/3] sm:aspect-[16/11] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-slate-900 shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer mr-3 sm:mr-4 select-none"
             >
                 <img
-                    src={item.file_webp_path}
+                    src={getOptimizedImage(item.file_webp_path, { sdWidth: 380, hdWidth: 1200 })}
                     alt={item.title}
                     loading="lazy"
                     draggable={false}

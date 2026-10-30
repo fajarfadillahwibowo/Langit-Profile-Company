@@ -1,8 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Camera, Code, GraduationCap, Sparkles } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function Hero3DCinemaStage() {
+    const { isHd } = useQuality();
+
     // 3D Mouse Parallax Tilt using Framer Motion MotionValues (Zero React Re-renders on mousemove)
     const rotateX = useMotionValue(0);
     const rotateY = useMotionValue(0);
@@ -17,7 +20,7 @@ export default function Hero3DCinemaStage() {
     const containerRef = useRef(null);
 
     const handleMouseMove = useCallback((e) => {
-        if (!containerRef.current) return;
+        if (!containerRef.current || !isHd) return; // In SD mode, skip mouse RAF to save CPU/GPU
         const rect = containerRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -53,30 +56,30 @@ export default function Hero3DCinemaStage() {
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={handleMouseLeave}
-            className="relative w-full h-[520px] lg:h-[580px] select-none flex items-center justify-center cursor-grab active:cursor-grabbing overflow-visible"
+            className="relative w-full h-[500px] lg:h-[560px] select-none flex items-center justify-center cursor-pointer overflow-visible"
             style={{
-                perspective: '1400px',
+                perspective: isHd ? '1400px' : '900px',
             }}
         >
             {/* Ambient Volumetric Glow Spotlights - Softened for 60fps GPU Compositing */}
             <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full pointer-events-none opacity-30 blur-3xl pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] h-[440px] rounded-full pointer-events-none opacity-25"
                 style={{
-                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 75%)',
+                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.12) 45%, transparent 70%)',
                 }}
             />
 
             {/* 3D TILT STAGE (Preserve 3D, No Box/Background) */}
             <motion.div
                 animate={{
-                    scale: isHovered ? 1.02 : 1,
+                    scale: isHovered ? 1.015 : 1,
                 }}
                 style={{ 
-                    rotateX: springRotateX,
-                    rotateY: springRotateY,
-                    transformStyle: 'preserve-3d',
+                    rotateX: isHd ? springRotateX : 0,
+                    rotateY: isHd ? springRotateY : 0,
+                    transformStyle: isHd ? 'preserve-3d' : 'flat',
                 }}
-                className="relative w-full h-full will-change-transform"
+                className="relative w-full h-full transition-transform duration-300 will-change-transform"
             >
                 {/* ── TOP CONTROL PILL: Switcher Icon-only (Simpel & Minimalis, Button + Logo Saja Tanpa Kata-kata) ── */}
                 <div 
@@ -268,21 +271,17 @@ export default function Hero3DCinemaStage() {
                     </div>
                 )}
 
-                {/* ── 4 FLOATING STUDIO BADGES (Clean Outer Frame Positioning) ── */}
+                {/* ── 4 FLOATING STUDIO BADGES (Clean & Performance Optimized - Zero Idle RAF Loops) ── */}
 
                 {/* Badge 1: Top-Left Photography & Videography */}
-                <motion.div
-                    animate={{
-                        y: [-4, 6, -4],
-                    }}
-                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                <div
                     onClick={() => window.location.href = '/layanan/photography-videography'}
-                    className="absolute top-10 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
+                    className="absolute top-10 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
-                        transform: 'translateZ(95px)',
+                        transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(245, 158, 11, 0.35)',
-                        boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(245,158,11,0.15)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
                     <div className="flex items-center gap-2 sm:gap-2.5">
@@ -297,21 +296,17 @@ export default function Hero3DCinemaStage() {
                             <div className="text-[11px] sm:text-xs font-bold text-white">Wedding, Wisuda & Event</div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Badge 2: Top-Right Langit Education */}
-                <motion.div
-                    animate={{
-                        y: [6, -4, 6],
-                    }}
-                    transition={{ duration: 5.1, repeat: Infinity, ease: 'easeInOut' }}
+                <div
                     onClick={() => window.location.href = '/layanan/langit-education'}
-                    className="absolute top-10 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
+                    className="absolute top-10 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
-                        transform: 'translateZ(90px)',
+                        transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(16, 185, 129, 0.4)',
-                        boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(16,185,129,0.18)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
                     <div className="flex items-center gap-2 sm:gap-2.5">
@@ -326,21 +321,17 @@ export default function Hero3DCinemaStage() {
                             <div className="text-[11px] sm:text-xs font-bold text-white">Kursus Coding & AI</div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Badge 3: Bottom-Left Web Development */}
-                <motion.div
-                    animate={{
-                        y: [-5, 5, -5],
-                    }}
-                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+                <div
                     onClick={() => window.location.href = '/layanan/web-development'}
-                    className="absolute bottom-1 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
+                    className="absolute bottom-1 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
-                        transform: 'translateZ(95px)',
+                        transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(14, 165, 233, 0.4)',
-                        boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(14,165,233,0.18)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
                     <div className="flex items-center gap-2 sm:gap-2.5">
@@ -355,21 +346,17 @@ export default function Hero3DCinemaStage() {
                             <div className="text-[11px] sm:text-xs font-bold text-white">Company Profile & Web Sistem</div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Badge 4: Bottom-Right Program Internship */}
-                <motion.div
-                    animate={{
-                        y: [5, -5, 5],
-                    }}
-                    transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
+                <div
                     onClick={() => window.location.href = '/layanan/internship'}
-                    className="absolute bottom-1 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 group"
+                    className="absolute bottom-1 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
-                        transform: 'translateZ(90px)',
+                        transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
                         border: '1px solid rgba(168, 85, 247, 0.35)',
-                        boxShadow: '0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(168,85,247,0.15)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
                     <div className="flex items-center gap-2 sm:gap-2.5">
@@ -384,7 +371,7 @@ export default function Hero3DCinemaStage() {
                             <div className="text-[11px] sm:text-xs font-bold text-white">Pendaftaran Terbuka</div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
             </motion.div>
         </div>

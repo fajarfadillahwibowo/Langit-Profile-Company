@@ -1,61 +1,38 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Play } from 'lucide-react';
 import Hero3DCinemaStage from '@/Components/Hero3DCinemaStage';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function HeroLangit() {
     const heroRef = useRef(null);
 
     useEffect(() => {
+        // Lightweight, fast entrance animation without continuous ScrollTrigger scrubbers
         const ctx = gsap.context(() => {
-            // ── Main entrance timeline ──────────────────────────────────────
-            const tl = gsap.timeline({
-                defaults: { ease: 'power3.out' },
-                delay: 0.08,
+            gsap.from('.hlg-badge', { opacity: 0, y: -12, duration: 0.5, ease: 'power2.out' });
+            gsap.from('.hlg-line', {
+                opacity: 0,
+                y: 35,
+                stagger: 0.08,
+                duration: 0.6,
+                ease: 'power2.out',
             });
-
-            tl.from('.hlg-badge', { opacity: 0, y: -18, duration: 0.7 })
-              .from('.hlg-line', {
-                  opacity: 0,
-                  y: 90,
-                  stagger: 0.11,
-                  duration: 0.85,
-                  ease: 'power4.out',
-              }, '-=0.45')
-              .from('.hlg-desc', { opacity: 0, y: 22, duration: 0.65 }, '-=0.5')
-              .from('.hlg-cta', {
-                  opacity: 0,
-                  y: 16,
-                  stagger: 0.1,
-                  duration: 0.55,
-              }, '-=0.4')
-              .from('.hlg-right', {
-                  opacity: 0,
-                  x: 55,
-                  duration: 0.95,
-                  ease: 'power3.out',
-              }, 0.35);
-
-            // ── ScrollTrigger parallax ──────────────────────────────────────
-            gsap.to('.hlg-a1', {
-                y: -130,
-                scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: 1.5 },
+            gsap.from('.hlg-desc', { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out', delay: 0.2 });
+            gsap.from('.hlg-cta', {
+                opacity: 0,
+                y: 12,
+                stagger: 0.08,
+                duration: 0.5,
+                ease: 'power2.out',
+                delay: 0.25,
             });
-            gsap.to('.hlg-a2', {
-                y: -75,
-                scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: 2.2 },
-            });
-            gsap.to('.hlg-title-group', {
-                y: 95,
-                scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: 0.9 },
-            });
-            gsap.to('.hlg-right', {
-                y: 50,
-                scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: 1.1 },
+            gsap.from('.hlg-right', {
+                opacity: 0,
+                scale: 0.96,
+                duration: 0.65,
+                ease: 'power2.out',
+                delay: 0.15,
             });
         }, heroRef);
 
@@ -80,18 +57,18 @@ export default function HeroLangit() {
                 }}
             />
 
-            {/* Aurora blobs - GPU Optimized soft gradients */}
+            {/* Aurora blobs - Lightweight radial gradients with zero GPU blur overhead */}
             <div
-                className="hlg-a1 absolute -top-56 left-[18%] w-[680px] h-[680px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-1"
-                style={{ background: 'radial-gradient(circle, rgba(0,87,146,0.45) 0%, rgba(0,120,200,0.15) 45%, transparent 70%)' }}
+                className="hlg-a1 absolute -top-56 left-[18%] w-[680px] h-[680px] rounded-full pointer-events-none z-0"
+                style={{ background: 'radial-gradient(circle, rgba(0,87,146,0.35) 0%, rgba(0,120,200,0.12) 35%, transparent 70%)' }}
             />
             <div
-                className="hlg-a2 absolute top-[30%] -right-44 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-2"
-                style={{ background: 'radial-gradient(circle, rgba(0,60,110,0.4) 0%, rgba(0,87,146,0.12) 45%, transparent 70%)' }}
+                className="hlg-a2 absolute top-[30%] -right-44 w-[600px] h-[600px] rounded-full pointer-events-none z-0"
+                style={{ background: 'radial-gradient(circle, rgba(0,60,110,0.3) 0%, rgba(0,87,146,0.1) 40%, transparent 70%)' }}
             />
             <div
-                className="absolute -bottom-44 left-0 w-[480px] h-[480px] rounded-full blur-3xl pointer-events-none z-0 animate-aurora-3"
-                style={{ background: 'radial-gradient(circle, rgba(0,100,180,0.25) 0%, rgba(0,50,100,0.08) 50%, transparent 70%)' }}
+                className="absolute -bottom-44 left-0 w-[480px] h-[480px] rounded-full pointer-events-none z-0"
+                style={{ background: 'radial-gradient(circle, rgba(0,100,180,0.2) 0%, rgba(0,50,100,0.06) 45%, transparent 70%)' }}
             />
 
             {/* Large watermark text */}

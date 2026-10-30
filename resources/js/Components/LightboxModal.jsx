@@ -1,10 +1,13 @@
 import React from 'react';
-import { X, Camera, Aperture, Eye, Disc, Clock, Gauge } from 'lucide-react';
+import { X, Camera, Aperture, Eye, Disc, Clock, Gauge, Sparkles, Zap } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function LightboxModal({ item, onClose }) {
     if (!item) return null;
 
+    const { isHd, toggleQuality, getOptimizedImage } = useQuality();
     const exif = item.exif_metadata_json || {};
+    const optimizedImageSrc = getOptimizedImage(item.file_webp_path, { sdWidth: 600, hdWidth: 1600 });
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 dark:bg-black/90 backdrop-blur-xl animate-in fade-in duration-200">
@@ -17,13 +20,37 @@ export default function LightboxModal({ item, onClose }) {
                     <X className="w-5 h-5" />
                 </button>
 
-                {/* Main Media Preview */}
+                {/* Main Media Preview with Interactive HD Switcher */}
                 <div className="lg:w-2/3 bg-slate-100 dark:bg-black/60 flex items-center justify-center p-4 relative group min-h-[350px] lg:min-h-[500px]">
                     <img 
-                        src={item.file_webp_path} 
+                        src={optimizedImageSrc} 
                         alt={item.title}
-                        className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl" 
+                        className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl transition-all duration-300" 
                     />
+
+                    {/* Floating HD Resolution Switcher Button */}
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={toggleQuality}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold shadow-lg backdrop-blur-md border transition-all hover:scale-105 active:scale-95 ${
+                                isHd
+                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/30'
+                                    : 'bg-black/75 text-emerald-300 border-white/20 hover:bg-black/90'
+                            }`}
+                            title="Klik untuk mengubah resolusi tampilan foto (SD Ringan / HD)"
+                        >
+                            {isHd ? <Sparkles className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5 text-emerald-400" />}
+                            <span>{isHd ? '💎 HD 100% Aktif' : '⚡ Klik untuk Mode HD'}</span>
+                        </button>
+                    </div>
+
+                    {/* Bottom resolution indicator */}
+                    <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
+                        <span className="text-[10px] font-mono px-2 py-1 rounded-md bg-black/60 text-slate-300 backdrop-blur-md border border-white/10">
+                            {isHd ? 'Resolusi: Full High Definition' : 'Resolusi: SD Ringan (Hemat Kuota)'}
+                        </span>
+                    </div>
                 </div>
 
                 {/* EXIF Inspector Sidebar (PRD 4.1) */}

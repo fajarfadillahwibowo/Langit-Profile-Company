@@ -5,6 +5,7 @@ import {
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
     ArrowRight, Check, ShieldCheck, Zap
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 /* ── 7 INTEGRATED DIVISIONS PALETTES & THEMES ───────────────────────────── */
 
@@ -162,6 +163,7 @@ const PALETTES_BY_SLUG = {
 /* ── INTERACTIVE 3D VIP CARD COMPONENT WITH TOP PHOTO & DISTINCT COLORS ──── */
 
 function VIP3DCard({ card }) {
+    const { isHd, getOptimizedImage } = useQuality();
     const cardRef = useRef(null);
     const rafId = useRef(null);
     const rotateX = useMotionValue(0);
@@ -171,7 +173,7 @@ function VIP3DCard({ card }) {
     const CardIcon = card.icon || Camera;
 
     const handleMouseMove = useCallback((e) => {
-        if (!cardRef.current) return;
+        if (!cardRef.current || !isHd) return; // In SD mode, skip mouse RAF to keep 60fps silky smooth
         const rect = cardRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -192,7 +194,7 @@ function VIP3DCard({ card }) {
                 cardRef.current.style.setProperty('--glare-op', '0.32');
             }
         });
-    }, [rotateX, rotateY]);
+    }, [rotateX, rotateY, isHd]);
 
     const handleMouseLeave = useCallback(() => {
         if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -215,12 +217,12 @@ function VIP3DCard({ card }) {
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{ 
-                rotateX: springRotateX,
-                rotateY: springRotateY,
-                transformStyle: 'preserve-3d',
-                transformPerspective: 1000,
+                rotateX: isHd ? springRotateX : 0,
+                rotateY: isHd ? springRotateY : 0,
+                transformStyle: isHd ? 'preserve-3d' : 'flat',
+                transformPerspective: isHd ? 1000 : 0,
             }}
-            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[380px]' : 'min-h-[440px]'} will-change-transform`}
+            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[380px]' : 'min-h-[440px]'} will-change-transform`}
         >
             {/* 3D Physical Embossed Plastic Bevel Highlight & Shadow */}
             <div 
@@ -248,7 +250,7 @@ function VIP3DCard({ card }) {
             {/* ── BAGIAN ATAS: FOTO VISUAL CARD ──────────────────────────── */}
             <div className={`relative w-full ${card.isWide ? 'h-48 sm:h-56' : 'h-44 sm:h-48'} overflow-hidden rounded-t-[26px] bg-black/40 shrink-0`}>
                 <img
-                    src={card.image_url || card.defaultImage}
+                    src={getOptimizedImage(card.image_url || card.defaultImage, { sdWidth: 480, hdWidth: 1200 })}
                     alt={card.title}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                     loading="lazy"

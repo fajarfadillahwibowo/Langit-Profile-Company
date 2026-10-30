@@ -5,10 +5,12 @@ import LightboxModal from '@/Components/LightboxModal';
 import KineticPortfolioMarquee from '@/Components/KineticPortfolioMarquee';
 import { 
     Camera, ArrowRight, Eye, Phone, SlidersHorizontal,
-    MoveHorizontal, Grid
+    MoveHorizontal, Grid, Sparkles, Zap
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function PortfolioIndex({ galleries = [] }) {
+    const { isHd, toggleQuality, getOptimizedImage } = useQuality();
     const [selectedTab, setSelectedTab] = useState('all');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
     const gridRef = useRef(null);
@@ -139,10 +141,27 @@ export default function PortfolioIndex({ galleries = [] }) {
 
                 {/* Photo & Video Showcase Grid */}
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-                            <SlidersHorizontal className="w-4 h-4 text-amber-500" />
-                            <span>Menampilkan {displayedGalleries.length} Karya Visual</span>
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
+                        <div className="flex items-center gap-3 text-sm font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-1.5">
+                                <SlidersHorizontal className="w-4 h-4 text-amber-500" />
+                                <span>Menampilkan {displayedGalleries.length} Karya</span>
+                            </div>
+
+                            {/* In-Page HD Mode Switcher Pill */}
+                            <button
+                                type="button"
+                                onClick={toggleQuality}
+                                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-semibold border transition-all ${
+                                    isHd
+                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
+                                        : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                                }`}
+                                title="Klik untuk mengubah resolusi tampilan foto (SD Cepat / HD)"
+                            >
+                                {isHd ? <Sparkles className="w-3.5 h-3.5 text-amber-500" /> : <Zap className="w-3.5 h-3.5 text-emerald-500" />}
+                                <span>{isHd ? 'Resolusi: HD (100%)' : 'Resolusi: SD (Cepat)'}</span>
+                            </button>
                         </div>
                         <Link 
                             href="/layanan/photography-videography" 
@@ -162,8 +181,9 @@ export default function PortfolioIndex({ galleries = [] }) {
                                     className="group relative rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-900 aspect-[4/3] cursor-pointer shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
                                 >
                                     <img
-                                        src={item.file_webp_path}
+                                        src={getOptimizedImage(item.file_webp_path, { sdWidth: 480, hdWidth: 1400 })}
                                         alt={item.title}
+                                        loading="lazy"
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     

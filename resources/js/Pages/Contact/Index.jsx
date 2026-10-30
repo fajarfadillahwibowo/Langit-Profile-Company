@@ -5,8 +5,10 @@ import {
     Phone, Mail, MapPin, MessageSquare, ChevronDown,
     Sparkles, ArrowRight
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function ContactIndex({ contacts = {}, faqs = [] }) {
+    const { getOptimizedImage } = useQuality();
     const [openFaqIndex, setOpenFaqIndex] = useState(0);
     const [faqSearch, setFaqSearch] = useState('');
 
@@ -362,8 +364,9 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                     <div className="lg:col-span-7 rounded-3xl overflow-hidden border border-white/10 bg-slate-900 shadow-2xl aspect-[16/10] relative group">
                         {/* Map Graphic Overlay */}
                         <img
-                            src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80"
+                            src={getOptimizedImage("https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80", { sdWidth: 550, hdWidth: 1200 })}
                             alt="Peta Lokasi Langit Office"
+                            loading="lazy"
                             className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>

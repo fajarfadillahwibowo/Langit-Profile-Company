@@ -199,3 +199,19 @@
     }
 }
 
+/* 7. Lite Quality Mode Optimizations (SD Mode - Ultra Low CPU/GPU Usage) */
+[data-quality="sd"] .animate-aurora-1,
+[data-quality="sd"] .animate-aurora-2,
+[data-quality="sd"] .animate-aurora-3 {
+    animation-play-state: paused;
+}
+
+[data-quality="sd"] .preserve-3d {
+    transform-style: flat !important;
+}
+
+[data-quality="sd"] .perspective-1000 {
+    perspective: none !important;
+}
+
+
