@@ -8,32 +8,22 @@ export default function HeroLangit() {
     const heroRef = useRef(null);
 
     useEffect(() => {
-        // Lightweight, fast entrance animation without continuous ScrollTrigger scrubbers
+        // Lightweight, fast entrance animation with explicit fromTo & clearProps to prevent stuck opacity
         const ctx = gsap.context(() => {
-            gsap.from('.hlg-badge', { opacity: 0, y: -12, duration: 0.5, ease: 'power2.out' });
-            gsap.from('.hlg-line', {
-                opacity: 0,
-                y: 35,
-                stagger: 0.08,
-                duration: 0.6,
-                ease: 'power2.out',
-            });
-            gsap.from('.hlg-desc', { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out', delay: 0.2 });
-            gsap.from('.hlg-cta', {
-                opacity: 0,
-                y: 12,
-                stagger: 0.08,
-                duration: 0.5,
-                ease: 'power2.out',
-                delay: 0.25,
-            });
-            gsap.from('.hlg-right', {
-                opacity: 0,
-                scale: 0.96,
-                duration: 0.65,
-                ease: 'power2.out',
-                delay: 0.15,
-            });
+            gsap.fromTo('.hlg-badge', { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' });
+            gsap.fromTo('.hlg-line', 
+                { opacity: 0, y: 35 }, 
+                { opacity: 1, y: 0, stagger: 0.08, duration: 0.6, ease: 'power2.out', clearProps: 'all' }
+            );
+            gsap.fromTo('.hlg-desc', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.2, clearProps: 'all' });
+            gsap.fromTo('.hlg-cta', 
+                { opacity: 0.5, y: 12 }, 
+                { opacity: 1, y: 0, stagger: 0.08, duration: 0.45, ease: 'power2.out', delay: 0.15, clearProps: 'all' }
+            );
+            gsap.fromTo('.hlg-right', 
+                { opacity: 0, scale: 0.96 }, 
+                { opacity: 1, scale: 1, duration: 0.65, ease: 'power2.out', delay: 0.15, clearProps: 'all' }
+            );
         }, heroRef);
 
         return () => ctx.revert();
@@ -167,30 +157,30 @@ export default function HeroLangit() {
                         </p>
 
                         {/* CTA Buttons */}
-                        <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4 pt-1">
+                            {/* Tombol 1: Mulai Konsultasi (Primary CTA - Cerah, Tajam & Mudah Dibaca) */}
                             <Link
                                 href="/konsultasi"
-                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
+                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] shadow-xl shadow-cyan-500/25 border border-cyan-300/40"
                                 style={{
-                                    background: 'linear-gradient(135deg, #06B6D4 0%, #4F46E5 100%)',
-                                    boxShadow: '0 20px 50px rgba(6,182,212,0.28), 0 0 0 1px rgba(255,255,255,0.08) inset',
+                                    background: 'linear-gradient(135deg, #06B6D4 0%, #2563EB 100%)',
                                 }}
                             >
-                                Mulai Konsultasi
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <span>Mulai Konsultasi</span>
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-cyan-200" />
                             </Link>
+
+                            {/* Tombol 2: Lihat Portofolio (Secondary CTA - Kontras Tinggi, Terang & Anti-Blur) */}
                             <Link
                                 href="/portofolio"
-                                className="hlg-cta group px-7 py-4 rounded-2xl font-semibold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02]"
+                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-semibold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/30 hover:border-cyan-400/60 shadow-lg shadow-black/30"
                                 style={{
-                                    border: '1px solid rgba(255,255,255,0.13)',
-                                    background: 'rgba(255,255,255,0.04)',
-                                    backdropFilter: 'blur(12px)',
-                                    color: 'rgba(255,255,255,0.88)',
+                                    background: 'rgba(255, 255, 255, 0.12)',
+                                    backdropFilter: 'blur(8px)',
                                 }}
                             >
-                                <Play className="w-4 h-4" style={{ opacity: 0.55 }} />
-                                Lihat Portofolio
+                                <Play className="w-4 h-4 text-cyan-400 fill-cyan-400/30 group-hover:scale-110 transition-transform" />
+                                <span>Lihat Portofolio</span>
                             </Link>
                         </div>
 
