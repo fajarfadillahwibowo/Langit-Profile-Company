@@ -478,37 +478,6 @@ export default function FloatingHeadbar({
                             </Link>
                         </div>
 
-                        {/* Mobile Settings: Theme Switcher (SD/HD moved to Photo & Video sections) */}
-                        {setTheme && (
-                            <div className="p-3 rounded-2xl bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 mb-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">Tema Warna:</span>
-                                    <div className="flex items-center p-0.5 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/10">
-                                        <button
-                                            type="button"
-                                            onClick={() => setTheme('light')}
-                                            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                                                theme === 'light' ? 'bg-white text-amber-600 font-bold' : 'text-slate-600 dark:text-slate-400'
-                                            }`}
-                                        >
-                                            <Sun className="w-3 h-3" />
-                                            <span>Terang</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setTheme('dark')}
-                                            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                                                theme === 'dark' ? 'bg-slate-900 text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400'
-                                            }`}
-                                        >
-                                            <Moon className="w-3 h-3" />
-                                            <span>Gelap</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
                             <span className="text-[10px] font-mono uppercase text-slate-500 block mb-3 font-semibold">
                                 7 Divisi Layanan:
