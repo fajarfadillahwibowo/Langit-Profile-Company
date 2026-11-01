@@ -3,7 +3,6 @@ import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PublicLayout from '@/Layouts/PublicLayout';
 import MultiDeviceMockup from '@/Components/MultiDeviceMockup';
-import WebPerformanceDuel from '@/Components/WebPerformanceDuel';
 import WebArchitectureCockpit from '@/Components/WebArchitectureCockpit';
 import WebSolutionCard3D from '@/Components/WebSolutionCard3D';
 import ScrollingWebDevPillars from '@/Components/ScrollingWebDevPillars';
@@ -329,9 +328,6 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
 
                     <MultiDeviceMockup portfolios={portfolios} />
                 </section>
-
-                {/* 2. Interactive Performance Duel & Engineering Lifecycle Arena */}
-                <WebPerformanceDuel />
             </div>
         </PublicLayout>
     );
