@@ -160,21 +160,10 @@ export default function UnifiedLogin() {
                         </div>
                     </form>
 
-                    {/* Information Guide */}
-                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 space-y-3">
-                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
-                                <span className="font-bold text-[#005792] dark:text-cyan-400 block mb-0.5">Admin CMS</span>
-                                <span className="text-slate-500 dark:text-slate-400 text-[10.5px]">Kelola 7 divisi layanan</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">Pelanggan</span>
-                                <span className="text-slate-500 dark:text-slate-400 text-[10.5px]">Unduh foto sesi Anda</span>
-                            </div>
-                        </div>
-
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-                            Pelanggan login dengan akun yang diberikan admin. Kendala kredensial?{' '}
+                    {/* Footer WhatsApp Link */}
+                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 text-center">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Kendala akun atau login? Hubungi kami via{' '}
                             <a 
                                 href="https://wa.me/6282246142791" 
                                 target="_blank" 
