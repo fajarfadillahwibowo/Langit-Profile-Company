@@ -200,17 +200,17 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                             className="pt-2 flex flex-wrap items-center justify-center gap-3"
                         >
                             <a
-                                href="#interactive-arena"
-                                className="relative group px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 overflow-hidden"
+                                href="#jenis-website"
+                                className="relative group px-5 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 overflow-hidden"
                             >
-                                <span className="relative z-10">Uji Balap Kinerja & Alur Sistem</span>
-                                <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+                                <span className="relative z-10">Jenis Website & Sistem Digital yang Kami Buat</span>
+                                <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform shrink-0" />
                                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                             </a>
 
                             <Link
                                 href="/konsultasi"
-                                className="px-5 py-3 rounded-xl bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-all hover:border-cyan-500/50 shadow-sm"
+                                className="px-5 py-3 rounded-xl bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-xs sm:text-sm font-semibold transition-all hover:border-cyan-500/50 shadow-sm"
                             >
                                 Konsultasi Arsitektur Web
                             </Link>
@@ -247,7 +247,7 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                 </section>
 
                 {/* 0. Jenis Solusi Website yang Kami Kembangkan (3D Animated Cards Bogdan Zhuk Style) */}
-                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                <section id="jenis-website" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10 scroll-mt-24">
                     <div className="text-center max-w-3xl mx-auto mb-12">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider mb-2">
                             <Sparkles className="w-3.5 h-3.5" />
