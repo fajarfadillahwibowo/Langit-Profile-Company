@@ -120,6 +120,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/client-deliveries', [AdminDashboardController::class, 'createClientDelivery'])->name('client-deliveries.create');
         Route::post('/client-deliveries/{id}/upload-photos', [AdminDashboardController::class, 'uploadAdditionalClientPhotos'])->name('client-deliveries.upload-photos');
         Route::put('/client-deliveries/{id}/expiry', [AdminDashboardController::class, 'updateDeliveryExpiry'])->name('client-deliveries.update-expiry');
+        Route::put('/client-deliveries/{id}/credentials', [AdminDashboardController::class, 'updateClientCredentials'])->name('client-deliveries.update-credentials');
         Route::delete('/client-photos/{id}', [AdminDashboardController::class, 'deleteClientPhoto'])->name('client-photos.delete');
         Route::delete('/client-deliveries/{id}', [AdminDashboardController::class, 'deleteClientDelivery'])->name('client-deliveries.delete');
 

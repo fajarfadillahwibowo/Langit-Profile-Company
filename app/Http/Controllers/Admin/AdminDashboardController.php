@@ -1090,8 +1090,9 @@ class AdminDashboardController extends Controller
     {
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
-            'client_email' => 'required|email|max:255',
-            'client_password' => 'nullable|string|min:6',
+            'client_username' => 'required|string|max:50|alpha_dash',
+            'client_password' => 'required|string|min:4',
+            'client_email' => 'nullable|email|max:255',
             'client_phone' => 'nullable|string|max:50',
             'title' => 'required|string|max:255',
             'notes' => 'nullable|string|max:1000',
@@ -1100,20 +1101,29 @@ class AdminDashboardController extends Controller
             'photos.*' => 'file|max:102400', // Ukuran file foto hingga 100MB per file (tidak dibatasi 5MB)
         ]);
 
-        // Buat akun User pelanggan jika belum ada
-        $user = User::firstOrCreate(
-            ['email' => $validated['client_email']],
-            [
+        $username = Str::lower($validated['client_username']);
+        $email = !empty($validated['client_email']) 
+            ? $validated['client_email'] 
+            : $username . '@pelanggan.langit';
+
+        // Buat akun User pelanggan menggunakan username dan password yang diberikan admin
+        $user = User::where('username', $username)->orWhere('email', $email)->first();
+        if (!$user) {
+            $user = User::create([
                 'name' => $validated['client_name'],
-                'password' => bcrypt($validated['client_password'] ?? 'langit123'),
+                'username' => $username,
+                'email' => $email,
+                'password' => bcrypt($validated['client_password']),
                 'role' => 'client',
                 'phone' => $validated['client_phone'] ?? null,
-            ]
-        );
-
-        if (!empty($validated['client_password'])) {
-            $user->password = bcrypt($validated['client_password']);
-            $user->save();
+            ]);
+        } else {
+            $user->update([
+                'name' => $validated['client_name'],
+                'username' => $username,
+                'password' => bcrypt($validated['client_password']),
+                'phone' => $validated['client_phone'] ?? $user->phone,
+            ]);
         }
 
         $expiredAt = Carbon::now()->addDays((int) $validated['expiry_days'])->endOfDay();
@@ -1121,7 +1131,9 @@ class AdminDashboardController extends Controller
         $delivery = ClientDelivery::create([
             'user_id' => $user->id,
             'client_name' => $validated['client_name'],
-            'client_email' => $validated['client_email'],
+            'client_username' => $username,
+            'client_password_hint' => $validated['client_password'],
+            'client_email' => $email,
             'client_phone' => $validated['client_phone'] ?? null,
             'title' => $validated['title'],
             'notes' => $validated['notes'] ?? null,
@@ -1146,7 +1158,36 @@ class AdminDashboardController extends Controller
             }
         }
 
-        return back()->with('success', 'Layanan foto untuk "'.$validated['client_name'].'" berhasil dibuat. '.$delivery->photos()->count().' foto telah diunggah.');
+        return back()->with('success', 'Layanan foto untuk "'.$validated['client_name'].'" berhasil dibuat. Username: '.$username.'. '.$delivery->photos()->count().' foto telah diunggah.');
+    }
+
+    /**
+     * Ubah / Reset Username & Password Pelanggan oleh Admin
+     */
+    public function updateClientCredentials(Request $request, $id)
+    {
+        $delivery = ClientDelivery::with('user')->findOrFail($id);
+        $validated = $request->validate([
+            'username' => 'required|string|max:50|alpha_dash',
+            'password' => 'required|string|min:4',
+        ]);
+
+        $newUsername = Str::lower($validated['username']);
+        $newPassword = $validated['password'];
+
+        if ($delivery->user) {
+            $delivery->user->update([
+                'username' => $newUsername,
+                'password' => bcrypt($newPassword),
+            ]);
+        }
+
+        $delivery->update([
+            'client_username' => $newUsername,
+            'client_password_hint' => $newPassword,
+        ]);
+
+        return back()->with('success', 'Username dan password pelanggan "'.$delivery->client_name.'" berhasil diperbarui.');
     }
 
     /**

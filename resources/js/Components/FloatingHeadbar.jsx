@@ -293,15 +293,6 @@ export default function FloatingHeadbar({
                             </button>
                         ) : null}
 
-                        {/* Admin CMS Portal link */}
-                        <Link 
-                            href="/admin/login" 
-                            title="Admin CMS Portal"
-                            className={`${scrolled ? 'hidden xl:flex' : 'hidden lg:flex'} shrink-0 items-center gap-1 px-2.5 py-1 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 rounded-full transition-all`}
-                        >
-                            <span>CMS</span>
-                        </Link>
-
                         {/* Login Pelanggan CTA Button (Topbar Kanan Atas) */}
                         <Link
                             href="/pelanggan/login"

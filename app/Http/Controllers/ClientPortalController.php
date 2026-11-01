@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientDelivery;
 use App\Models\ClientPhoto;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use ZipArchive;
@@ -30,30 +32,38 @@ class ClientPortalController extends Controller
     }
 
     /**
-     * Proses Login Pelanggan
+     * Proses Login Pelanggan Menggunakan Username atau Email yang Diberikan Admin
      */
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+     public function login(Request $request)
+     {
+         $validated = $request->validate([
+             'login' => 'required|string',
+             'password' => 'required|string',
+         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+         $loginInput = trim($validated['login']);
+         $password = $validated['password'];
 
-            if ($user->role === 'client') {
-                return redirect()->intended(route('client.gallery'));
-            }
+         // Cari pengguna berdasarkan username atau email
+         $user = User::where('username', $loginInput)
+             ->orWhere('email', $loginInput)
+             ->first();
 
-            return redirect()->intended(route('admin.dashboard'));
-        }
+         if ($user && Hash::check($password, $user->password)) {
+             Auth::login($user, $request->boolean('remember'));
+             $request->session()->regenerate();
 
-        return back()->withErrors([
-            'email' => 'Email atau kata sandi tidak cocok. Pastikan Anda memasukkan data login yang diberikan oleh admin Studio Langit.',
-        ]);
-    }
+             if ($user->role === 'client') {
+                 return redirect()->intended(route('client.gallery'));
+             }
+
+             return redirect()->intended(route('admin.dashboard'));
+         }
+
+         return back()->withErrors([
+             'login' => 'Username atau kata sandi tidak cocok. Pastikan Anda memasukkan username dan password yang diberikan oleh admin Studio Langit.',
+         ]);
+     }
 
     /**
      * Logout Pelanggan

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { Lock, Mail, ArrowLeft, Eye, EyeOff, Camera, Sparkles, Download } from 'lucide-react';
+import { Lock, User, ArrowLeft, Eye, EyeOff, Camera, Sparkles, Download } from 'lucide-react';
 import ThemeToggle from '@/Components/ThemeToggle';
 
 export default function ClientLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        login: '',
         password: '',
         remember: true,
     });
@@ -73,28 +73,29 @@ export default function ClientLogin() {
                             Portal Ambil Foto
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed max-w-xs mx-auto">
-                            Masukkan email dan kata sandi yang diberikan admin Studio Langit untuk mengunduh foto Anda.
+                            Masukkan username dan kata sandi yang telah diberikan oleh admin Studio Langit untuk mengunduh foto Anda.
                         </p>
                     </div>
 
                     <form onSubmit={submit} className="space-y-4">
                         <div>
                             <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
-                                Email Pelanggan
+                                Username Pelanggan
                             </label>
                             <div className="relative">
-                                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                 <input
-                                    type="email"
+                                    type="text"
                                     required
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="nama@email.com"
+                                    value={data.login}
+                                    onChange={(e) => setData('login', e.target.value)}
+                                    placeholder="Contoh: rina_dimas atau email"
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
+                                    autoCapitalize="none"
                                 />
                             </div>
-                            {errors.email && (
-                                <p className="text-xs text-rose-500 mt-1 font-mono">{errors.email}</p>
+                            {errors.login && (
+                                <p className="text-xs text-rose-500 mt-1 font-mono">{errors.login}</p>
                             )}
                         </div>
 
@@ -139,7 +140,7 @@ export default function ClientLogin() {
 
                     <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 text-center">
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Belum memiliki akses atau masa unduh habis? Hubungi Studio Langit via{' '}
+                            Belum memiliki username & password atau masa unduh habis? Hubungi Studio Langit via{' '}
                             <a 
                                 href="https://wa.me/6282246142791" 
                                 target="_blank" 

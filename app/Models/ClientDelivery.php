@@ -15,6 +15,8 @@ class ClientDelivery extends Model
     protected $fillable = [
         'user_id',
         'client_name',
+        'client_username',
+        'client_password_hint',
         'client_email',
         'client_phone',
         'title',
