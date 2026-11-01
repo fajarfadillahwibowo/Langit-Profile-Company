@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
-    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle
+    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle, LogIn
 } from 'lucide-react';
 import InteractiveBentoCard from '@/Components/InteractiveBentoCard';
 
@@ -302,15 +302,16 @@ export default function FloatingHeadbar({
                             <span>CMS</span>
                         </Link>
 
-                        {/* Consultation CTA - Always functional on Mobile & Desktop */}
+                        {/* Login Pelanggan CTA Button (Topbar Kanan Atas) */}
                         <Link
-                            href="/konsultasi"
+                            href="/pelanggan/login"
                             className={`shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-[#005792]/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap ${
-                                scrolled ? 'px-2.5 sm:px-3 py-1 sm:py-1.5' : 'px-2.5 sm:px-4 py-1 sm:py-1.5'
+                                scrolled ? 'px-3 py-1 sm:py-1.5' : 'px-3.5 sm:px-4 py-1 sm:py-1.5'
                             }`}
+                            title="Portal Login Pelanggan - Ambil Foto"
                         >
-                            <span>Konsultasi</span>
-                            <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                            <LogIn className="w-3.5 h-3.5 shrink-0" />
+                            <span>Login</span>
                         </Link>
 
                         {/* Mobile Hamburger Toggle */}
@@ -470,9 +471,17 @@ export default function FloatingHeadbar({
                                 Kontak & Lokasi Studio
                             </Link>
                             <Link 
+                                href="/pelanggan/login" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block px-3 py-2 rounded-xl text-sm font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 flex items-center justify-between"
+                            >
+                                <span>Login Pelanggan (Ambil Foto)</span>
+                                <LogIn className="w-4 h-4 shrink-0" />
+                            </Link>
+                            <Link 
                                 href="/konsultasi" 
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="block px-3 py-2 rounded-xl text-sm font-bold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-500/10"
+                                className="block px-3 py-2 rounded-xl text-sm font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-500/10"
                             >
                                 Mulai Konsultasi 3 Langkah →
                             </Link>

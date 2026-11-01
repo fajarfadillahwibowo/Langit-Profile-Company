@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
@@ -37,6 +38,16 @@ Route::get('/portofolio', [PortfolioController::class, 'index'])->name('portfoli
 Route::get('/internship', fn () => redirect()->route('services.internship'));
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');
 Route::get('/konsultasi', [ConsultationController::class, 'wizard'])->name('consultation.wizard');
+
+// Portal Pelanggan (Login & Ambil Foto)
+Route::prefix('pelanggan')->name('client.')->group(function () {
+    Route::get('/login', [ClientPortalController::class, 'showLogin'])->name('login');
+    Route::post('/login', [ClientPortalController::class, 'login'])->name('login.post');
+    Route::post('/logout', [ClientPortalController::class, 'logout'])->name('logout');
+    Route::get('/galeri', [ClientPortalController::class, 'gallery'])->name('gallery');
+    Route::get('/foto/{id}/download', [ClientPortalController::class, 'downloadPhoto'])->name('photo.download');
+    Route::get('/album/{id}/download-all', [ClientPortalController::class, 'downloadAllZip'])->name('album.download-all');
+});
 
 // Interactive Action Endpoints (Public)
 Route::get('/api/service-tracker/{receipt_number}', [InteractiveActionController::class, 'serviceTracker'])->name('api.service-tracker');
@@ -104,6 +115,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Services Management (Kartu 7 Divisi Layanan)
         Route::put('/services/{id}', [AdminDashboardController::class, 'updateService'])->name('services.update');
         Route::post('/services/{id}/update', [AdminDashboardController::class, 'updateService'])->name('services.update-post');
+
+        // Layanan Pengambilan Foto Pelanggan (Client Deliveries)
+        Route::post('/client-deliveries', [AdminDashboardController::class, 'createClientDelivery'])->name('client-deliveries.create');
+        Route::post('/client-deliveries/{id}/upload-photos', [AdminDashboardController::class, 'uploadAdditionalClientPhotos'])->name('client-deliveries.upload-photos');
+        Route::put('/client-deliveries/{id}/expiry', [AdminDashboardController::class, 'updateDeliveryExpiry'])->name('client-deliveries.update-expiry');
+        Route::delete('/client-photos/{id}', [AdminDashboardController::class, 'deleteClientPhoto'])->name('client-photos.delete');
+        Route::delete('/client-deliveries/{id}', [AdminDashboardController::class, 'deleteClientDelivery'])->name('client-deliveries.delete');
 
         // Admin Profile Management & Live Camera / Upload Avatar
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');

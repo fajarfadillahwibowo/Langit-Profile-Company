@@ -3,12 +3,13 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
 import AdminServiceCardsManager from '@/Components/AdminServiceCardsManager';
+import AdminClientDeliveryManager from '@/Components/AdminClientDeliveryManager';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
     Phone, Calendar, FileText, Download, Eye, Filter,
     ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart
 } from 'lucide-react';
 
 export default function AdminDashboard({
@@ -23,6 +24,7 @@ export default function AdminDashboard({
     courses = [],
     webPortfolios = [],
     recentConsultations = [],
+    clientDeliveries = [],
 }) {
     const { auth } = usePage().props;
     // Theme Management: Primary is 'light', Secondary is 'dark'
@@ -814,6 +816,28 @@ export default function AdminDashboard({
                             </span>
                         </button>
 
+                        {/* Layanan Foto Pelanggan (Delivery & Ambil Foto) */}
+                        <button
+                            onClick={() => setActiveTab('client_deliveries')}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                activeTab === 'client_deliveries'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-sky-300'}`} />
+                                <span>Foto Pelanggan</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                activeTab === 'client_deliveries'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {clientDeliveries.length}
+                            </span>
+                        </button>
+
                         {/* Sub-Sidebar: Galeri & EXIF Media with Services Accordion */}
                         <div className="space-y-1">
                             <button
@@ -1015,6 +1039,7 @@ export default function AdminDashboard({
                     <div>
                         <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
                             {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
+                            {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan (Delivery & Ambil Foto)'}
                             {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
                             {activeTab === 'rentals' && 'Manajemen Sewa Alat & Inventaris Gear'}
                             {activeTab === 'galleries' && 'Manajemen Galeri Mahakarya & EXIF'}
@@ -2225,6 +2250,11 @@ export default function AdminDashboard({
                 {/* TAB: 7 INTEGRATED DIVISIONS VIP CARDS MANAGER */}
                 {activeTab === 'services' && (
                     <AdminServiceCardsManager services={services} />
+                )}
+
+                {/* TAB: LAYANAN FOTO PELANGGAN (DELIVERY & AMBIL FOTO) */}
+                {activeTab === 'client_deliveries' && (
+                    <AdminClientDeliveryManager clientDeliveries={clientDeliveries} />
                 )}
 
                 {/* TAB 7: COLLABORATION PROPOSALS (B2B & KEMITRAAN) */}

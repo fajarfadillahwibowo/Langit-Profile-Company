@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClientDelivery;
+use App\Models\ClientPhoto;
 use App\Models\Collaboration;
 use App\Models\ComputerServiceTicket;
 use App\Models\Consultation;
@@ -12,9 +14,12 @@ use App\Models\InternshipApplication;
 use App\Models\RentalBooking;
 use App\Models\RentalEquipment;
 use App\Models\Service;
+use App\Models\User;
 use App\Models\WebEstimatorComponent;
 use App\Models\WebPortfolio;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -34,6 +39,8 @@ class AdminDashboardController extends Controller
             'total_equipments' => RentalEquipment::count(),
             'total_collaborations' => Collaboration::count(),
             'pending_collaborations' => Collaboration::whereIn('status', ['new', 'in_discussion'])->count(),
+            'total_client_deliveries' => ClientDelivery::count(),
+            'active_client_deliveries' => ClientDelivery::where('is_active', true)->where('expired_at', '>', Carbon::now())->count(),
         ];
 
         $services = Service::all();
@@ -52,6 +59,7 @@ class AdminDashboardController extends Controller
             'courses' => EducationCourse::withCount('registrations')->get(),
             'webPortfolios' => WebPortfolio::all(),
             'estimatorComponents' => WebEstimatorComponent::all(),
+            'clientDeliveries' => ClientDelivery::with(['photos', 'user'])->latest()->get(),
         ]);
     }
 
@@ -1073,5 +1081,159 @@ class AdminDashboardController extends Controller
         ]);
 
         return back()->with('success', 'Divisi Layanan "'.$service->name.'" berhasil diperbarui.');
+    }
+
+    /**
+     * Buat Layanan Pengambilan Foto Pelanggan Baru & Unggah Foto Asli (Tanpa Batasan Ukuran File)
+     */
+    public function createClientDelivery(Request $request)
+    {
+        $validated = $request->validate([
+            'client_name' => 'required|string|max:255',
+            'client_email' => 'required|email|max:255',
+            'client_password' => 'nullable|string|min:6',
+            'client_phone' => 'nullable|string|max:50',
+            'title' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:1000',
+            'expiry_days' => 'required|integer|min:1|max:365',
+            'photos' => 'required|array|min:1',
+            'photos.*' => 'file|max:102400', // Ukuran file foto hingga 100MB per file (tidak dibatasi 5MB)
+        ]);
+
+        // Buat akun User pelanggan jika belum ada
+        $user = User::firstOrCreate(
+            ['email' => $validated['client_email']],
+            [
+                'name' => $validated['client_name'],
+                'password' => bcrypt($validated['client_password'] ?? 'langit123'),
+                'role' => 'client',
+                'phone' => $validated['client_phone'] ?? null,
+            ]
+        );
+
+        if (!empty($validated['client_password'])) {
+            $user->password = bcrypt($validated['client_password']);
+            $user->save();
+        }
+
+        $expiredAt = Carbon::now()->addDays((int) $validated['expiry_days'])->endOfDay();
+
+        $delivery = ClientDelivery::create([
+            'user_id' => $user->id,
+            'client_name' => $validated['client_name'],
+            'client_email' => $validated['client_email'],
+            'client_phone' => $validated['client_phone'] ?? null,
+            'title' => $validated['title'],
+            'notes' => $validated['notes'] ?? null,
+            'expired_at' => $expiredAt,
+            'is_active' => true,
+        ]);
+
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                $origName = $file->getClientOriginalName();
+                $size = $file->getSize(); // Ukuran byte asli
+                $mime = $file->getClientMimeType() ?: 'image/jpeg';
+                $path = $file->store("client_photos/{$delivery->id}", 'public');
+
+                ClientPhoto::create([
+                    'client_delivery_id' => $delivery->id,
+                    'file_path' => $path,
+                    'original_name' => $origName,
+                    'file_size' => $size,
+                    'mime_type' => $mime,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Layanan foto untuk "'.$validated['client_name'].'" berhasil dibuat. '.$delivery->photos()->count().' foto telah diunggah.');
+    }
+
+    /**
+     * Tambah Foto Tambahan ke Album Pelanggan yang Sudah Ada
+     */
+    public function uploadAdditionalClientPhotos(Request $request, $id)
+    {
+        $delivery = ClientDelivery::findOrFail($id);
+
+        $request->validate([
+            'photos' => 'required|array|min:1',
+            'photos.*' => 'file|max:102400',
+        ]);
+
+        $count = 0;
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                $origName = $file->getClientOriginalName();
+                $size = $file->getSize();
+                $mime = $file->getClientMimeType() ?: 'image/jpeg';
+                $path = $file->store("client_photos/{$delivery->id}", 'public');
+
+                ClientPhoto::create([
+                    'client_delivery_id' => $delivery->id,
+                    'file_path' => $path,
+                    'original_name' => $origName,
+                    'file_size' => $size,
+                    'mime_type' => $mime,
+                ]);
+                $count++;
+            }
+        }
+
+        return back()->with('success', $count.' foto tambahan berhasil diunggah ke album "'.$delivery->title.'".');
+    }
+
+    /**
+     * Kelola Menu Expired Hitungan Hari Mundur & Status Akses
+     */
+    public function updateDeliveryExpiry(Request $request, $id)
+    {
+        $delivery = ClientDelivery::findOrFail($id);
+
+        $validated = $request->validate([
+            'extend_days' => 'nullable|integer',
+            'specific_date' => 'nullable|date',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        if (!empty($validated['extend_days'])) {
+            $base = $delivery->is_expired ? Carbon::now() : $delivery->expired_at;
+            $delivery->expired_at = (clone $base)->addDays((int) $validated['extend_days'])->endOfDay();
+            $delivery->is_active = true;
+        } elseif (!empty($validated['specific_date'])) {
+            $delivery->expired_at = Carbon::parse($validated['specific_date'])->endOfDay();
+        }
+
+        if (isset($validated['is_active'])) {
+            $delivery->is_active = (bool) $validated['is_active'];
+        }
+
+        $delivery->save();
+
+        return back()->with('success', 'Masa aktif dan hitungan hari kedaluwarsa untuk "'.$delivery->client_name.'" berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Satu Foto Individual
+     */
+    public function deleteClientPhoto($photoId)
+    {
+        $photo = ClientPhoto::findOrFail($photoId);
+        Storage::disk('public')->delete($photo->file_path);
+        $photo->delete();
+
+        return back()->with('success', 'Foto berhasil dihapus.');
+    }
+
+    /**
+     * Hapus Seluruh Sesi Layanan Pelanggan beserta Folder Foto Fisiknya
+     */
+    public function deleteClientDelivery($id)
+    {
+        $delivery = ClientDelivery::with('photos')->findOrFail($id);
+        Storage::disk('public')->deleteDirectory("client_photos/{$delivery->id}");
+        $delivery->delete();
+
+        return back()->with('success', 'Layanan foto pelanggan berhasil dihapus.');
     }
 }
