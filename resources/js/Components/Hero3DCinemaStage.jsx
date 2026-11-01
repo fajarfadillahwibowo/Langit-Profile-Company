@@ -148,7 +148,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(40px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[23%] sm:top-[18%] lg:top-[15%] right-1 sm:right-3 lg:right-2 z-10 w-[180px] sm:w-[240px] lg:w-[290px] pointer-events-auto"
+                            className="absolute top-[23%] sm:top-[18%] lg:top-[14%] right-1 sm:right-3 lg:right-[-35px] xl:right-[-45px] z-10 w-[180px] sm:w-[240px] lg:w-[265px] xl:w-[285px] pointer-events-auto"
                         >
                             <img
                                 src="/images/laptop-3d-transparent.png"
@@ -164,7 +164,7 @@ export default function Hero3DCinemaStage() {
                             />
                         </motion.div>
 
-                        {/* 2. 3D CAMERA (Posisi aman di dalam viewport, tidak terpotong atau ketambrak di layar HP) */}
+                        {/* 2. 3D CAMERA (Aman di Mobile, Berjarak Lega di Desktop/Laptop) */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ 
@@ -183,7 +183,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(75px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[30%] sm:top-[25%] lg:top-[22%] left-2 sm:left-4 lg:left-[-15px] z-20 w-[138px] sm:w-[195px] lg:w-[240px] pointer-events-auto"
+                            className="absolute top-[30%] sm:top-[25%] lg:top-[20%] left-2 sm:left-4 lg:left-[-55px] xl:left-[-65px] z-20 w-[138px] sm:w-[195px] lg:w-[215px] xl:w-[235px] pointer-events-auto"
                         >
                             <img
                                 src="/images/camera-3d-transparent.png"
@@ -276,7 +276,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 1: Top-Left Photography & Videography */}
                 <div
                     onClick={() => window.location.href = '/layanan/photography-videography'}
-                    className="absolute top-3 sm:top-5 lg:top-6 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-3 sm:top-5 lg:top-6 left-1 sm:left-2 lg:left-[-35px] xl:left-[-45px] z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -301,7 +301,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 2: Top-Right Langit Education */}
                 <div
                     onClick={() => window.location.href = '/layanan/langit-education'}
-                    className="absolute top-3 sm:top-5 lg:top-6 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-3 sm:top-5 lg:top-6 right-1 sm:right-2 lg:right-[-25px] xl:right-[-35px] z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -323,10 +323,10 @@ export default function Hero3DCinemaStage() {
                     </div>
                 </div>
 
-                {/* Badge 3: Bottom-Left Web Development (Dirapatkan tidak kejahuan) */}
+                {/* Badge 3: Bottom-Left Web Development */}
                 <div
                     onClick={() => window.location.href = '/layanan/web-development'}
-                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 left-1 sm:left-2 lg:left-[-35px] xl:left-[-45px] z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -348,10 +348,10 @@ export default function Hero3DCinemaStage() {
                     </div>
                 </div>
 
-                {/* Badge 4: Bottom-Right Program Internship (Dirapatkan tidak kejahuan) */}
+                {/* Badge 4: Bottom-Right Program Internship */}
                 <div
                     onClick={() => window.location.href = '/layanan/internship'}
-                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 right-1 sm:right-2 lg:right-[-25px] xl:right-[-35px] z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
