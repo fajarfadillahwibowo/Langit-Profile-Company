@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { Lock, User, ArrowLeft, Eye, EyeOff, LogIn, Shield, Camera, Sparkles } from 'lucide-react';
-import ThemeToggle from '@/Components/ThemeToggle';
+import { Lock, User, ArrowLeft, Eye, EyeOff, LogIn, Sun, Moon } from 'lucide-react';
 
 export default function UnifiedLogin() {
     const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +57,19 @@ export default function UnifiedLogin() {
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <ThemeToggle theme={theme} setTheme={setTheme} />
+                        <button
+                            type="button"
+                            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                            aria-label="Ganti Tema Tampilan"
+                            title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-white/10 transition-transform active:scale-95 shadow-xs cursor-pointer"
+                        >
+                            {theme === 'dark' ? (
+                                <Sun className="w-4 h-4 text-amber-400" />
+                            ) : (
+                                <Moon className="w-4 h-4 text-slate-700" />
+                            )}
+                        </button>
                         <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#005792]/10 text-[#005792] dark:bg-cyan-500/20 dark:text-cyan-300 border border-[#005792]/20 dark:border-cyan-500/30">
                             Akses Akun
                         </span>
