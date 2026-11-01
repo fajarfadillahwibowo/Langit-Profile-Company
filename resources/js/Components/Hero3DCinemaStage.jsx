@@ -56,7 +56,7 @@ export default function Hero3DCinemaStage() {
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={handleMouseLeave}
-            className="relative w-full h-[480px] sm:h-[500px] lg:h-[560px] select-none flex items-center justify-center cursor-pointer overflow-visible"
+            className="relative w-full h-[390px] sm:h-[440px] lg:h-[510px] select-none flex items-center justify-center cursor-pointer overflow-visible"
             style={{
                 perspective: isHd ? '1400px' : '900px',
             }}
@@ -81,12 +81,12 @@ export default function Hero3DCinemaStage() {
                 }}
                 className="relative w-full h-full transition-transform duration-300 will-change-transform"
             >
-                {/* ── TOP CONTROL PILL: Switcher Icon-only (Simpel & Minimalis, Button + Logo Saja Tanpa Kata-kata) ── */}
+                {/* ── TOP CONTROL PILL: Switcher Icon-only (Beri Jarak Vertikal Nyaman, Tidak Menempel ke Kartu) ── */}
                 <div 
-                    className="absolute -top-6 sm:-top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1.5 rounded-full border border-white/20 backdrop-blur-xl shadow-2xl"
+                    className="absolute -top-12 sm:-top-11 lg:-top-9 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1 sm:p-1.5 rounded-full border border-white/20 backdrop-blur-xl shadow-2xl"
                     style={{ 
                         transform: 'translateZ(130px) translateX(-50%)',
-                        background: 'rgba(0, 20, 42, 0.92)',
+                        background: 'rgba(0, 20, 42, 0.94)',
                         boxShadow: '0 10px 30px rgba(0,0,0,0.55), 0 0 20px rgba(56,189,248,0.2)',
                     }}
                 >
@@ -104,7 +104,7 @@ export default function Hero3DCinemaStage() {
                                 onClick={() => setViewMode(item.id)}
                                 aria-label={item.label}
                                 title={item.label}
-                                className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-95 group"
+                                className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-95 group"
                             >
                                 {isActive && (
                                     <motion.div
@@ -148,7 +148,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(40px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[20%] sm:top-[16%] lg:top-[15%] right-1 sm:right-3 lg:right-2 z-10 w-[185px] sm:w-[245px] lg:w-[290px] pointer-events-auto"
+                            className="absolute top-[23%] sm:top-[18%] lg:top-[15%] right-1 sm:right-3 lg:right-2 z-10 w-[180px] sm:w-[240px] lg:w-[290px] pointer-events-auto"
                         >
                             <img
                                 src="/images/laptop-3d-transparent.png"
@@ -183,7 +183,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(75px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[26%] sm:top-[22%] lg:top-[20%] left-2 sm:left-4 lg:left-[-20px] z-20 w-[140px] sm:w-[195px] lg:w-[240px] pointer-events-auto"
+                            className="absolute top-[30%] sm:top-[25%] lg:top-[22%] left-2 sm:left-4 lg:left-[-15px] z-20 w-[138px] sm:w-[195px] lg:w-[240px] pointer-events-auto"
                         >
                             <img
                                 src="/images/camera-3d-transparent.png"
@@ -276,7 +276,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 1: Top-Left Photography & Videography */}
                 <div
                     onClick={() => window.location.href = '/layanan/photography-videography'}
-                    className="absolute top-8 sm:top-10 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-3 sm:top-5 lg:top-6 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -301,7 +301,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 2: Top-Right Langit Education */}
                 <div
                     onClick={() => window.location.href = '/layanan/langit-education'}
-                    className="absolute top-8 sm:top-10 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-3 sm:top-5 lg:top-6 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -323,10 +323,10 @@ export default function Hero3DCinemaStage() {
                     </div>
                 </div>
 
-                {/* Badge 3: Bottom-Left Web Development */}
+                {/* Badge 3: Bottom-Left Web Development (Dirapatkan tidak kejahuan) */}
                 <div
                     onClick={() => window.location.href = '/layanan/web-development'}
-                    className="absolute bottom-2 sm:bottom-1 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -348,10 +348,10 @@ export default function Hero3DCinemaStage() {
                     </div>
                 </div>
 
-                {/* Badge 4: Bottom-Right Program Internship */}
+                {/* Badge 4: Bottom-Right Program Internship (Dirapatkan tidak kejahuan) */}
                 <div
                     onClick={() => window.location.href = '/layanan/internship'}
-                    className="absolute bottom-2 sm:bottom-1 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-4 sm:bottom-4 lg:bottom-5 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',

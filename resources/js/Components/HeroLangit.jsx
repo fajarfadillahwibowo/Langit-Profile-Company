@@ -197,7 +197,7 @@ export default function HeroLangit() {
                     </div>
 
                     {/* RIGHT: VISUAL PANEL (3D Cinema Camera & Web System Stage) */}
-                    <div className="hlg-right lg:col-span-5 relative overflow-visible">
+                    <div className="hlg-right lg:col-span-5 relative overflow-visible mt-10 sm:mt-6 lg:mt-0">
                         <Hero3DCinemaStage />
                     </div>
                 </div>
