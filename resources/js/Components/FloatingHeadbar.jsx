@@ -137,8 +137,8 @@ export default function FloatingHeadbar({
                     pointer-events-auto w-full transition-all duration-300 ease-out
                     rounded-2xl sm:rounded-full border
                     ${scrolled
-                        ? 'max-w-4xl py-2 px-4 sm:px-6 bg-white/92 dark:bg-[#07090E]/92 backdrop-blur-md border-[#005792]/40 dark:border-[#005792]/50 shadow-xl shadow-[#005792]/15 dark:shadow-[0_12px_36px_-6px_rgba(0,87,146,0.35)] ring-1 ring-[#005792]/20'
-                        : 'max-w-7xl py-3 sm:py-3.5 px-5 sm:px-8 bg-white/85 dark:bg-[#090D16]/85 backdrop-blur-md border-[#005792]/30 dark:border-[#005792]/45 shadow-lg shadow-[#005792]/8 dark:shadow-none ring-1 ring-[#005792]/15'
+                        ? 'max-w-4xl py-2 px-3.5 sm:px-6 bg-white/98 dark:bg-[#07090E]/98 backdrop-blur-xl border-[#005792]/40 dark:border-[#005792]/50 shadow-xl shadow-[#005792]/15 dark:shadow-[0_12px_36px_-6px_rgba(0,87,146,0.35)] ring-1 ring-[#005792]/20'
+                        : 'max-w-7xl py-2.5 sm:py-3.5 px-4 sm:px-8 bg-white/95 dark:bg-[#090D16]/95 backdrop-blur-xl border-[#005792]/30 dark:border-[#005792]/45 shadow-lg shadow-[#005792]/8 dark:shadow-none ring-1 ring-[#005792]/15'
                     }
                 `}
             >

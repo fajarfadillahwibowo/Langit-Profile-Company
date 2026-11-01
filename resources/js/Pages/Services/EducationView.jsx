@@ -14,7 +14,7 @@ export default function EducationView({ service, courses = [], galleries = [] })
             </Head>
 
             {/* Atmosphere: Modern Academy & Learning Hub Layout */}
-            <div className="bg-[#EDF9FC] dark:bg-[#04100D] min-h-screen text-slate-800 dark:text-slate-100 -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#04100D] min-h-screen text-slate-800 dark:text-slate-100 pt-2 sm:pt-6 transition-colors duration-300">
                 {/* Hero Header */}
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6 pb-12 text-center space-y-4">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-mono tracking-wider">

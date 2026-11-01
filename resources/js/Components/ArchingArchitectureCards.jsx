@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from '@inertiajs/react';
 import { 
     ChevronLeft, ChevronRight, Play, Pause, ArrowRight,
-    Sparkles, ShieldCheck, Zap, Activity
+    Sparkles, ShieldCheck, Zap, Activity, CheckCircle2
 } from 'lucide-react';
 
 /* ── 1. REAL OFFICIAL SVGS FOR EACH ARCHITECTURE TECHNOLOGY ────────────── */
@@ -93,11 +94,11 @@ export const ARCH_STACK = [
         badge: 'PHP 8.4 JIT Engine',
         logo: LogoLaravel,
         features: [
-            'Arsitektur MVC Modular dengan RESTful API terstruktur',
-            'Validasi ketat standar OWASP & proteksi CSRF instan',
-            'Queue asynchronous untuk pengiriman email & background jobs'
+            'Arsitektur MVC modular dengan endpoint RESTful API terstruktur',
+            'Validasi ketat standar keamanan OWASP & proteksi CSRF instan',
+            'Sistem antrean (Queue) asynchronous untuk background jobs'
         ],
-        description: 'Pondasi logika bisnis yang kokoh, mengendalikan orkestrasi data, otentikasi multi-guard, dan pemrosesan transaksi berkecepatan tinggi.',
+        description: 'Pondasi logika bisnis yang kokoh, mengendalikan orkestrasi data, otentikasi multi-guard berstandar OWASP, serta pemrosesan transaksi berkecepatan tinggi.',
     },
     {
         id: 'react',
@@ -110,11 +111,11 @@ export const ARCH_STACK = [
         badge: 'Concurrent Hydration',
         logo: LogoReact,
         features: [
-            'Navigasi instan 0ms tanpa refresh halaman (Zero Reload)',
+            'Navigasi instan 0ms tanpa refresh halaman (Zero Page Reload)',
             'Virtual DOM berkinerja tinggi dengan code-splitting otomatis',
-            'Komponen UI modular, teruji, dan mudah dirawat'
+            'Komponen UI modular, teruji, dan reaktif'
         ],
-        description: 'Mesin antarmuka klien yang responsif dan luwes, menghasilkan pengalaman aplikasi web secepat aplikasi desktop (SPA).',
+        description: 'Mesin antarmuka klien yang responsif dan luwes, menghadirkan pengalaman aplikasi web instan secepat aplikasi desktop tanpa reload (Single Page Application).',
     },
     {
         id: 'vue',
@@ -127,9 +128,9 @@ export const ARCH_STACK = [
         badge: 'Composition API',
         logo: LogoVue,
         features: [
-            'Sistem reaktivitas mendalam berbasis JavaScript Proxy',
-            'Sintaks template bersih dengan single-file components (SFC)',
-            'Transisi animasi bawaan yang sangat halus dan fleksibel'
+            'Sistem reaktivitas mendalam berbasis JavaScript Proxy modern',
+            'Sintaks template bersih dengan Single-File Components (SFC)',
+            'Transisi animasi bawaan yang sangat halus dan teruji'
         ],
         description: 'Framework progresif alternatif yang ringan dan sangat reaktif, ideal untuk portal interaktif dan dashboard manajemen modern.',
     },
@@ -144,11 +145,11 @@ export const ARCH_STACK = [
         badge: 'OPcache + JIT',
         logo: LogoPhp,
         features: [
-            'Kompilasi Just-In-Time (JIT) untuk komputasi cepat',
+            'Kompilasi Just-In-Time (JIT) untuk performa komputasi tinggi',
             'Type-safety ketat, readonly properties, dan fiber concurrency',
-            'Ekosistem matang dengan manajemen dependensi Composer'
+            'Ekosistem matang dengan optimasi OPcache produksi'
         ],
-        description: 'Runtime server generasi terbaru dengan eksekusi kode terkompilasi, menghantarkan ribuan request per detik dengan konsumsi RAM rendah.',
+        description: 'Runtime server generasi terbaru dengan eksekusi kode terkompilasi, menghantarkan ribuan request per detik secara stabil dengan efisiensi memori tinggi.',
     },
     {
         id: 'mysql',
@@ -165,7 +166,7 @@ export const ARCH_STACK = [
             'Indexing multi-kolom dan partisi tabel untuk jutaan baris data',
             'Dukungan native JSON column indexing dan full-text search cepat'
         ],
-        description: 'Sistem basis data teruji untuk mencatat seluruh transaksi, inventori, dan data pengguna secara aman tanpa risiko korupsi data.',
+        description: 'Sistem basis data teruji untuk mencatat seluruh transaksi, inventori, dan data pengguna secara aman tanpa risiko inkonsistensi data.',
     },
     {
         id: 'css',
@@ -180,7 +181,7 @@ export const ARCH_STACK = [
         features: [
             'Layout adaptif berbasis modern CSS Grid & Flexbox',
             'Dukungan native Dark/Light mode dengan CSS Variables',
-            'Akselerasi hardware 60 FPS untuk transisi dan efek glassmorphism'
+            'Akselerasi hardware 60 FPS untuk transisi dan efek visual'
         ],
         description: 'Lapisan estetika visual modern yang memastikan tampilan website presisi di semua resolusi layar mulai dari smartphone hingga monitor ultrawide.',
     },
@@ -214,7 +215,7 @@ export const ARCH_STACK = [
         features: [
             'Membangun SPA modern tanpa kompleksitas GraphQL atau REST terpisah',
             'Props passing langsung dari controller Laravel ke komponen React/Vue',
-            'Prefetching cerdas saat mouse mendekati link navigasi'
+            'Prefetching cerdas saat pengguna berinteraksi dengan link navigasi'
         ],
         description: 'Jembatan protokol yang menggabungkan kemudahan backend monolith Laravel dengan antarmuka reaktif single-page application.',
     },
@@ -227,7 +228,19 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
     const [activeIndex, setActiveIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const touchStartXRef = useRef(null);
+    const touchMoveXRef = useRef(null);
+
+    // Responsive screen width detection
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile, { passive: true });
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Sync external activeTechId if passed
     useEffect(() => {
@@ -262,23 +275,29 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
         onSelectTech?.(ARCH_STACK[idx].id);
     };
 
-    // Auto-play timer (smooth continuous cycling ~3.5s)
+    // Auto-play timer
     useEffect(() => {
         if (isPaused || isHovered) return;
-        const interval = setInterval(goToNext, 3500);
+        const interval = setInterval(goToNext, 3800);
         return () => clearInterval(interval);
     }, [isPaused, isHovered, goToNext]);
 
-    // Touch swipe gestures
+    // Touch swipe gestures with high touch-fidelity
     const handleTouchStart = (e) => {
         touchStartXRef.current = e.touches[0].clientX;
+        touchMoveXRef.current = e.touches[0].clientX;
     };
 
-    const handleTouchEnd = (e) => {
-        if (touchStartXRef.current === null) return;
-        const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const handleTouchMove = (e) => {
+        touchMoveXRef.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        if (touchStartXRef.current === null || touchMoveXRef.current === null) return;
+        const deltaX = touchMoveXRef.current - touchStartXRef.current;
         touchStartXRef.current = null;
-        if (Math.abs(deltaX) > 40) {
+        touchMoveXRef.current = null;
+        if (Math.abs(deltaX) > 35) {
             if (deltaX < 0) goToNext();
             else goToPrev();
         }
@@ -289,12 +308,13 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             className="w-full select-none"
         >
-            {/* Top Technology Selector Chips */}
-            <div className="flex items-center justify-between gap-3 mb-6 pb-3 border-b border-slate-200/60 dark:border-white/5">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            {/* Top Technology Selector Chips & Controls Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 border-b border-slate-200/60 dark:border-white/5">
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
                     {ARCH_STACK.map((tech, idx) => {
                         const isCur = idx === activeIndex;
                         const MiniLogo = tech.logo;
@@ -304,36 +324,36 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                                 type="button"
                                 onClick={() => handleSelectIndex(idx)}
                                 style={{
-                                    backgroundColor: isCur ? `${tech.color}15` : 'transparent',
-                                    borderColor: isCur ? tech.color : 'transparent',
+                                    backgroundColor: isCur ? `${tech.color}15` : undefined,
+                                    borderColor: isCur ? tech.color : undefined,
                                 }}
-                                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all border ${
+                                className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all border ${
                                     isCur 
                                         ? 'shadow-xs scale-105' 
-                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/60 dark:bg-white/[0.03]'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/70 dark:bg-white/[0.04] border-transparent'
                                 }`}
                             >
-                                <MiniLogo className="w-4 h-4 shrink-0" />
+                                <MiniLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                                 <span style={{ color: isCur ? tech.color : 'inherit' }}>{tech.name}</span>
                             </button>
                         );
                     })}
                 </div>
 
-                {/* Autoplay & Arrow Controls */}
-                <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                {/* Autoplay & Quick Arrow Controls */}
+                <div className="flex items-center justify-end gap-1.5 shrink-0 pt-1 sm:pt-0">
                     <button
                         type="button"
                         onClick={() => setIsPaused(p => !p)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
                         title={isPaused ? "Putar Otomatis" : "Jeda"}
                     >
-                        {isPaused ? <Play className="w-3 h-3 text-emerald-500" /> : <Pause className="w-3 h-3 text-amber-500" />}
+                        {isPaused ? <Play className="w-3 h-3 text-emerald-500 fill-emerald-500" /> : <Pause className="w-3 h-3 text-amber-500 fill-amber-500" />}
                     </button>
                     <button
                         type="button"
                         onClick={goToPrev}
-                        className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors active:scale-95"
                         title="Sebelumnya"
                     >
                         <ChevronLeft className="w-4 h-4" />
@@ -341,7 +361,7 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                     <button
                         type="button"
                         onClick={goToNext}
-                        className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors active:scale-95"
                         title="Selanjutnya"
                     >
                         <ChevronRight className="w-4 h-4" />
@@ -349,37 +369,32 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                 </div>
             </div>
 
-            {/* 3D ARCHING / CYLINDER CAROUSEL STAGE (Pinterest Reference: pin.it/3WqP8jryH) */}
-            <div className="relative w-full h-[320px] sm:h-[340px] md:h-[360px] flex items-center justify-center overflow-hidden py-4 perspective-[1000px]">
+            {/* 3D ARCHING / CYLINDER CAROUSEL STAGE */}
+            <div className="relative w-full h-[240px] sm:h-[275px] md:h-[305px] flex items-center justify-center overflow-hidden py-2 perspective-[1000px]">
                 {/* Ambient Center Aura */}
                 <div 
                     style={{ backgroundColor: `${activeTech.color}25` }}
-                    className="absolute w-72 h-72 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
+                    className="absolute w-48 sm:w-64 h-48 sm:h-64 rounded-full blur-2xl pointer-events-none transition-colors duration-500"
                 />
 
                 {/* Arching Cards Container */}
                 <div className="relative w-full max-w-4xl h-full flex items-center justify-center">
                     {ARCH_STACK.map((tech, idx) => {
-                        // Shortest circular offset
                         let diff = idx - activeIndex;
                         if (diff > total / 2) diff -= total;
                         if (diff < -total / 2) diff += total;
 
                         const isCenter = diff === 0;
-                        const isVisible = Math.abs(diff) <= 3;
+                        const isVisible = Math.abs(diff) <= (isMobile ? 2 : 3);
 
-                        // 3D Parabolic Arch Math (Smile / Downward Arch Curve)
-                        // x = horizontal spacing along track
-                        // y = parabolic drop on the sides (Apex in center!)
-                        // rotateZ = angle tilting outwards
-                        // rotateY = 3D perspective inward tilt
-                        const spacing = 180;
+                        // Responsive Spacing & Drop Calculation
+                        const spacing = isMobile ? 130 : 175;
                         const x = diff * spacing;
-                        const y = Math.pow(diff, 2) * 14; 
-                        const rotateZ = diff * 5.5;
-                        const rotateY = -diff * 7;
-                        const scale = isCenter ? 1.05 : Math.max(0.72, 1 - Math.abs(diff) * 0.09);
-                        const opacity = isCenter ? 1 : Math.max(0, 0.9 - Math.abs(diff) * 0.28);
+                        const y = Math.pow(diff, 2) * (isMobile ? 7 : 12); 
+                        const rotateZ = diff * (isMobile ? 3.5 : 5);
+                        const rotateY = -diff * (isMobile ? 4.5 : 7);
+                        const scale = isCenter ? (isMobile ? 1.04 : 1.06) : Math.max(0.74, 1 - Math.abs(diff) * 0.1);
+                        const opacity = isCenter ? 1 : Math.max(0, 0.88 - Math.abs(diff) * (isMobile ? 0.35 : 0.28));
                         const zIndex = 30 - Math.abs(diff) * 5;
 
                         const LogoComponent = tech.logo;
@@ -401,53 +416,54 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                                 }}
                                 transition={{
                                     type: 'spring',
-                                    stiffness: 280,
-                                    damping: 24,
-                                    mass: 0.8,
+                                    stiffness: 300,
+                                    damping: 26,
+                                    mass: 0.7,
                                 }}
                                 onClick={() => handleSelectIndex(idx)}
                                 style={{
                                     boxShadow: isCenter
-                                        ? `0 20px 45px -10px ${tech.color}45, 0 10px 20px -5px rgba(0,0,0,0.2)`
-                                        : '0 8px 20px -5px rgba(0,0,0,0.1)',
+                                        ? `0 16px 36px -8px ${tech.color}40, 0 8px 16px -4px rgba(0,0,0,0.18)`
+                                        : '0 6px 14px -3px rgba(0,0,0,0.08)',
                                     borderColor: isCenter ? tech.color : undefined,
                                 }}
-                                className={`absolute w-[185px] sm:w-[210px] md:w-[225px] h-[250px] sm:h-[265px] md:h-[280px] rounded-3xl p-5 flex flex-col justify-between cursor-pointer border transition-all duration-300 select-none ${
+                                className={`absolute w-[165px] sm:w-[195px] md:w-[220px] h-[190px] sm:h-[215px] md:h-[235px] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 flex flex-col justify-between cursor-pointer border transition-all duration-300 select-none ${
                                     isCenter
-                                        ? 'bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur-2xl ring-2 ring-white/60 dark:ring-white/20'
-                                        : 'bg-white/70 dark:bg-[#090d18]/70 backdrop-blur-md border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                                        ? 'bg-white dark:bg-[#0c1220] backdrop-blur-2xl ring-2 ring-white/60 dark:ring-white/20'
+                                        : 'bg-white/80 dark:bg-[#090d18]/80 backdrop-blur-md border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                                 }`}
                             >
-                                {/* Card Top: Real Logo & Latency Tag */}
+                                {/* Card Top: Logo & Latency Pill */}
                                 <div>
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center justify-between mb-2 sm:mb-3">
                                         <div 
                                             style={{ backgroundColor: `${tech.color}15` }}
-                                            className="w-12 h-12 rounded-2xl flex items-center justify-center p-2 border border-black/5 dark:border-white/10 shadow-xs transition-transform group-hover:scale-110"
+                                            className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center p-1.5 sm:p-2 border border-black/5 dark:border-white/10 shadow-xs"
                                         >
-                                            <LogoComponent className="w-7 h-7" />
+                                            <LogoComponent className="w-5 h-5 sm:w-7 sm:h-7" />
                                         </div>
 
-                                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10">
+                                        <span className="text-[9px] sm:text-[10px] font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10">
                                             {tech.latency}
                                         </span>
                                     </div>
 
                                     {/* Tech Title */}
-                                    <h4 className="font-heading font-black text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
+                                    <h4 className="font-heading font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
                                         {tech.name}
                                     </h4>
 
-                                    <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                                    {/* Tagline - 2 Lines on Mobile to avoid truncation */}
+                                    <p className="text-[10.5px] sm:text-xs font-mono text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                                         {tech.tagline}
                                     </p>
                                 </div>
 
-                                {/* Card Bottom: Role Tag & Arrow */}
-                                <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between text-[10px] font-mono">
+                                {/* Card Bottom: Role Tag & Indicator */}
+                                <div className="pt-2 sm:pt-2.5 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between text-[9.5px] sm:text-[10px] font-mono">
                                     <span 
                                         style={{ color: isCenter ? tech.color : undefined }}
-                                        className="font-bold uppercase tracking-wider truncate max-w-[130px]"
+                                        className="font-bold uppercase tracking-wider truncate max-w-[120px]"
                                     >
                                         {tech.role}
                                     </span>
@@ -464,19 +480,49 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                 </div>
             </div>
 
-            {/* DETAILED ACTIVE INSPECTOR PANEL */}
-            <div className="mt-4 p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-900/80 border border-slate-200/90 dark:border-white/10 backdrop-blur-xl shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 transition-all">
-                <div className="flex items-start gap-4">
+            {/* Pagination Dots Indicator */}
+            <div className="flex items-center justify-center gap-1.5 my-2">
+                {ARCH_STACK.map((tech, idx) => {
+                    const isCur = idx === activeIndex;
+                    return (
+                        <button
+                            key={tech.id}
+                            type="button"
+                            onClick={() => handleSelectIndex(idx)}
+                            aria-label={`Pilih ${tech.name}`}
+                            className="p-1 cursor-pointer transition-all focus:outline-none"
+                        >
+                            <span 
+                                style={{
+                                    backgroundColor: isCur ? tech.color : undefined,
+                                    width: isCur ? '20px' : '6px',
+                                }}
+                                className={`block h-1.5 rounded-full transition-all duration-300 ${
+                                    isCur 
+                                        ? 'shadow-xs' 
+                                        : 'bg-slate-300 dark:bg-white/20 hover:bg-slate-400 dark:hover:bg-white/40'
+                                }`}
+                            />
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* DETAILED ACTIVE INSPECTOR PANEL (Mobile-First Polish) */}
+            <div className="mt-3 sm:mt-4 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 backdrop-blur-xl shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-5 transition-all text-left">
+                <div className="flex flex-col sm:flex-row items-start gap-3.5 sm:gap-4 flex-1">
+                    {/* Icon Box */}
                     <div 
                         style={{ backgroundColor: `${activeTech.color}20` }}
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 p-2.5 border border-black/5 dark:border-white/10 shadow-sm"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 p-2 sm:p-2.5 border border-black/5 dark:border-white/10 shadow-sm"
                     >
-                        {React.createElement(activeTech.logo, { className: "w-8 h-8" })}
+                        {React.createElement(activeTech.logo, { className: "w-7 h-7 sm:w-8 sm:h-8" })}
                     </div>
 
-                    <div>
+                    <div className="flex-1 min-w-0">
+                        {/* Title & Badges */}
                         <div className="flex flex-wrap items-center gap-2">
-                            <h5 className="font-heading font-black text-base sm:text-lg text-slate-900 dark:text-white">
+                            <h5 className="font-heading font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white">
                                 {activeTech.name} Inspector
                             </h5>
                             <span 
@@ -485,35 +531,41 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
                             >
                                 {activeTech.badge}
                             </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300">
                                 Latensi: {activeTech.latency}
                             </span>
                         </div>
 
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        {/* Description Paragraph */}
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed text-left">
                             {activeTech.description}
                         </p>
 
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                        {/* Features Checklist */}
+                        <div className="grid grid-cols-1 gap-1.5 mt-2.5 text-[11px] font-mono text-slate-600 dark:text-slate-300 text-left">
                             {activeTech.features.map((feat, i) => (
-                                <span key={i} className="flex items-center gap-1">
-                                    <span style={{ color: activeTech.color }}>✓</span>
-                                    <span>{feat}</span>
-                                </span>
+                                <div key={i} className="flex items-start gap-1.5">
+                                    <CheckCircle2 
+                                        className="w-3.5 h-3.5 shrink-0 mt-0.5" 
+                                        style={{ color: activeTech.color }} 
+                                    />
+                                    <span className="leading-snug">{feat}</span>
+                                </div>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <div className="shrink-0 w-full md:w-auto flex justify-end">
-                    <a
-                        href="#interactive-arena"
+                {/* Valid CTA Consultation Button */}
+                <div className="shrink-0 w-full md:w-auto pt-2 md:pt-0">
+                    <Link
+                        href={`/konsultasi?service=web-development&stack=${activeTech.id}`}
                         style={{ backgroundColor: activeTech.color }}
-                        className="w-full md:w-auto px-5 py-2.5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-md"
+                        className="w-full md:w-auto px-4 sm:px-5 py-2.5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-md shadow-black/10"
                     >
                         <span>Konsultasi Stack Ini</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                    </a>
+                        <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                    </Link>
                 </div>
             </div>
         </div>

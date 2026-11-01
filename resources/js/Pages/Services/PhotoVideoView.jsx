@@ -161,10 +161,10 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
             </Head>
 
             {/* Atmosphere styling: Dual Theme Support */}
-            <div className="bg-amber-50/20 text-slate-900 dark:bg-[#050507] dark:text-slate-100 min-h-screen -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-amber-50/20 text-slate-900 dark:bg-[#050507] dark:text-slate-100 min-h-screen pt-2 sm:pt-6 transition-colors duration-300">
                 {/* 1. Full-Screen Showreel Header with Real Video Playback */}
-                <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 pb-16">
-                    <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 aspect-[16/9] md:aspect-[21/9] flex items-center justify-center group">
+                <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-2 sm:pt-4 pb-16">
+                    <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 min-h-[450px] sm:min-h-[490px] md:min-h-0 md:aspect-[21/9] flex items-center justify-center group">
                         
                         {/* Real HTML5 Video Player with Guaranteed Autoplay */}
                         <video 

@@ -117,7 +117,7 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
             </Head>
 
             {/* Atmosphere: IDE & Cyber-Architecture Blueprint Layout */}
-            <div className="bg-[#EDF9FC] dark:bg-[#060B14] min-h-screen text-slate-800 dark:text-slate-100 bg-grid-pattern -mt-6 pt-6 transition-colors duration-300">
+            <div className="bg-[#EDF9FC] dark:bg-[#060B14] min-h-screen text-slate-800 dark:text-slate-100 bg-grid-pattern pt-2 sm:pt-6 transition-colors duration-300">
                 {/* Hero Header: Cyber Blueprint & Modern Kinetic Atmosphere */}
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-20 text-center overflow-hidden">
                     {/* Ambient Aurora Glow Layers */}

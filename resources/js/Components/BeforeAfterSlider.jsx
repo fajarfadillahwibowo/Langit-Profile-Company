@@ -38,11 +38,12 @@ export default function BeforeAfterSlider({
         <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#090D16] select-none group">
             <div 
                 ref={containerRef}
-                className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden cursor-ew-resize"
+                className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden cursor-ew-resize touch-none"
                 onMouseMove={handleMouseMove}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={(e) => handleMove(e.touches[0].clientX)}
                 onTouchMove={handleTouchMove}
             >
                 {/* AFTER Image (Color Graded - Background full) */}

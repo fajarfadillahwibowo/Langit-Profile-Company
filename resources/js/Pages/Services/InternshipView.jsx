@@ -196,7 +196,7 @@ export default function InternshipView({ service, positions = [], galleries = []
             </Head>
 
             {/* Atmosphere: Startup Talent & Career Portal with Dual Theme Support */}
-            <div className="bg-[#EDF9FC] text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen -mt-6 pt-6 transition-colors duration-300 relative overflow-hidden">
+            <div className="bg-[#EDF9FC] text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen pt-2 sm:pt-6 transition-colors duration-300 relative overflow-hidden">
                 {/* Artistic Volumetric Lighting Blobs */}
                 <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[400px] bg-gradient-to-tr from-[#005792]/20 via-purple-600/15 to-pink-500/10 blur-3xl rounded-full pointer-events-none -z-0" />
                 <div className="absolute top-[480px] -left-20 w-[400px] h-[400px] bg-[#005792]/10 blur-3xl rounded-full pointer-events-none -z-0" />

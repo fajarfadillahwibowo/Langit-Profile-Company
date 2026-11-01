@@ -147,34 +147,36 @@ export const LangitApp = createEngine({
                     </div>
 
                     {/* Mode Navigation Tabs */}
-                    <div className="flex items-center gap-1 p-1 bg-slate-200/70 dark:bg-black/40 rounded-xl border border-slate-300/60 dark:border-white/10 text-xs font-mono">
+                    <div className="flex items-center gap-1 p-1 bg-slate-200/70 dark:bg-black/40 rounded-xl border border-slate-300/60 dark:border-white/10 text-xs font-mono overflow-x-auto no-scrollbar max-w-full">
                         <button
                             onClick={() => setActiveTab('pipeline')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
                                 activeTab === 'pipeline'
                                     ? 'bg-white dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-bold shadow-sm border border-slate-200 dark:border-cyan-500/30'
                                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                             <Activity className="w-3.5 h-3.5" />
-                            <span>Topology Pipeline</span>
+                            <span className="hidden sm:inline">Topology Pipeline</span>
+                            <span className="sm:hidden">Pipeline</span>
                         </button>
 
                         <button
                             onClick={() => setActiveTab('benchmark')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
                                 activeTab === 'benchmark'
                                     ? 'bg-white dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold shadow-sm border border-slate-200 dark:border-emerald-500/30'
                                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                             <Gauge className="w-3.5 h-3.5" />
-                            <span>Lighthouse Audit</span>
+                            <span className="hidden sm:inline">Lighthouse Audit</span>
+                            <span className="sm:hidden">Lighthouse</span>
                         </button>
 
                         <button
                             onClick={() => setActiveTab('code')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
                                 activeTab === 'code'
                                     ? 'bg-white dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 font-bold shadow-sm border border-slate-200 dark:border-violet-500/30'
                                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -188,7 +190,7 @@ export const LangitApp = createEngine({
                 </div>
 
                 {/* Window Body Content */}
-                <div className="p-4 sm:p-6 lg:p-8 min-h-[340px] flex flex-col justify-center">
+                <div className="p-1 sm:p-4 lg:p-6 min-h-[300px] flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                         {/* TAB 1: TOPOLOGY PIPELINE (Pinterest Reference 3D Arching Carousel) */}
                         {activeTab === 'pipeline' && (
