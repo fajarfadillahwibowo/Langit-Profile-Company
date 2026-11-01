@@ -293,13 +293,13 @@ export default function FloatingHeadbar({
                             </button>
                         ) : null}
 
-                        {/* Login Pelanggan CTA Button (Topbar Kanan Atas) */}
+                        {/* Login Unified CTA Button (Topbar Kanan Atas) */}
                         <Link
-                            href="/pelanggan/login"
+                            href="/login"
                             className={`shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-[#005792]/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap ${
                                 scrolled ? 'px-3 py-1 sm:py-1.5' : 'px-3.5 sm:px-4 py-1 sm:py-1.5'
                             }`}
-                            title="Portal Login Pelanggan - Ambil Foto"
+                            title="Portal Login Akun"
                         >
                             <LogIn className="w-3.5 h-3.5 shrink-0" />
                             <span>Login</span>
@@ -462,11 +462,11 @@ export default function FloatingHeadbar({
                                 Kontak & Lokasi Studio
                             </Link>
                             <Link 
-                                href="/pelanggan/login" 
+                                href="/login" 
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="block px-3 py-2 rounded-xl text-sm font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 flex items-center justify-between"
                             >
-                                <span>Login Pelanggan (Ambil Foto)</span>
+                                <span>Login Akun</span>
                                 <LogIn className="w-4 h-4 shrink-0" />
                             </Link>
                             <Link 

@@ -187,10 +187,10 @@ export default function PublicLayout({ children, activeService = null }) {
                                     <span>Instagram</span>
                                 </a>
                                 <Link 
-                                    href="/admin/login" 
+                                    href="/login" 
                                     className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
                                 >
-                                    Admin CMS
+                                    Portal Login
                                 </Link>
                             </div>
                         </div>

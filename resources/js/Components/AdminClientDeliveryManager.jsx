@@ -91,7 +91,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
 
     // Copy credentials to clipboard
     const copyCredentials = (delivery) => {
-        const text = `Akses Foto Studio Langit:\nUsername: ${delivery.client_username || delivery.user?.username}\nPassword: ${delivery.client_password_hint || 'langit123'}\nLink Login: https://www.langitcreative.pro/pelanggan/login`;
+        const text = `Akses Foto Studio Langit:\nUsername: ${delivery.client_username || delivery.user?.username}\nPassword: ${delivery.client_password_hint || 'langit123'}\nLink Login: https://www.langitcreative.pro/login`;
         navigator.clipboard.writeText(text);
         setCopiedId(delivery.id);
         setTimeout(() => setCopiedId(null), 2000);
@@ -318,7 +318,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                     const clientUser = delivery.client_username || delivery.user?.username || '-';
                                     const clientPass = delivery.client_password_hint || 'langit123';
                                     const waNumber = delivery.client_phone ? delivery.client_phone.replace(/[^0-9]/g, '') : null;
-                                    const waText = encodeURIComponent(`Halo Kak ${delivery.client_name}, foto sesi "${delivery.title}" dari Studio Langit sudah siap diambil! Silakan login di https://www.langitcreative.pro/pelanggan/login menggunakan akun berikut:\n\n👤 Username: ${clientUser}\n🔑 Password: ${clientPass}\n⏳ Sisa Waktu Unduh: ${remainingDays} Hari lagi (sebelum foto otomatis di-hide).\n\nTerima kasih telah mempercayakan dokumentasi Anda kepada Studio Langit!`);
+                                    const waText = encodeURIComponent(`Halo Kak ${delivery.client_name}, foto sesi "${delivery.title}" dari Studio Langit sudah siap diambil! Silakan login di https://www.langitcreative.pro/login menggunakan akun berikut:\n\n👤 Username: ${clientUser}\n🔑 Password: ${clientPass}\n⏳ Sisa Waktu Unduh: ${remainingDays} Hari lagi (sebelum foto otomatis di-hide).\n\nTerima kasih telah mempercayakan dokumentasi Anda kepada Studio Langit!`);
 
                                     return (
                                         <tr key={delivery.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors">

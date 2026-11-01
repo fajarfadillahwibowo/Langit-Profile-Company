@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\ContactController;
@@ -39,11 +40,16 @@ Route::get('/internship', fn () => redirect()->route('services.internship'));
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');
 Route::get('/konsultasi', [ConsultationController::class, 'wizard'])->name('consultation.wizard');
 
-// Portal Pelanggan (Login & Ambil Foto)
+// Unified Login Portal (Admin & Pelanggan Jadi Satu)
+Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Portal Pelanggan (Ambil Foto & Galeri)
 Route::prefix('pelanggan')->name('client.')->group(function () {
-    Route::get('/login', [ClientPortalController::class, 'showLogin'])->name('login');
-    Route::post('/login', [ClientPortalController::class, 'login'])->name('login.post');
-    Route::post('/logout', [ClientPortalController::class, 'logout'])->name('logout');
+    Route::get('/login', fn () => redirect()->route('login'))->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/galeri', [ClientPortalController::class, 'gallery'])->name('gallery');
     Route::get('/foto/{id}/download', [ClientPortalController::class, 'downloadPhoto'])->name('photo.download');
     Route::get('/album/{id}/download-all', [ClientPortalController::class, 'downloadAllZip'])->name('album.download-all');
@@ -64,13 +70,10 @@ Route::post('/education/register', [InteractiveActionController::class, 'educati
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
-    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+    Route::get('/login', fn () => redirect()->route('login'))->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
-
-// Fallback named route for standard Laravel auth redirection
-Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
