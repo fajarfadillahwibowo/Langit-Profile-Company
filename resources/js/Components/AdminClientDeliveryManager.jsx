@@ -91,7 +91,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
 
     // Copy credentials to clipboard
     const copyCredentials = (delivery) => {
-        const text = `Akses Foto Studio Langit:\nUsername: ${delivery.client_username || delivery.user?.username}\nPassword: ${delivery.client_password_hint || 'langit123'}\nLink Login: https://www.langitcreative.pro/login`;
+        const text = `Akses Foto Studio Langit:\nNama Pengguna: ${delivery.client_username || delivery.user?.username}\nKata Sandi: ${delivery.client_password_hint || 'langit123'}\nLink Login: https://www.langitcreative.pro/login`;
         navigator.clipboard.writeText(text);
         setCopiedId(delivery.id);
         setTimeout(() => setCopiedId(null), 2000);
@@ -318,7 +318,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                     const clientUser = delivery.client_username || delivery.user?.username || '-';
                                     const clientPass = delivery.client_password_hint || 'langit123';
                                     const waNumber = delivery.client_phone ? delivery.client_phone.replace(/[^0-9]/g, '') : null;
-                                    const waText = encodeURIComponent(`Halo Kak ${delivery.client_name}, foto sesi "${delivery.title}" dari Studio Langit sudah siap diambil! Silakan login di https://www.langitcreative.pro/login menggunakan akun berikut:\n\n👤 Username: ${clientUser}\n🔑 Password: ${clientPass}\n⏳ Sisa Waktu Unduh: ${remainingDays} Hari lagi (sebelum foto otomatis di-hide).\n\nTerima kasih telah mempercayakan dokumentasi Anda kepada Studio Langit!`);
+                                    const waText = encodeURIComponent(`Halo Kak ${delivery.client_name}, foto sesi "${delivery.title}" dari Studio Langit sudah siap diambil! Silakan login di https://www.langitcreative.pro/login menggunakan akun berikut:\n\n👤 Nama Pengguna: ${clientUser}\n🔑 Kata Sandi: ${clientPass}\n⏳ Sisa Waktu Unduh: ${remainingDays} Hari lagi (sebelum foto otomatis di-hide).\n\nTerima kasih telah mempercayakan dokumentasi Anda kepada Studio Langit!`);
 
                                     return (
                                         <tr key={delivery.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors">
@@ -344,13 +344,13 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                             <td className="px-5 py-4">
                                                 <div className="p-2.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 font-mono text-[11px] space-y-1">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <span className="text-slate-500">User:</span>
+                                                        <span className="text-slate-500">Pengguna:</span>
                                                         <span className="font-bold text-slate-900 dark:text-cyan-400">
                                                             {clientUser}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <span className="text-slate-500">Pass:</span>
+                                                        <span className="text-slate-500">Sandi:</span>
                                                         <span className="font-bold text-amber-600 dark:text-amber-400">
                                                             {clientPass}
                                                         </span>
@@ -549,12 +549,12 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                             <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 space-y-3">
                                 <div className="flex items-center gap-2 text-cyan-900 dark:text-cyan-200 font-bold text-xs">
                                     <Key className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                                    <span>Atur Username & Password Login Pelanggan</span>
+                                    <span>Atur Nama Pengguna & Kata Sandi Pelanggan</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                            Username Pelanggan *
+                                            Nama Pengguna Pelanggan *
                                         </label>
                                         <input
                                             type="text"
@@ -565,12 +565,12 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                             className="w-full px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-white dark:bg-black/40 text-xs font-mono text-cyan-800 dark:text-cyan-300 font-bold focus:ring-2 focus:ring-cyan-500"
                                         />
                                         <span className="text-[10px] text-slate-500 block mt-0.5">
-                                            Digunakan pelanggan untuk login di website.
+                                            Digunakan pelanggan untuk masuk di website.
                                         </span>
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                            Password Pelanggan *
+                                            Kata Sandi Pelanggan *
                                         </label>
                                         <input
                                             type="text"
@@ -844,7 +844,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white">
-                                    Ubah Username & Password Pelanggan
+                                    Ubah Nama Pengguna & Kata Sandi Pelanggan
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
                                     Pelanggan: <strong>{credentialsModalDelivery.client_name}</strong>
@@ -862,7 +862,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                         <form onSubmit={handleUpdateCredentials} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Username Baru:
+                                    Nama Pengguna Baru:
                                 </label>
                                 <input
                                     type="text"
@@ -875,7 +875,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
 
                             <div>
                                 <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Password Baru:
+                                    Kata Sandi Baru:
                                 </label>
                                 <input
                                     type="text"

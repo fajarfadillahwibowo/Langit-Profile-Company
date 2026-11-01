@@ -1099,6 +1099,15 @@ class AdminDashboardController extends Controller
             'expiry_days' => 'required|integer|min:1|max:365',
             'photos' => 'required|array|min:1',
             'photos.*' => 'file|max:102400', // Ukuran file foto hingga 100MB per file (tidak dibatasi 5MB)
+        ], [
+            'client_name.required' => 'Nama pelanggan wajib diisi.',
+            'client_username.required' => 'Nama pengguna pelanggan wajib diisi.',
+            'client_username.alpha_dash' => 'Nama pengguna hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah.',
+            'client_password.required' => 'Kata sandi pelanggan wajib diisi.',
+            'client_password.min' => 'Kata sandi pelanggan minimal 4 karakter.',
+            'title.required' => 'Judul sesi foto wajib diisi.',
+            'expiry_days.required' => 'Hitungan hari aktif (expired) wajib diisi.',
+            'photos.required' => 'Minimal 1 foto wajib diunggah.',
         ]);
 
         $username = Str::lower($validated['client_username']);
@@ -1170,6 +1179,11 @@ class AdminDashboardController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:50|alpha_dash',
             'password' => 'required|string|min:4',
+        ], [
+            'username.required' => 'Nama pengguna wajib diisi.',
+            'username.alpha_dash' => 'Nama pengguna hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.min' => 'Kata sandi minimal 4 karakter.',
         ]);
 
         $newUsername = Str::lower($validated['username']);
@@ -1187,7 +1201,7 @@ class AdminDashboardController extends Controller
             'client_password_hint' => $newPassword,
         ]);
 
-        return back()->with('success', 'Username dan password pelanggan "'.$delivery->client_name.'" berhasil diperbarui.');
+        return back()->with('success', 'Nama pengguna dan kata sandi pelanggan "'.$delivery->client_name.'" berhasil diperbarui.');
     }
 
     /**

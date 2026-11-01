@@ -36,12 +36,15 @@ class LoginController extends Controller
         $validated = $request->validate([
             'login' => 'required|string',
             'password' => 'required|string',
+        ], [
+            'login.required' => 'Nama pengguna atau email wajib diisi.',
+            'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
         $loginInput = trim($validated['login']);
         $password = $validated['password'];
 
-        // Cari pengguna berdasarkan username atau email
+        // Cari pengguna berdasarkan nama pengguna (username) atau email
         $user = User::where('username', $loginInput)
             ->orWhere('email', $loginInput)
             ->first();
@@ -60,7 +63,7 @@ class LoginController extends Controller
         }
 
         return back()->withErrors([
-            'login' => 'Username, email, atau kata sandi yang Anda masukkan tidak sesuai.',
+            'login' => 'Nama pengguna, email, atau kata sandi yang Anda masukkan tidak sesuai.',
         ]);
     }
 

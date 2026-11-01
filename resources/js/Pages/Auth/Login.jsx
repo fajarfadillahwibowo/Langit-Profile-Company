@@ -89,7 +89,7 @@ export default function UnifiedLogin() {
                     <form onSubmit={submit} className="space-y-4">
                         <div>
                             <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
-                                Username atau Email
+                                Nama Pengguna atau Email
                             </label>
                             <div className="relative">
                                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -98,7 +98,7 @@ export default function UnifiedLogin() {
                                     required
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
-                                    placeholder="admin@langit.id atau username Anda"
+                                    placeholder="admin@langit.id atau nama pengguna Anda"
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
                                     autoCapitalize="none"
                                 />
@@ -126,7 +126,7 @@ export default function UnifiedLogin() {
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
-                                    title={showPassword ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
+                                    title={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                                 >
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
