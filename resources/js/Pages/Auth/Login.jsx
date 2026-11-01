@@ -40,7 +40,7 @@ export default function UnifiedLogin() {
 
     return (
         <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-8 font-sans relative overflow-hidden transition-colors duration-200">
-            <Head title="Login Akun — Langit" />
+            <Head title="Masuk ke Akun — Langit" />
 
             {/* Ambient Background Glows */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/15 dark:bg-cyan-600/20 rounded-full blur-[140px] pointer-events-none"></div>
@@ -60,7 +60,7 @@ export default function UnifiedLogin() {
                     <div className="flex items-center gap-2">
                         <ThemeToggle theme={theme} setTheme={setTheme} />
                         <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#005792]/10 text-[#005792] dark:bg-cyan-500/20 dark:text-cyan-300 border border-[#005792]/20 dark:border-cyan-500/30">
-                            Portal Akses
+                            Akses Akun
                         </span>
                     </div>
                 </div>
@@ -78,10 +78,10 @@ export default function UnifiedLogin() {
                             </span>
                         </Link>
                         <h1 className="font-heading font-black text-2xl text-slate-900 dark:text-white tracking-tight">
-                            Portal Login
+                            Masuk ke Akun
                         </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                            Satu portal masuk untuk Administrator dan Pelanggan Studio Langit.
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-xs mx-auto leading-relaxed">
+                            Akses terpadu pengelolaan layanan dan dokumentasi Studio Langit.
                         </p>
                     </div>
 
@@ -98,7 +98,7 @@ export default function UnifiedLogin() {
                                     required
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
-                                    placeholder="admin@langit.id atau username pelanggan"
+                                    placeholder="admin@langit.id atau username Anda"
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
                                     autoCapitalize="none"
                                 />
