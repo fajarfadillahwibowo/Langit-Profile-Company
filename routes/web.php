@@ -29,6 +29,7 @@ Route::prefix('layanan')->group(function () {
     Route::get('/magang-pkl', fn () => redirect()->route('services.internship'));
     Route::get('/sewa-alat', [ServiceController::class, 'sewaAlat'])->name('services.sewa-alat');
     Route::get('/kolaborasi', [ServiceController::class, 'kolaborasi'])->name('services.kolaborasi');
+    Route::get('/konsultasi', fn () => redirect()->route('consultation.wizard'))->name('services.konsultasi');
 });
 
 // Main Topbar Direct Pages

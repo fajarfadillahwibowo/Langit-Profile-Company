@@ -228,9 +228,24 @@ export default function FloatingHeadbar({
 
                     {/* 3. RIGHT CONTROLS: QUALITY SWITCHER (SD/HD), THEME SWITCHER, CMS LINK & CTA */}
                     <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
-                        {/* HD / SD Resolution Switcher */}
+                        {/* Compact Mobile SD/HD Toggle Button (< sm) */}
+                        <button
+                            type="button"
+                            onClick={() => setQuality(isHd ? 'sd' : 'hd')}
+                            className={`sm:hidden px-2 py-1 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 transition-all active:scale-95 shadow-xs ${
+                                !isHd
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold'
+                            }`}
+                            title={isHd ? "Mode HD Aktif (Klik untuk ubah ke SD Cepat)" : "Mode SD Aktif (Klik untuk ubah ke HD Tajam)"}
+                        >
+                            {isHd ? <Sparkles className="w-3 h-3 shrink-0" /> : <Zap className="w-3 h-3 shrink-0 text-white" />}
+                            <span>{isHd ? 'HD' : 'SD'}</span>
+                        </button>
+
+                        {/* HD / SD Resolution Switcher (sm+ screens) */}
                         <div 
-                            className={`flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
+                            className={`hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
                                 scrolled ? 'gap-0.5' : 'gap-0.5 sm:gap-1'
                             }`}
                             title="Pengaturan Kualitas Media: SD (Ringan & Cepat) atau HD (Tajam Maksimal)"
@@ -271,9 +286,21 @@ export default function FloatingHeadbar({
                             </button>
                         </div>
 
-                        {/* Segmented Dual-Theme Switcher (Terang Utama & Gelap) */}
+                        {/* Compact Mobile Theme Switcher (< sm) */}
                         {setTheme ? (
-                            <div className={`flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
+                            <button
+                                type="button"
+                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                className="sm:hidden w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-amber-400 border border-[#005792]/20 dark:border-[#005792]/30 transition-transform active:scale-95 shadow-xs"
+                                title="Ganti Tema (Terang / Gelap)"
+                            >
+                                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
+                            </button>
+                        ) : null}
+
+                        {/* Segmented Dual-Theme Switcher (sm+ screens) */}
+                        {setTheme ? (
+                            <div className={`hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
                                 scrolled ? 'gap-0.5' : 'gap-1'
                             }`}>
                                 <button
@@ -335,15 +362,15 @@ export default function FloatingHeadbar({
                             <span>CMS</span>
                         </Link>
 
-                        {/* Consultation CTA */}
+                        {/* Consultation CTA - Always functional on Mobile & Desktop */}
                         <Link
                             href="/konsultasi"
-                            className={`shrink-0 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-[#005792]/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap ${
-                                scrolled ? 'px-3 py-1.5' : 'px-3.5 sm:px-4 py-1.5'
+                            className={`shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-[#005792]/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap ${
+                                scrolled ? 'px-2.5 sm:px-3 py-1 sm:py-1.5' : 'px-2.5 sm:px-4 py-1 sm:py-1.5'
                             }`}
                         >
                             <span>Konsultasi</span>
-                            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                            <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                         </Link>
 
                         {/* Mobile Hamburger Toggle */}
@@ -575,7 +602,7 @@ export default function FloatingHeadbar({
                                 {services.map((srv) => (
                                     <Link
                                         key={srv.slug}
-                                        href={`/layanan/${srv.slug}`}
+                                        href={srv.href || `/layanan/${srv.slug}`}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="p-2.5 rounded-xl border border-slate-200/80 dark:border-white/5 hover:border-cyan-500/30 flex items-center gap-3 bg-slate-50/50 dark:bg-white/[0.02]"
                                     >
