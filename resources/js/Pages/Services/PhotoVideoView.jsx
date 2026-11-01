@@ -269,27 +269,43 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             </div>
                         </div>
 
-                        {/* Top-Right Audio & Quality Floating Pill Controls */}
-                        <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={toggleQuality}
-                                title={isHd ? 'Sedang Kualitas HD. Klik untuk Mode Ringan (SD)' : 'Sedang Mode SD. Klik untuk Resolusi HD'}
-                                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-mono transition-all hover:scale-105 cursor-pointer shadow-lg ${
-                                    isHd
-                                        ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                                        : 'bg-black/70 hover:bg-black/90 text-emerald-300 border-white/20'
-                                }`}
-                            >
-                                {isHd ? <Sparkles className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5 text-emerald-400" />}
-                                <span>{isHd ? 'Mode: HD' : 'Mode: SD'}</span>
-                            </button>
+                        {/* Top-Right Audio & Quality Floating Pill Controls (Ditempat Video) */}
+                        <div className="absolute top-4 sm:top-5 right-4 sm:right-5 z-30 flex items-center gap-2">
+                            {/* In-Place SD/HD Dual Pill Switcher */}
+                            <div className="flex items-center p-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/25 shadow-xl">
+                                <button
+                                    type="button"
+                                    onClick={() => isHd && toggleQuality()}
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all ${
+                                        !isHd
+                                            ? 'bg-emerald-600 text-white shadow-xs'
+                                            : 'text-slate-300 hover:text-white'
+                                    }`}
+                                    title="Mode SD: Video ringan dan hemat kuota"
+                                >
+                                    <Zap className="w-3 h-3 shrink-0" />
+                                    <span>SD</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => !isHd && toggleQuality()}
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all ${
+                                        isHd
+                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                            : 'text-slate-300 hover:text-white'
+                                    }`}
+                                    title="Mode HD: Video resolusi sinema tinggi 4K"
+                                >
+                                    <Sparkles className="w-3 h-3 shrink-0" />
+                                    <span>HD</span>
+                                </button>
+                            </div>
 
                             <button
                                 type="button"
                                 onClick={toggleMute}
                                 title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-105 cursor-pointer shadow-lg text-xs font-mono"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 hover:bg-black/95 backdrop-blur-md border border-white/25 text-white transition-all hover:scale-105 cursor-pointer shadow-xl text-xs font-mono"
                             >
                                 {isMuted ? (
                                     <>
@@ -597,19 +613,35 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             </p>
                         </div>
 
-                        {/* HD toggle button for before/after */}
-                        <button
-                            type="button"
-                            onClick={toggleQuality}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 shadow-sm shrink-0 ${
-                                isHd
-                                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
-                                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
-                            }`}
-                        >
-                            {isHd ? <Sparkles className="w-3.5 h-3.5 text-amber-500" /> : <Zap className="w-3.5 h-3.5 text-emerald-500" />}
-                            <span>{isHd ? 'Resolusi: HD (100%)' : 'Resolusi: SD (Cepat)'}</span>
-                        </button>
+                        {/* In-Place SD/HD Switcher for Before/After */}
+                        <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => isHd && toggleQuality()}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                    !isHd
+                                        ? 'bg-emerald-600 text-white shadow-xs'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                                title="Mode SD: Sangat ringan & hemat kuota"
+                            >
+                                <Zap className="w-3 h-3 shrink-0" />
+                                <span>SD</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => !isHd && toggleQuality()}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                    isHd
+                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                                title="Mode HD: Tampilan color grading resolusi tinggi 100%"
+                            >
+                                <Sparkles className="w-3 h-3 shrink-0" />
+                                <span>HD</span>
+                            </button>
+                        </div>
                     </div>
 
                     <BeforeAfterSlider

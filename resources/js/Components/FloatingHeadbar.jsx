@@ -3,10 +3,9 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
-    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle, Zap
+    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle
 } from 'lucide-react';
 import InteractiveBentoCard from '@/Components/InteractiveBentoCard';
-import { useQuality } from '@/Context/QualityContext';
 
 export default function FloatingHeadbar({ 
     activeService = null, 
@@ -15,7 +14,6 @@ export default function FloatingHeadbar({
     toggleTheme 
 }) {
     const { url } = usePage();
-    const { quality, isHd, setQuality, toggleQuality } = useQuality();
     const [scrolled, setScrolled] = useState(false);
     const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -226,66 +224,8 @@ export default function FloatingHeadbar({
                         })}
                     </nav>
 
-                    {/* 3. RIGHT CONTROLS: QUALITY SWITCHER (SD/HD), THEME SWITCHER, CMS LINK & CTA */}
+                    {/* 3. RIGHT CONTROLS: THEME SWITCHER, CMS LINK & CTA (SD/HD moved in-place to Photo & Video sections) */}
                     <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
-                        {/* Compact Mobile SD/HD Toggle Button (< sm) */}
-                        <button
-                            type="button"
-                            onClick={() => setQuality(isHd ? 'sd' : 'hd')}
-                            className={`sm:hidden px-2 py-1 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 transition-all active:scale-95 shadow-xs ${
-                                !isHd
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold'
-                            }`}
-                            title={isHd ? "Mode HD Aktif (Klik untuk ubah ke SD Cepat)" : "Mode SD Aktif (Klik untuk ubah ke HD Tajam)"}
-                        >
-                            {isHd ? <Sparkles className="w-3 h-3 shrink-0" /> : <Zap className="w-3 h-3 shrink-0 text-white" />}
-                            <span>{isHd ? 'HD' : 'SD'}</span>
-                        </button>
-
-                        {/* HD / SD Resolution Switcher (sm+ screens) */}
-                        <div 
-                            className={`hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
-                                scrolled ? 'gap-0.5' : 'gap-0.5 sm:gap-1'
-                            }`}
-                            title="Pengaturan Kualitas Media: SD (Ringan & Cepat) atau HD (Tajam Maksimal)"
-                        >
-                            <button
-                                type="button"
-                                onClick={() => setQuality('sd')}
-                                className={`flex items-center justify-center gap-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                                    scrolled ? 'p-1.5' : 'px-2 sm:px-2.5 py-1'
-                                } ${
-                                    !isHd
-                                        ? 'bg-emerald-600 text-white shadow-sm font-bold scale-[1.02]'
-                                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                                }`}
-                                title="Mode SD: Sangat ringan, hemat kuota & render cepat"
-                            >
-                                <Zap className={`w-3.5 h-3.5 shrink-0 ${!isHd ? 'text-white' : 'text-emerald-500'}`} />
-                                {!scrolled && (
-                                    <span className="hidden sm:inline text-[11px] font-mono">SD</span>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setQuality('hd')}
-                                className={`flex items-center justify-center gap-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                                    scrolled ? 'p-1.5' : 'px-2 sm:px-2.5 py-1'
-                                } ${
-                                    isHd
-                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-sm font-extrabold scale-[1.02]'
-                                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                                }`}
-                                title="Mode HD: Tampilan foto & video resolusi tinggi (High Definition)"
-                            >
-                                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                                {!scrolled && (
-                                    <span className="hidden sm:inline text-[11px] font-mono">HD</span>
-                                )}
-                            </button>
-                        </div>
-
                         {/* Compact Mobile Theme Switcher (< sm) */}
                         {setTheme ? (
                             <button
@@ -538,35 +478,10 @@ export default function FloatingHeadbar({
                             </Link>
                         </div>
 
-                        {/* Mobile Settings: Quality & Theme Switchers */}
-                        <div className="p-3 rounded-2xl bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 mb-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">Resolusi Visual:</span>
-                                <div className="flex items-center p-0.5 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/10">
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuality('sd')}
-                                        className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                                            !isHd ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
-                                        }`}
-                                    >
-                                        <Zap className="w-3 h-3" />
-                                        <span>SD Cepat</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuality('hd')}
-                                        className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                                            isHd ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-400'
-                                        }`}
-                                    >
-                                        <Sparkles className="w-3 h-3" />
-                                        <span>HD Tajam</span>
-                                    </button>
-                                </div>
-                            </div>
-                            {setTheme && (
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-white/5">
+                        {/* Mobile Settings: Theme Switcher (SD/HD moved to Photo & Video sections) */}
+                        {setTheme && (
+                            <div className="p-3 rounded-2xl bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 mb-4">
+                                <div className="flex items-center justify-between">
                                     <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">Tema Warna:</span>
                                     <div className="flex items-center p-0.5 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/10">
                                         <button
@@ -591,8 +506,8 @@ export default function FloatingHeadbar({
                                         </button>
                                     </div>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
 
                         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
                             <span className="text-[10px] font-mono uppercase text-slate-500 block mb-3 font-semibold">

@@ -119,20 +119,35 @@ export default function HomeIndex({
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {/* Quality Switcher Button */}
-                            <button
-                                type="button"
-                                onClick={toggleQuality}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 shadow-sm ${
-                                    isHd
-                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
-                                        : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
-                                }`}
-                                title="Klik untuk mengubah resolusi tampilan foto (SD Ringan / HD)"
-                            >
-                                {isHd ? <Sparkles className="w-3.5 h-3.5 text-amber-500" /> : <Zap className="w-3.5 h-3.5 text-emerald-500" />}
-                                <span>{isHd ? 'Visual: HD' : 'Visual: SD'}</span>
-                            </button>
+                            {/* In-Place SD/HD Switcher (Ditempat Foto/Media) */}
+                            <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner">
+                                <button
+                                    type="button"
+                                    onClick={() => isHd && toggleQuality()}
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                        !isHd
+                                            ? 'bg-emerald-600 text-white shadow-xs'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                    title="Mode SD: Sangat ringan, hemat kuota & render cepat"
+                                >
+                                    <Zap className="w-3 h-3 shrink-0" />
+                                    <span>SD</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => !isHd && toggleQuality()}
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                        isHd
+                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                    title="Mode HD: Tampilan media resolusi tinggi"
+                                >
+                                    <Sparkles className="w-3 h-3 shrink-0" />
+                                    <span>HD</span>
+                                </button>
+                            </div>
 
                             <button
                                 type="button"
