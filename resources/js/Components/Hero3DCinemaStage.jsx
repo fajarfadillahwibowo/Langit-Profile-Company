@@ -56,7 +56,7 @@ export default function Hero3DCinemaStage() {
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={handleMouseLeave}
-            className="relative w-full h-[500px] lg:h-[560px] select-none flex items-center justify-center cursor-pointer overflow-visible"
+            className="relative w-full h-[480px] sm:h-[500px] lg:h-[560px] select-none flex items-center justify-center cursor-pointer overflow-visible"
             style={{
                 perspective: isHd ? '1400px' : '900px',
             }}
@@ -125,17 +125,17 @@ export default function Hero3DCinemaStage() {
                     })}
                 </div>
 
-                {/* ── MODE 1: DUAL 3D (Kamera di Samping Kiri & Laptop di Kanan yang Dikecilkan, Tidak Bertabrakan) ── */}
+                {/* ── MODE 1: DUAL 3D (Kamera di Samping Kiri & Laptop di Kanan yang Proporsional & Rapi di Mobile) ── */}
                 {viewMode === 'dual' && (
                     <div className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
                         
-                        {/* 1. 3D LAPTOP (Dikecilkan ukurannya & ditaruh di sisi kanan) */}
+                        {/* 1. 3D LAPTOP */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.85, y: -15 }}
+                            initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ 
                                 opacity: 1, 
                                 scale: 1,
-                                y: [-8, 8, -8],
+                                y: [-6, 6, -6],
                                 rotateZ: [-0.6, 0.6, -0.6],
                             }}
                             transition={{
@@ -148,7 +148,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(40px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[20%] sm:top-[16%] right-0 sm:right-1 lg:right-2 z-10 w-[230px] sm:w-[270px] lg:w-[295px] pointer-events-auto"
+                            className="absolute top-[20%] sm:top-[16%] lg:top-[15%] right-1 sm:right-3 lg:right-2 z-10 w-[185px] sm:w-[245px] lg:w-[290px] pointer-events-auto"
                         >
                             <img
                                 src="/images/laptop-3d-transparent.png"
@@ -164,13 +164,13 @@ export default function Hero3DCinemaStage() {
                             />
                         </motion.div>
 
-                        {/* 2. 3D CAMERA (Digeser ke samping kiri, posisi tengah-kiri tidak ke bawah) */}
+                        {/* 2. 3D CAMERA (Posisi aman di dalam viewport, tidak terpotong atau ketambrak di layar HP) */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.85, x: -30 }}
+                            initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ 
                                 opacity: 1, 
                                 scale: 1,
-                                y: [8, -8, 8],
+                                y: [6, -6, 6],
                                 rotateZ: [-1, 1, -1],
                             }}
                             transition={{
@@ -183,7 +183,7 @@ export default function Hero3DCinemaStage() {
                                 transform: 'translateZ(75px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[28%] sm:top-[24%] left-[-15px] sm:left-[-30px] lg:left-[-45px] z-20 w-[190px] sm:w-[225px] lg:w-[245px] pointer-events-auto"
+                            className="absolute top-[26%] sm:top-[22%] lg:top-[20%] left-2 sm:left-4 lg:left-[-20px] z-20 w-[140px] sm:w-[195px] lg:w-[240px] pointer-events-auto"
                         >
                             <img
                                 src="/images/camera-3d-transparent.png"
@@ -194,7 +194,7 @@ export default function Hero3DCinemaStage() {
 
                             {/* Red ring specular glow pulse */}
                             <div 
-                                className="absolute top-[38%] left-[28%] w-12 h-12 rounded-full pointer-events-none opacity-40 blur-xl animate-pulse"
+                                className="absolute top-[38%] left-[28%] w-10 sm:w-12 h-10 sm:h-12 rounded-full pointer-events-none opacity-40 blur-xl animate-pulse"
                                 style={{ background: '#EF4444' }}
                             />
                         </motion.div>
@@ -222,7 +222,7 @@ export default function Hero3DCinemaStage() {
                                 rotateZ: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
                             }}
                             style={{ transform: 'translateZ(65px)', transformStyle: 'preserve-3d' }}
-                            className="relative z-20 w-[280px] sm:w-[340px] lg:w-[390px] pointer-events-auto"
+                            className="relative z-20 w-[240px] sm:w-[320px] lg:w-[380px] pointer-events-auto"
                         >
                             <img
                                 src="/images/camera-3d-transparent.png"
@@ -233,7 +233,7 @@ export default function Hero3DCinemaStage() {
 
                             {/* Floating Lens Ring Accent */}
                             <div 
-                                className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-44 h-44 rounded-full border border-sky-400/40 pointer-events-none animate-ping opacity-25"
+                                className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-36 sm:w-44 h-36 sm:h-44 rounded-full border border-sky-400/40 pointer-events-none animate-ping opacity-25"
                             />
                         </motion.div>
                     </div>
@@ -247,9 +247,9 @@ export default function Hero3DCinemaStage() {
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ 
                                 opacity: 1, 
-                                scale: 1.15,
-                                y: [-8, 8, -8],
-                                rotateZ: [-0.8, 0.8, -0.8],
+                                scale: 1.08,
+                                y: [-6, 6, -6],
+                                rotateZ: [-0.6, 0.6, -0.6],
                             }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             transition={{
@@ -259,7 +259,7 @@ export default function Hero3DCinemaStage() {
                                 rotateZ: { duration: 6.5, repeat: Infinity, ease: 'easeInOut' },
                             }}
                             style={{ transform: 'translateZ(65px)', transformStyle: 'preserve-3d' }}
-                            className="relative z-20 w-[320px] sm:w-[390px] lg:w-[440px] pointer-events-auto"
+                            className="relative z-20 w-[260px] sm:w-[350px] lg:w-[420px] pointer-events-auto"
                         >
                             <img
                                 src="/images/laptop-3d-transparent.png"
@@ -276,7 +276,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 1: Top-Left Photography & Videography */}
                 <div
                     onClick={() => window.location.href = '/layanan/photography-videography'}
-                    className="absolute top-10 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-8 sm:top-10 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -284,7 +284,7 @@ export default function Hero3DCinemaStage() {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
-                    <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5">
                         <div
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform"
                             style={{ background: 'rgba(245,158,11,0.2)' }}
@@ -292,8 +292,8 @@ export default function Hero3DCinemaStage() {
                             <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
                         </div>
                         <div>
-                            <div className="text-[9px] font-mono text-slate-400">Photography & Videography</div>
-                            <div className="text-[11px] sm:text-xs font-bold text-white">Wedding, Wisuda & Event</div>
+                            <div className="text-[8.5px] sm:text-[9px] font-mono text-slate-400">Photo & Video</div>
+                            <div className="text-[10.5px] sm:text-xs font-bold text-white">Wisuda & Event</div>
                         </div>
                     </div>
                 </div>
@@ -301,7 +301,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 2: Top-Right Langit Education */}
                 <div
                     onClick={() => window.location.href = '/layanan/langit-education'}
-                    className="absolute top-10 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute top-8 sm:top-10 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -309,7 +309,7 @@ export default function Hero3DCinemaStage() {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
-                    <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5">
                         <div
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform"
                             style={{ background: 'rgba(16,185,129,0.2)' }}
@@ -317,8 +317,8 @@ export default function Hero3DCinemaStage() {
                             <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                         </div>
                         <div>
-                            <div className="text-[9px] font-mono text-emerald-300">Langit Education</div>
-                            <div className="text-[11px] sm:text-xs font-bold text-white">Kursus Coding & AI</div>
+                            <div className="text-[8.5px] sm:text-[9px] font-mono text-emerald-300">Education</div>
+                            <div className="text-[10.5px] sm:text-xs font-bold text-white">Coding & AI</div>
                         </div>
                     </div>
                 </div>
@@ -326,7 +326,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 3: Bottom-Left Web Development */}
                 <div
                     onClick={() => window.location.href = '/layanan/web-development'}
-                    className="absolute bottom-1 left-0 sm:left-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-2 sm:bottom-1 left-1 sm:left-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(80px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -334,7 +334,7 @@ export default function Hero3DCinemaStage() {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
-                    <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5">
                         <div
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:-rotate-6 transition-transform"
                             style={{ background: 'rgba(14,165,233,0.2)' }}
@@ -342,8 +342,8 @@ export default function Hero3DCinemaStage() {
                             <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
                         </div>
                         <div>
-                            <div className="text-[9px] font-mono text-slate-400">Web Development</div>
-                            <div className="text-[11px] sm:text-xs font-bold text-white">Company Profile & Web Sistem</div>
+                            <div className="text-[8.5px] sm:text-[9px] font-mono text-slate-400">Web Dev</div>
+                            <div className="text-[10.5px] sm:text-xs font-bold text-white">Sistem & Compro</div>
                         </div>
                     </div>
                 </div>
@@ -351,7 +351,7 @@ export default function Hero3DCinemaStage() {
                 {/* Badge 4: Bottom-Right Program Internship */}
                 <div
                     onClick={() => window.location.href = '/layanan/internship'}
-                    className="absolute bottom-1 right-0 sm:right-1 z-30 rounded-2xl p-2.5 sm:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
+                    className="absolute bottom-2 sm:bottom-1 right-1 sm:right-2 z-30 rounded-2xl p-2 sm:p-2.5 md:p-3 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group"
                     style={{
                         transform: isHd ? 'translateZ(75px)' : 'none',
                         background: 'rgba(0, 24, 50, 0.96)',
@@ -359,7 +359,7 @@ export default function Hero3DCinemaStage() {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.45)',
                     }}
                 >
-                    <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5">
                         <div
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform"
                             style={{ background: 'rgba(168,85,247,0.2)' }}
@@ -367,8 +367,8 @@ export default function Hero3DCinemaStage() {
                             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
                         </div>
                         <div>
-                            <div className="text-[9px] font-mono text-purple-300">Program Internship</div>
-                            <div className="text-[11px] sm:text-xs font-bold text-white">Pendaftaran Terbuka</div>
+                            <div className="text-[8.5px] sm:text-[9px] font-mono text-purple-300">Internship</div>
+                            <div className="text-[10.5px] sm:text-xs font-bold text-white">Buka Magang</div>
                         </div>
                     </div>
                 </div>
