@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PublicLayout from '@/Layouts/PublicLayout';
-import MultiDeviceMockup from '@/Components/MultiDeviceMockup';
 import WebArchitectureCockpit from '@/Components/WebArchitectureCockpit';
 import WebSolutionCard3D from '@/Components/WebSolutionCard3D';
 import ScrollingWebDevPillars from '@/Components/ScrollingWebDevPillars';
@@ -311,23 +310,6 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
 
                 {/* 3D Stacked Card Scrolling Experience: 7 Pilar Rekayasa Web & Sistem Digital */}
                 <ScrollingWebDevPillars />
-
-                {/* 1. Interactive Multi-Device Mockup Previewer (PRD 4.2) */}
-                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12">
-                    <div className="mb-6 text-center max-w-2xl mx-auto">
-                        <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">
-                            Live Multi-Device Viewport Tester
-                        </span>
-                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
-                            Uji Responsivitas Langsung di Layar Anda
-                        </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                            Pilih proyek dan ganti mode viewport antara Desktop, Tablet, dan Mobile untuk melihat adaptasi layout sistem secara real-time.
-                        </p>
-                    </div>
-
-                    <MultiDeviceMockup portfolios={portfolios} />
-                </section>
             </div>
         </PublicLayout>
     );

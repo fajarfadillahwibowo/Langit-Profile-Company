@@ -262,9 +262,8 @@ export default function PublicLayout({ children, activeService = null }) {
                         </div>
                     </div>
 
-                    <div className="mt-12 pt-6 border-t border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+                    <div className="mt-12 pt-6 border-t border-slate-200 dark:border-white/5 flex items-center justify-center text-xs text-slate-500 text-center">
                         <p>© {new Date().getFullYear()} Langit Digital Ecosystem. Master Consolidated Edition v2.1.0.</p>
-                        <p className="font-mono text-[11px] text-slate-500">Built with Laravel 13, React.js & Tailwind CSS v4</p>
                     </div>
                 </div>
             </footer>
