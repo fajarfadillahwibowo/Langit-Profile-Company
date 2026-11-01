@@ -9,7 +9,7 @@ import {
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
     Phone, Calendar, FileText, Download, Eye, Filter,
     ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu
 } from 'lucide-react';
 
 export default function AdminDashboard({
@@ -50,6 +50,7 @@ export default function AdminDashboard({
     }, [theme]);
 
     const [activeTab, setActiveTab] = useState('overview'); // overview, tickets, rentals, galleries, internships, collaborations, consultations
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     // Gallery Sub-Sidebar & Filtering State
     const [isGalleryMenuOpen, setIsGalleryMenuOpen] = useState(true);
@@ -741,6 +742,295 @@ export default function AdminDashboard({
         <div className="h-screen h-[100dvh] overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
             <Head title="Admin CMS Executive Dashboard — Langit" />
 
+            {/* Mobile Sidebar Overlay & Slide-Over Drawer */}
+            {mobileSidebarOpen && (
+                <div className="fixed inset-0 z-50 md:hidden flex">
+                    {/* Backdrop */}
+                    <div 
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                        onClick={() => setMobileSidebarOpen(false)}
+                    />
+                    
+                    {/* Drawer Content */}
+                    <aside className="relative w-72 max-w-[85vw] h-full bg-[#005792] flex flex-col justify-between p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+                        <div className="flex-1 min-h-0 flex flex-col space-y-4">
+                            {/* Drawer Header: Logo + Close Button */}
+                            <div className="flex items-center justify-between pb-3 border-b border-white/20">
+                                <Link href="/" onClick={() => setMobileSidebarOpen(false)} className="block px-1 group">
+                                    <div className="flex items-center gap-1.5">
+                                        <span 
+                                            className="font-etna font-bold text-2xl tracking-tight text-white flex items-center gap-1.5 leading-none"
+                                            style={{ fontFamily: "'Etna Sans Serif', 'Etna', sans-serif" }}
+                                        >
+                                            langit
+                                            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-hud-pulse shadow-[0_0_10px_rgba(34,211,238,0.9)] shrink-0"></span>
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-sky-200 block mt-1 tracking-wider uppercase">
+                                        Back-Office CMS
+                                    </span>
+                                </Link>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setMobileSidebarOpen(false)}
+                                    className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                                    aria-label="Tutup Menu"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Nav Items Scrollable */}
+                            <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1 -mr-1 sidebar-scroll">
+                                <button
+                                    onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'overview'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
+                                    <span>Executive Overview</span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'client_deliveries'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-sky-300'}`} />
+                                        <span>Foto Pelanggan</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {clientDeliveries.length}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'tickets'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
+                                        <span>Computer Servis</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'tickets' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {serviceTickets.length}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'rentals'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
+                                        <span>Sewa Alat & Gear</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {rentalBookings.length}
+                                    </span>
+                                </button>
+
+                                {/* Accordion Galeri */}
+                                <div className="space-y-1">
+                                    <button
+                                        onClick={() => {
+                                            if (activeTab !== 'galleries') {
+                                                setActiveTab('galleries');
+                                                setIsGalleryMenuOpen(true);
+                                            } else {
+                                                setIsGalleryMenuOpen(!isGalleryMenuOpen);
+                                            }
+                                        }}
+                                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                            activeTab === 'galleries'
+                                                ? 'bg-white text-[#005792] font-bold shadow-md'
+                                                : 'text-white/90 hover:text-white hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Camera className={`w-4 h-4 shrink-0 ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-amber-300'}`} />
+                                            <span>Galeri & EXIF Media</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                                activeTab === 'galleries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                            }`}>
+                                                {galleries.length}
+                                            </span>
+                                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                                isGalleryMenuOpen ? 'rotate-180' : ''
+                                            } ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-white/70'}`} />
+                                        </div>
+                                    </button>
+
+                                    {isGalleryMenuOpen && (
+                                        <div className="ml-3 pl-2.5 border-l-2 border-white/30 space-y-1 pt-1 pb-1">
+                                            {serviceNavItems.map((sItem) => {
+                                                const isSelected = activeTab === 'galleries' && selectedGalleryService === sItem.slug;
+                                                const count = getServiceGalleryCount(sItem.slug);
+
+                                                return (
+                                                    <button
+                                                        key={sItem.id}
+                                                        onClick={() => {
+                                                            setActiveTab('galleries');
+                                                            setSelectedGalleryService(sItem.slug);
+                                                            setGallerySubCategoryFilter('all');
+                                                            setMobileSidebarOpen(false);
+                                                        }}
+                                                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex items-center justify-between cursor-pointer ${
+                                                            isSelected ? 'bg-white text-[#005792] font-bold shadow-xs' : 'text-white/85 hover:bg-white/10'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2 min-w-0 pr-1">
+                                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sItem.color }} />
+                                                            <span className="truncate font-semibold text-[11px] leading-tight">{sItem.name}</span>
+                                                        </div>
+                                                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-white/20 text-white">
+                                                            {count}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button
+                                    onClick={() => { setActiveTab('internships'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'internships'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Sparkles className={`w-4 h-4 ${activeTab === 'internships' ? 'text-[#005792]' : 'text-purple-300'}`} />
+                                        <span>Internship Pelamar</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'internships' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {internshipApplications.length}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('collaborations'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'collaborations'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Handshake className={`w-4 h-4 ${activeTab === 'collaborations' ? 'text-[#005792]' : 'text-rose-300'}`} />
+                                        <span>Proposal Kerja Sama</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'collaborations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {collaborations.length}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('consultations'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'consultations'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Ticket className={`w-4 h-4 ${activeTab === 'consultations' ? 'text-[#005792]' : 'text-sky-300'}`} />
+                                        <span>Jadwal Konsultasi</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'consultations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {recentConsultations.length}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => { setActiveTab('services'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'services'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
+                                        <span>7 Divisi Layanan (VIP)</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'services' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {services.length}
+                                    </span>
+                                </button>
+                            </nav>
+                        </div>
+
+                        {/* Drawer Footer Actions */}
+                        <div className="pt-3 border-t border-white/20 space-y-1.5 shrink-0">
+                            <Link
+                                href="/admin/profile"
+                                onClick={() => setMobileSidebarOpen(false)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+                            >
+                                <div className="w-5 h-5 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-[10px]">
+                                    {(auth?.user?.name || 'AD').substring(0, 2).toUpperCase()}
+                                </div>
+                                <span>Profil Administrator</span>
+                            </Link>
+
+                            <Link
+                                href="/"
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+                            >
+                                <ExternalLink className="w-4 h-4 text-sky-200" />
+                                <span>Lihat Website Publik</span>
+                            </Link>
+
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-200 hover:text-white hover:bg-rose-500/25 transition-colors cursor-pointer text-left"
+                            >
+                                <LogOut className="w-4 h-4 text-rose-300" />
+                                <span>Keluar / Logout</span>
+                            </Link>
+                        </div>
+                    </aside>
+                </div>
+            )}
+
             {/* Sidebar Navigation - Fixed height in viewport, only content scrolls */}
             <aside className="w-64 h-full border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
                 <div className="flex-1 min-h-0 flex flex-col space-y-5">
@@ -1033,28 +1323,59 @@ export default function AdminDashboard({
             </aside>
 
             {/* Main Content Dashboard - Scrolls independently */}
-            <main className="flex-1 h-full min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
+            <main className="flex-1 h-full min-w-0 p-4 sm:p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
                 {/* Topbar Info */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#005792]/15 dark:border-white/10">
-                    <div>
-                        <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-                            {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
-                            {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan (Delivery & Ambil Foto)'}
-                            {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
-                            {activeTab === 'rentals' && 'Manajemen Sewa Alat & Inventaris Gear'}
-                            {activeTab === 'galleries' && 'Manajemen Galeri Mahakarya & EXIF'}
-                            {activeTab === 'internships' && 'Review Pelamar Magang & CV'}
-                            {activeTab === 'collaborations' && 'Manajemen Pengajuan Kerja Sama & Kemitraan (B2B)'}
-                            {activeTab === 'consultations' && 'Manajemen Tiket Jadwal Konsultasi'}
-                            {activeTab === 'services' && 'Manajemen 7 Divisi Layanan Terintegrasi (VIP Cards)'}
-                        </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                            Status Server: Online 200 OK • Laravel 13 • MySQL phpMyAdmin Connected
-                        </p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-[#005792]/15 dark:border-white/10">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            {/* Mobile Hamburger Button to Open Sidebar Drawer */}
+                            <button
+                                type="button"
+                                onClick={() => setMobileSidebarOpen(true)}
+                                className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#005792] hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-[#005792]/25 cursor-pointer active:scale-95 transition-all shrink-0"
+                                aria-label="Buka Menu Sidebar"
+                            >
+                                <Menu className="w-4 h-4" />
+                                <span>Menu</span>
+                            </button>
+
+                            <div>
+                                <h1 className="font-heading font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white leading-tight">
+                                    {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
+                                    {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan'}
+                                    {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
+                                    {activeTab === 'rentals' && 'Manajemen Sewa Alat & Gear'}
+                                    {activeTab === 'galleries' && 'Manajemen Galeri & EXIF'}
+                                    {activeTab === 'internships' && 'Review Pelamar Magang & CV'}
+                                    {activeTab === 'collaborations' && 'Pengajuan Kerja Sama (B2B)'}
+                                    {activeTab === 'consultations' && 'Jadwal Konsultasi'}
+                                    {activeTab === 'services' && '7 Divisi Layanan Terintegrasi'}
+                                </h1>
+                                <p className="text-[10.5px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">
+                                    Status Server: Online 200 OK • Laravel 13 • MySQL Connected
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Mobile Theme Toggle & Profile on the right */}
+                        <div className="flex md:hidden items-center gap-2 shrink-0">
+                            <ThemeToggle theme={theme} setTheme={setTheme} />
+                            <Link
+                                href="/admin/profile"
+                                className="w-8 h-8 rounded-full overflow-hidden bg-[#005792] text-white flex items-center justify-center font-bold text-xs shadow-xs"
+                                title="Profil Admin"
+                            >
+                                {auth?.user?.avatar ? (
+                                    <img src={auth.user.avatar} alt={auth.user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span>{(auth?.user?.name || 'AD').substring(0, 2).toUpperCase()}</span>
+                                )}
+                            </Link>
+                        </div>
                     </div>
 
-                    {/* Topbar Theme Toggle & Admin Profile */}
-                    <div className="flex items-center gap-2.5">
+                    {/* Desktop Theme Toggle & Admin Profile */}
+                    <div className="hidden md:flex items-center gap-2.5">
                         {/* Theme Toggle in Header */}
                         <ThemeToggle theme={theme} setTheme={setTheme} />
 
@@ -1071,23 +1392,25 @@ export default function AdminDashboard({
                                     <span>{(auth?.user?.name || 'AD').substring(0, 2).toUpperCase()}</span>
                                 )}
                             </div>
-                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-[#005792] dark:group-hover:text-white hidden sm:inline truncate max-w-[130px]">
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-[#005792] dark:group-hover:text-white truncate max-w-[130px]">
                                 {auth?.user?.name || 'Admin'}
                             </span>
                         </Link>
                     </div>
                 </div>
 
-                {/* Mobile Tabs Switcher */}
-                <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-6 no-scrollbar text-xs font-medium">
+                {/* Mobile Tabs Quick Switcher */}
+                <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-5 no-scrollbar text-xs font-medium">
                     {[
                         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                        { id: 'client_deliveries', label: `Foto Pelanggan (${clientDeliveries.length})`, icon: FolderHeart },
                         { id: 'tickets', label: `Servis (${serviceTickets.length})`, icon: Cpu },
                         { id: 'rentals', label: `Rental (${rentalBookings.length})`, icon: PackageCheck },
                         { id: 'galleries', label: `Galeri (${galleries.length})`, icon: Camera },
                         { id: 'internships', label: `Magang (${internshipApplications.length})`, icon: Sparkles },
                         { id: 'collaborations', label: `Kerja Sama (${collaborations.length})`, icon: Handshake },
                         { id: 'consultations', label: `Konsultasi (${recentConsultations.length})`, icon: Ticket },
+                        { id: 'services', label: `7 Layanan (${services.length})`, icon: SlidersHorizontal },
                     ].map(tab => {
                         const Icon = tab.icon;
                         return (
