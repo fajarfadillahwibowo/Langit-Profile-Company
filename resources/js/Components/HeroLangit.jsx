@@ -8,21 +8,22 @@ export default function HeroLangit() {
     const heroRef = useRef(null);
 
     useEffect(() => {
-        // Lightweight, fast entrance animation with explicit fromTo & clearProps to prevent stuck opacity
+        // Lightweight, fast entrance animation with explicit fromTo & safe clearProps to prevent stuck opacity
         const ctx = gsap.context(() => {
-            gsap.fromTo('.hlg-badge', { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' });
+            gsap.fromTo('.hlg-badge', { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'transform,opacity' });
             gsap.fromTo('.hlg-line', 
                 { opacity: 0, y: 35 }, 
-                { opacity: 1, y: 0, stagger: 0.08, duration: 0.6, ease: 'power2.out', clearProps: 'all' }
+                { opacity: 1, y: 0, stagger: 0.08, duration: 0.6, ease: 'power2.out', clearProps: 'transform,opacity' }
             );
-            gsap.fromTo('.hlg-desc', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.2, clearProps: 'all' });
+            gsap.fromTo('.hlg-desc', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.2, clearProps: 'transform,opacity' });
+            // For CTA buttons: only animate vertical float, never wipe out inline background/colors
             gsap.fromTo('.hlg-cta', 
-                { opacity: 0.5, y: 12 }, 
-                { opacity: 1, y: 0, stagger: 0.08, duration: 0.45, ease: 'power2.out', delay: 0.15, clearProps: 'all' }
+                { y: 12 }, 
+                { y: 0, stagger: 0.08, duration: 0.45, ease: 'power2.out', delay: 0.15, clearProps: 'transform' }
             );
             gsap.fromTo('.hlg-right', 
                 { opacity: 0, scale: 0.96 }, 
-                { opacity: 1, scale: 1, duration: 0.65, ease: 'power2.out', delay: 0.15, clearProps: 'all' }
+                { opacity: 1, scale: 1, duration: 0.65, ease: 'power2.out', delay: 0.15, clearProps: 'transform,opacity' }
             );
         }, heroRef);
 
@@ -173,13 +174,13 @@ export default function HeroLangit() {
                             {/* Tombol 2: Lihat Portofolio (Secondary CTA - Kontras Tinggi, Terang & Anti-Blur) */}
                             <Link
                                 href="/portofolio"
-                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-semibold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/30 hover:border-cyan-400/60 shadow-lg shadow-black/30"
+                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/30 hover:border-cyan-400/60 shadow-lg shadow-black/30"
                                 style={{
-                                    background: 'rgba(255, 255, 255, 0.12)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
                                     backdropFilter: 'blur(8px)',
                                 }}
                             >
-                                <Play className="w-4 h-4 text-cyan-400 fill-cyan-400/30 group-hover:scale-110 transition-transform" />
+                                <Play className="w-4 h-4 text-cyan-400 fill-cyan-400/50 group-hover:scale-110 transition-transform" />
                                 <span>Lihat Portofolio</span>
                             </Link>
                         </div>
