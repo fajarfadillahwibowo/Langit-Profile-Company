@@ -152,7 +152,7 @@ export default function UnifiedLogin() {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all duration-200 active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                className="w-full py-3 rounded-xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-sm shadow-sm hover:shadow transition-all duration-200 active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                             >
                                 <LogIn className="w-4 h-4" />
                                 <span>{processing ? 'Memverifikasi...' : 'Masuk'}</span>

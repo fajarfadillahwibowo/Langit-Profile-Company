@@ -250,7 +250,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                     <button
                         type="button"
                         onClick={() => setCreateModalOpen(true)}
-                        className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                        className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Tambah Pelanggan & Upload Foto</span>
@@ -739,7 +739,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || selectedFiles.length === 0}
-                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 text-white font-bold text-xs shadow-md shadow-sky-500/25 disabled:opacity-50 cursor-pointer"
+                                    className="px-6 py-2.5 rounded-xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-xs shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     {isSubmitting ? 'Sedang Mengunggah...' : `Unggah ${selectedFiles.length} Foto Sekarang`}
                                 </button>

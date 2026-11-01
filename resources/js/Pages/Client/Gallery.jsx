@@ -152,7 +152,7 @@ export default function ClientGallery({ client, deliveries = [] }) {
                                             <div className="shrink-0 flex items-center gap-3">
                                                 <a
                                                     href={`/pelanggan/album/${delivery.id}/download-all`}
-                                                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all hover:scale-105 active:scale-95"
+                                                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
                                                 >
                                                     <FolderArchive className="w-4 h-4 shrink-0" />
                                                     <span>Unduh Semua Foto (ZIP • {delivery.total_size_formatted})</span>

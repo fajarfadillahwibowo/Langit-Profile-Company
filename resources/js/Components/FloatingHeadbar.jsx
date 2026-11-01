@@ -296,10 +296,10 @@ export default function FloatingHeadbar({
                         {/* Login Unified CTA Button (Topbar Kanan Atas) */}
                         <Link
                             href="/login"
-                            className={`shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-[#005792] via-sky-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-[#005792]/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap ${
-                                scrolled ? 'px-3 py-1 sm:py-1.5' : 'px-3.5 sm:px-4 py-1 sm:py-1.5'
+                            className={`shrink-0 flex items-center gap-1.5 rounded-full bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-semibold text-[11px] sm:text-xs shadow-xs hover:shadow-sm border border-[#005792] active:scale-95 transition-all whitespace-nowrap cursor-pointer ${
+                                scrolled ? 'px-3 py-1 sm:py-1.5' : 'px-3.5 sm:px-4 py-1.5'
                             }`}
-                            title="Portal Login Akun"
+                            title="Masuk ke Akun"
                         >
                             <LogIn className="w-3.5 h-3.5 shrink-0" />
                             <span>Login</span>
