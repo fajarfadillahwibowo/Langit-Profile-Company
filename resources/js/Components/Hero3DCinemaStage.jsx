@@ -85,7 +85,7 @@ export default function Hero3DCinemaStage() {
                 <div 
                     className="absolute -top-12 sm:-top-11 lg:-top-9 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1 sm:p-1.5 rounded-full border border-white/20 backdrop-blur-xl shadow-2xl"
                     style={{ 
-                        transform: 'translateZ(130px) translateX(-50%)',
+                        transform: isHd ? 'translateZ(130px)' : 'none',
                         background: 'rgba(0, 20, 42, 0.94)',
                         boxShadow: '0 10px 30px rgba(0,0,0,0.55), 0 0 20px rgba(56,189,248,0.2)',
                     }}
