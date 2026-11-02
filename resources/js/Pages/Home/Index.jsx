@@ -120,31 +120,31 @@ export default function HomeIndex({
 
                         <div className="flex items-center gap-2">
                             {/* In-Place SD/HD Switcher (Ditempat Foto/Media) */}
-                            <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner">
+                            <div className="flex items-center p-0.5 rounded-full bg-slate-200/90 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner">
                                 <button
                                     type="button"
-                                    onClick={() => isHd && toggleQuality()}
-                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                    onClick={() => setQuality('sd')}
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                                         !isHd
                                             ? 'bg-emerald-600 text-white shadow-xs'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                     }`}
                                     title="Mode SD: Sangat ringan, hemat kuota & render cepat"
                                 >
-                                    <Zap className="w-3 h-3 shrink-0" />
+                                    <Zap className={`w-3 h-3 shrink-0 ${!isHd ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                                     <span>SD</span>
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => !isHd && toggleQuality()}
-                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                    onClick={() => setQuality('hd')}
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                                         isHd
-                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                            ? 'bg-emerald-600 text-white shadow-xs'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                     }`}
-                                    title="Mode HD: Tampilan media resolusi tinggi"
+                                    title="Mode HD: Tampilan media resolusi tinggi 100%"
                                 >
-                                    <Sparkles className="w-3 h-3 shrink-0" />
+                                    <Sparkles className={`w-3 h-3 shrink-0 ${isHd ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                                     <span>HD</span>
                                 </button>
                             </div>

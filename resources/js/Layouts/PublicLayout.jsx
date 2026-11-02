@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import FloatingHeadbar from '@/Components/FloatingHeadbar';
-import { QualityProvider } from '@/Context/QualityContext';
 import { 
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
     ChevronDown, Menu, X, ArrowRight, Phone, Mail, MapPin, Clock, ShieldCheck,
@@ -120,8 +119,7 @@ export default function PublicLayout({ children, activeService = null }) {
     ];
 
     return (
-        <QualityProvider>
-            <div className="min-h-screen bg-[#EDF9FC] text-slate-900 dark:bg-[#07090E] dark:text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 transition-colors duration-300">
+        <div className="min-h-screen bg-[#EDF9FC] text-slate-900 dark:bg-[#07090E] dark:text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-900 dark:selection:bg-cyan-500/30 dark:selection:text-cyan-200 transition-colors duration-300">
             {/* Ambient Background Glows (Absolute, optimized for silky scroll) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-400/10 dark:bg-cyan-600/10 rounded-full blur-3xl"></div>
@@ -268,6 +266,5 @@ export default function PublicLayout({ children, activeService = null }) {
                 </div>
             </footer>
         </div>
-        </QualityProvider>
     );
 }

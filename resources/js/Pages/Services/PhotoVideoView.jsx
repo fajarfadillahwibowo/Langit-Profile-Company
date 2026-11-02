@@ -11,7 +11,7 @@ import {
 import { useQuality } from '@/Context/QualityContext';
 
 export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {
-    const { isHd, toggleQuality, getOptimizedImage } = useQuality();
+    const { isHd, setQuality, toggleQuality, getOptimizedImage } = useQuality();
     const [activeTab, setActiveTab] = useState('services'); // 'services' | 'gallery'
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
@@ -242,14 +242,14 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                     onClick={toggleQuality}
                                     className={`px-4 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer ${
                                         isHd
-                                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/30'
+                                            ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-500/30'
                                             : 'bg-black/60 text-emerald-300 border-white/20 hover:bg-black/80'
                                     }`}
                                     title="Klik untuk mengubah kualitas video & foto (SD Cepat / HD)"
                                 >
                                     {isHd ? (
                                         <>
-                                            <Sparkles className="w-4 h-4" />
+                                            <Sparkles className="w-4 h-4 text-white" />
                                             <span>Kualitas: HD Penuh</span>
                                         </>
                                     ) : (
@@ -275,28 +275,28 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             <div className="flex items-center p-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/25 shadow-xl">
                                 <button
                                     type="button"
-                                    onClick={() => isHd && toggleQuality()}
-                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all ${
+                                    onClick={() => setQuality('sd')}
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
                                         !isHd
                                             ? 'bg-emerald-600 text-white shadow-xs'
                                             : 'text-slate-300 hover:text-white'
                                     }`}
                                     title="Mode SD: Video ringan dan hemat kuota"
                                 >
-                                    <Zap className="w-3 h-3 shrink-0" />
+                                    <Zap className={`w-3 h-3 shrink-0 ${!isHd ? 'text-white' : 'text-slate-400'}`} />
                                     <span>SD</span>
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => !isHd && toggleQuality()}
-                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all ${
+                                    onClick={() => setQuality('hd')}
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
                                         isHd
-                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                            ? 'bg-emerald-600 text-white shadow-xs font-bold'
                                             : 'text-slate-300 hover:text-white'
                                     }`}
                                     title="Mode HD: Video resolusi sinema tinggi 4K"
                                 >
-                                    <Sparkles className="w-3 h-3 shrink-0" />
+                                    <Sparkles className={`w-3 h-3 shrink-0 ${isHd ? 'text-white' : 'text-slate-400'}`} />
                                     <span>HD</span>
                                 </button>
                             </div>
@@ -614,31 +614,31 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                         </div>
 
                         {/* In-Place SD/HD Switcher for Before/After */}
-                        <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner shrink-0">
+                        <div className="flex items-center p-0.5 rounded-full bg-slate-200/90 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner shrink-0">
                             <button
                                 type="button"
-                                onClick={() => isHd && toggleQuality()}
-                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                onClick={() => setQuality('sd')}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                                     !isHd
                                         ? 'bg-emerald-600 text-white shadow-xs'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                                 title="Mode SD: Sangat ringan & hemat kuota"
                             >
-                                <Zap className="w-3 h-3 shrink-0" />
+                                <Zap className={`w-3 h-3 shrink-0 ${!isHd ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                                 <span>SD</span>
                             </button>
                             <button
                                 type="button"
-                                onClick={() => !isHd && toggleQuality()}
-                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                onClick={() => setQuality('hd')}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                                     isHd
-                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs font-extrabold'
+                                        ? 'bg-emerald-600 text-white shadow-xs font-bold'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                                 title="Mode HD: Tampilan color grading resolusi tinggi 100%"
                             >
-                                <Sparkles className="w-3 h-3 shrink-0" />
+                                <Sparkles className={`w-3 h-3 shrink-0 ${isHd ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                                 <span>HD</span>
                             </button>
                         </div>

@@ -33,15 +33,15 @@ export default function LightboxModal({ item, onClose }) {
                         <button
                             type="button"
                             onClick={toggleQuality}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold shadow-lg backdrop-blur-md border transition-all hover:scale-105 active:scale-95 ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold shadow-lg backdrop-blur-md border transition-all hover:scale-105 active:scale-95 cursor-pointer ${
                                 isHd
-                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/30'
+                                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-500/30'
                                     : 'bg-black/75 text-emerald-300 border-white/20 hover:bg-black/90'
                             }`}
                             title="Klik untuk mengubah resolusi tampilan foto (SD Ringan / HD)"
                         >
                             {isHd ? <Sparkles className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5 text-emerald-400" />}
-                            <span>{isHd ? '💎 HD 100% Aktif' : '⚡ Klik untuk Mode HD'}</span>
+                            <span>{isHd ? '✨ HD 100% Aktif' : '⚡ Klik untuk Mode HD'}</span>
                         </button>
                     </div>
 
