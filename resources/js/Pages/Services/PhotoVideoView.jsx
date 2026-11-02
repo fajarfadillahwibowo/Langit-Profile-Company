@@ -9,6 +9,7 @@ import {
     ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images, Zap
 } from 'lucide-react';
 import { useQuality } from '@/Context/QualityContext';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function PhotoVideoView({ service, galleries = [], beforeAfter = null, showreel = null }) {
     const { isHd, setQuality, toggleQuality, getOptimizedImage } = useQuality();
@@ -493,13 +494,19 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                                     <ArrowRight className="w-3.5 h-3.5" />
                                                 </button>
 
-                                                <Link
-                                                    href="/konsultasi"
+                                                <a
+                                                    href={getWhatsAppUrl('photo-video', {
+                                                        category: pillar.title,
+                                                        title: pillar.title,
+                                                        details: 'Saya ingin booking paket photoshoot / videography ini.'
+                                                    })}
+                                                    target="_blank"
+                                                    rel="noreferrer"
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105"
+                                                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105 active:scale-95 flex items-center gap-1 cursor-pointer"
                                                 >
-                                                    Booking
-                                                </Link>
+                                                    <span>Booking WhatsApp</span>
+                                                </a>
                                             </div>
                                         </div>
                                     ))}

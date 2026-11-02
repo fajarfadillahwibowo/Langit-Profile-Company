@@ -5,6 +5,7 @@ import {
     CheckCircle2, ArrowRight, Sparkles, ShieldCheck, 
     CreditCard, QrCode, Cpu, Zap, Activity, Clock, Layers
 } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 /* ── 3D VISUAL ILLUSTRATION WIDGETS (Matching Bogdan Zhuk 3D Cards Reference) ── */
 
@@ -486,9 +487,15 @@ export default function WebSolutionCard3D({ sol, idx }) {
 
                 {/* Bottom CTA Button: Elevated 3D Magnetic Action */}
                 <div style={{ transform: 'translateZ(20px)' }} className="relative z-20 mt-5 pt-3 border-t border-slate-100 dark:border-white/5">
-                    <Link
-                        href={`/konsultasi?layanan=web-development&solusi=${encodeURIComponent(sol.title)}`}
-                        className="group/btn relative w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden shadow-sm"
+                    <a
+                        href={getWhatsAppUrl('web-dev', {
+                            category: sol.title,
+                            title: sol.title,
+                            details: `Fitur utama: ${sol.features.slice(0, 2).join(', ')}`
+                        })}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group/btn relative w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden shadow-sm cursor-pointer"
                         style={{
                             backgroundColor: isHovered ? sol.color : undefined,
                             color: isHovered ? '#060B14' : undefined,
@@ -500,7 +507,7 @@ export default function WebSolutionCard3D({ sol, idx }) {
                         )}
 
                         <span className="relative z-10 font-bold transition-transform group-hover/btn:translate-x-[-2px]">
-                            Konsultasikan Solusi Ini
+                            Konsultasikan via WhatsApp
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 relative z-10 transition-transform group-hover/btn:translate-x-1" />
 
@@ -508,7 +515,7 @@ export default function WebSolutionCard3D({ sol, idx }) {
                         {isHovered && (
                             <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                         )}
-                    </Link>
+                    </a>
                 </div>
             </motion.div>
         </motion.div>

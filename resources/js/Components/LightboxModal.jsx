@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Camera, Aperture, Eye, Disc, Clock, Gauge, Sparkles, Zap } from 'lucide-react';
 import { useQuality } from '@/Context/QualityContext';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function LightboxModal({ item, onClose }) {
     if (!item) return null;
@@ -130,7 +131,10 @@ export default function LightboxModal({ item, onClose }) {
                     <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <span className="text-[11px] font-mono text-slate-500">Color Profile: Rec.709</span>
                         <a 
-                            href="https://wa.me/6282246142791?text=Halo%20Admin%20Langit,%20saya%20tertarik%20dengan%20gaya%20visual%20karya%20foto%20ini"
+                            href={getWhatsAppUrl('portfolio', { 
+                                title: item.title,
+                                category: item.category || 'Dokumentasi Visual'
+                            })}
                             target="_blank"
                             rel="noreferrer"
                             className="px-3.5 py-1.5 rounded-lg bg-[#005792] hover:bg-[#004270] text-white text-xs font-semibold transition-colors shadow-sm"

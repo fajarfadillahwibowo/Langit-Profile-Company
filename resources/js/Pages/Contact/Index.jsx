@@ -6,6 +6,7 @@ import {
     Sparkles, ArrowRight
 } from 'lucide-react';
 import { useQuality } from '@/Context/QualityContext';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function ContactIndex({ contacts = {}, faqs = [] }) {
     const { getOptimizedImage } = useQuality();
@@ -83,7 +84,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* 1. Official WhatsApp Card */}
                         <a
-                            href={`https://wa.me/${(contacts.general_phone || '+62 822-4614-2791').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo Studio Langit, saya ingin berkonsultasi mengenai layanan dan proyek...')}`}
+                            href={getWhatsAppUrl('general', { phone: contacts.general_phone || '+62 822-4614-2791' })}
                             target="_blank"
                             rel="noreferrer"
                             className="group relative p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden"
@@ -261,7 +262,12 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 {contacts.division_contacts.map((div, idx) => (
                                     <a
                                         key={idx}
-                                        href={`https://wa.me/${(div.phone || contacts.general_phone || '+62 822-4614-2791').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo ${div.pic} (${div.division}) Studio Langit, saya ingin berkonsultasi mengenai ${div.tag}...`)}`}
+                                        href={getWhatsAppUrl(div.key || 'general', { 
+                                            phone: div.phone || contacts.general_phone || '+62 822-4614-2791',
+                                            category: div.tag,
+                                            title: div.division,
+                                            clientName: ''
+                                        })}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-lg transition-all group flex flex-col justify-between"
@@ -342,7 +348,10 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                     <span className="leading-relaxed group-hover:underline">{contacts.address}</span>
                                 </a>
                                 <a
-                                    href={`https://wa.me/${(contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791').replace(/[^0-9]/g, '')}`}
+                                    href={getWhatsAppUrl('general', { 
+                                        phone: contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791',
+                                        details: 'Saya ingin konsultasi langsung atau berkunjung ke studio Langit.'
+                                    })}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center gap-2.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"

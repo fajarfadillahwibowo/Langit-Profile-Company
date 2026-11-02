@@ -3,7 +3,8 @@ import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import EducationTrack3DCards from '@/Components/EducationTrack3DCards';
 import InteractiveEducationHub from '@/Components/InteractiveEducationHub';
-import { GraduationCap, ArrowRight } from 'lucide-react';
+import { GraduationCap, ArrowRight, Phone } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function EducationView({ service, courses = [], galleries = [] }) {
     return (
@@ -41,12 +42,18 @@ export default function EducationView({ service, courses = [], galleries = [] })
                             <span>Eksplorasi Studio Lab & Kurikulum</span>
                             <ArrowRight className="w-4 h-4" />
                         </a>
-                        <Link
-                            href="/konsultasi"
-                            className="px-5 py-3 rounded-xl bg-slate-200/70 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-colors"
+                        <a
+                            href={getWhatsAppUrl('education', {
+                                category: 'In-House Training & Pelatihan Kelompok',
+                                details: 'Konsultasi pelatihan untuk instansi / kelompok / sekolah.'
+                            })}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-5 py-3 rounded-xl bg-slate-200/70 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-colors flex items-center gap-2"
                         >
-                            Konsultasi In-House Training
-                        </Link>
+                            <Phone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>Konsultasi Pelatihan via WA</span>
+                        </a>
                     </div>
                 </section>
 

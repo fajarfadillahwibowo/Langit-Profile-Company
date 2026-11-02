@@ -9,6 +9,7 @@ import {
     ShieldCheck, Zap, Clock, Users, Phone, Mail, FileCheck,
     X, ChevronRight, BadgeCheck, AlertCircle
 } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function CollaborationView({ service }) {
     const [formData, setFormData] = useState({
@@ -277,7 +278,10 @@ export default function CollaborationView({ service }) {
                             </a>
 
                             <a
-                                href="https://wa.me/6282246142791?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
+                                href={getWhatsAppUrl('kolaborasi', { 
+                                    category: 'Fast-Track Kemitraan & Proposal',
+                                    details: 'Kami ingin mendiskusikan peluang kerja sama strategis.'
+                                })}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-sm font-semibold shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"

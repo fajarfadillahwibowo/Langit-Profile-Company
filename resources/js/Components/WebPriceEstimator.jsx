@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calculator, Check, ArrowRight, Clock, ShieldCheck, Sparkles } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function WebPriceEstimator({ components = [] }) {
     // Default checked features
@@ -37,11 +38,18 @@ export default function WebPriceEstimator({ components = [] }) {
     const generateWhatsAppUrl = () => {
         const selectedTitles = components
             .filter(c => selectedIds.includes(c.id))
-            .map(c => `- ${c.component_name} (${formatRupiah(c.base_price)})`)
+            .map(c => `• ${c.component_name} (${formatRupiah(c.base_price)})`)
             .join('\n');
 
-        const message = `Halo Tim Web Langit,\nSaya baru saja mencoba Kalkulator Estimasi Proyek di website dengan pilihan fitur berikut:\n\n${selectedTitles}\n\n*Estimasi Total:* ${formatRupiah(totalPrice)}\n*Estimasi Pengerjaan:* ~${totalDays} Hari Kerja\n\nSaya ingin berkonsultasi lebih lanjut untuk detail pengerjaan. Terima kasih!`;
-        return `https://wa.me/6282246142791?text=${encodeURIComponent(message)}`;
+        const message = `Halo Tim Web Development Langit, saya baru saja melakukan simulasi estimasi website dengan rincian fitur berikut:
+
+${selectedTitles}
+
+• Estimasi Total Biaya: ${formatRupiah(totalPrice)}
+• Estimasi Waktu Pengerjaan: ~${totalDays} Hari Kerja
+
+Saya ingin berkonsultasi lebih lanjut mengenai detail pengerjaan proyek ini. Terima kasih!`;
+        return getWhatsAppUrl('web-dev', { customMessage: message });
     };
 
     return (

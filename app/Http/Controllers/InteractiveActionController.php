@@ -78,15 +78,16 @@ class InteractiveActionController extends Controller
             $waItemsText .= "- {$item['name']} ({$item['qty']}x) @ Rp " . number_format($item['price'], 0, ',', '.') . "\n";
         }
 
-        $waText = urlencode("Halo Admin Rental Langit,\nSaya ingin konfirmasi booking sewa alat:\n" .
-            "Kode Booking: {$bookingCode}\n" .
-            "Nama: {$validated['customer_name']}\n" .
-            "Durasi: {$validated['total_days']} Hari ({$validated['start_date']} s/d {$validated['end_date']})\n" .
-            "Item:\n{$waItemsText}" .
-            "Total Biaya: Rp " . number_format($validated['total_price'], 0, ',', '.') . "\n" .
-            "Jaminan ID: {$validated['identity_card_type']}\nTerima kasih!");
+        $waText = "Halo Tim Rental Langit,\nSaya ingin konfirmasi booking sewa alat:\n\n" .
+            "• Kode Booking: {$bookingCode}\n" .
+            "• Nama Penyewa: {$validated['customer_name']}\n" .
+            "• Durasi Sewa: {$validated['total_days']} Hari ({$validated['start_date']} s/d {$validated['end_date']})\n" .
+            "• Jaminan Identitas: {$validated['identity_card_type']}\n\n" .
+            "Daftar Unit:\n{$waItemsText}\n" .
+            "*Total Biaya:* Rp " . number_format($validated['total_price'], 0, ',', '.') . "\n\n" .
+            "Mohon konfirmasi ketersediaan unit dan jadwal pengambilan. Terima kasih!";
 
-        $waLink = "https://wa.me/6281234567893?text={$waText}";
+        $waLink = "https://wa.me/6282246142791?text=" . urlencode($waText);
 
         return response()->json([
             'success' => true,
@@ -217,14 +218,16 @@ class InteractiveActionController extends Controller
             'status' => 'scheduled',
         ]);
 
-        $waMsg = urlencode("Halo Admin Langit, saya baru saja menjadwalkan konsultasi proyek:\n" .
-            "No Tiket: {$ticketCode}\n" .
-            "Nama: {$validated['client_name']}\n" .
-            "Topik: {$validated['service_topic']}\n" .
-            "Metode: " . ($validated['meeting_method'] === 'online_meet' ? 'Online (Google Meet)' : 'Tatap Muka di Studio Langit') . "\n" .
-            "Jadwal: {$validated['preferred_date']} jam {$validated['preferred_time']}\nTerima kasih.");
+        $meetingLabel = ($validated['meeting_method'] ?? '') === 'online_meet' ? 'Online (Google Meet)' : 'Tatap Muka di Studio Langit';
+        $waMsg = "Halo Admin Studio Langit, saya telah menjadwalkan konsultasi proyek:\n\n" .
+            "• Kode Tiket: #{$ticketCode}\n" .
+            "• Nama Klien: {$validated['client_name']}\n" .
+            "• Topik Layanan: {$validated['service_topic']}\n" .
+            "• Metode Pertemuan: {$meetingLabel}\n" .
+            "• Rencana Jadwal: {$validated['preferred_date']} ({$validated['preferred_time']} WIB)\n\n" .
+            "Mohon konfirmasi ketersediaan jadwal tim Langit. Terima kasih!";
 
-        $waLink = "https://wa.me/6281234567890?text={$waMsg}";
+        $waLink = "https://wa.me/6282246142791?text=" . urlencode($waMsg);
 
         return response()->json([
             'success' => true,

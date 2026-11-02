@@ -6,6 +6,7 @@ import {
     ChevronDown, Menu, X, ArrowRight, Phone, Mail, MapPin, Clock, ShieldCheck,
     Layers, Sun, Moon
 } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function PublicLayout({ children, activeService = null }) {
     const { url } = usePage();
@@ -13,6 +14,17 @@ export default function PublicLayout({ children, activeService = null }) {
     const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const megaMenuRef = useRef(null);
+
+    const serviceDivisionMap = {
+        'photography-videography': 'photo-video',
+        'web-development': 'web-dev',
+        'computer-service': 'computer-service',
+        'sewa-alat': 'sewa-alat',
+        'langit-education': 'education',
+        'internship': 'internship',
+        'kolaborasi': 'kolaborasi',
+    };
+    const footerWhatsAppDivision = serviceDivisionMap[activeService] || 'general';
 
     // Theme Management: Primary is 'light', Secondary is 'dark'
     const [theme, setTheme] = useState(() => {
@@ -160,7 +172,7 @@ export default function PublicLayout({ children, activeService = null }) {
                             </p>
                             <div className="flex flex-wrap items-center gap-2.5 pt-2">
                                 <a 
-                                    href="https://wa.me/6282246142791" 
+                                    href={getWhatsAppUrl(footerWhatsAppDivision)} 
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 transition-colors shadow-sm font-semibold"
@@ -241,7 +253,7 @@ export default function PublicLayout({ children, activeService = null }) {
                                     <span>Senin - Jumat: 09:00 - 18:00 WIB<br/>Sabtu: 10:00 - 16:00 WIB</span>
                                 </p>
                                 <a 
-                                    href="https://wa.me/6282246142791" 
+                                    href={getWhatsAppUrl(footerWhatsAppDivision, { details: 'Saya ingin konsultasi langsung perihal operasional / proyek.' })} 
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"

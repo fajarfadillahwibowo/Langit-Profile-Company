@@ -5,6 +5,7 @@ import {
     Wrench, Clock, CheckCircle2, ShieldCheck,
     ArrowRight, PhoneCall, MessageSquare, Zap
 } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function ComputerServiceView({ service, galleries = [] }) {
     const servicePresets = {
@@ -139,7 +140,7 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                             <ArrowRight className="w-4 h-4" />
                         </Link>
                         <a
-                            href="https://wa.me/6282246142791?text=Halo%20Teknisi%20Langit,%20saya%20ingin%20konsultasi%20mengenai%20kendala%20komputer/laptop%20saya."
+                            href={getWhatsAppUrl('computer-service', { category: 'Konsultasi Cepat Teknisi' })}
                             target="_blank"
                             rel="noreferrer"
                             className="px-5 py-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-colors flex items-center gap-2 shadow-xs"
@@ -224,12 +225,18 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                                             <span className="font-semibold">{srv.estTime}</span>
                                         </div>
 
-                                        <Link
-                                            href="/konsultasi"
-                                            className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105 active:scale-95 shrink-0"
+                                        <a
+                                            href={getWhatsAppUrl('computer-service', { 
+                                                category: srv.title,
+                                                details: `Estimasi waktu: ${srv.estTime}. Pembahasan: ${srv.items.slice(0, 2).join(', ')}`
+                                            })}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center gap-1"
                                         >
-                                            Konsultasi
-                                        </Link>
+                                            <span>Konsultasi</span>
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -379,7 +386,10 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                             </div>
                             <div className="flex items-center gap-2.5 shrink-0">
                                 <a
-                                    href="https://wa.me/6282246142791?text=Halo%20Teknisi%20Langit,%20saya%20ingin%20konsultasi%20kendala%20laptop/komputer%20saya."
+                                    href={getWhatsAppUrl('computer-service', { 
+                                        category: 'Diagnosa Cepat Laptop & PC',
+                                        details: 'Saya ingin konsultasi langsung kendala perangkat saya.'
+                                    })}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 cursor-pointer"

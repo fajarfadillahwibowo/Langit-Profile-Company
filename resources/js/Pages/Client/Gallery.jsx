@@ -6,6 +6,7 @@ import {
     Info, Eye, X, ChevronRight
 } from 'lucide-react';
 import ThemeToggle from '@/Components/ThemeToggle';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function ClientGallery({ client, deliveries = [] }) {
     const [previewPhoto, setPreviewPhoto] = useState(null);
@@ -87,7 +88,11 @@ export default function ClientGallery({ client, deliveries = [] }) {
 
                     <div className="shrink-0 flex items-center gap-2">
                         <a
-                            href="https://wa.me/6282246142791"
+                            href={getWhatsAppUrl('client-delivery', {
+                                clientName: client?.name || '',
+                                title: 'Portal Pengambilan Foto',
+                                details: 'Konsultasi atau bantuan unduh album foto'
+                            })}
                             target="_blank"
                             rel="noreferrer"
                             className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all hover:scale-105 active:scale-95"
@@ -176,7 +181,11 @@ export default function ClientGallery({ client, deliveries = [] }) {
                                                 </p>
                                                 <div className="mt-3">
                                                     <a
-                                                        href={`https://wa.me/6282246142791?text=${encodeURIComponent(`Halo Admin Studio Langit, saya ${client?.name} ingin meminta perpanjangan masa unduh untuk album "${delivery.title}".`)}`}
+                                                        href={getWhatsAppUrl('client-delivery', {
+                                                            clientName: client?.name || '',
+                                                            title: delivery.title,
+                                                            details: 'Meminta perpanjangan masa aktif unduh album foto yang telah kedaluwarsa'
+                                                        })}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors"

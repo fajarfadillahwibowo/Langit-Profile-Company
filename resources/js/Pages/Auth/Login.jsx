@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { Lock, User, ArrowLeft, Eye, EyeOff, LogIn, Sun, Moon } from 'lucide-react';
+import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function UnifiedLogin() {
     const [showPassword, setShowPassword] = useState(false);
@@ -78,20 +79,20 @@ export default function UnifiedLogin() {
 
                 <div className="rounded-3xl bg-white/95 dark:bg-[#090D16]/95 border border-slate-200/90 dark:border-white/10 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl shadow-slate-200/60 dark:shadow-black/60 transition-colors duration-200">
                     {/* Header Brand */}
-                    <div className="text-center mb-7">
-                        <Link href="/" className="inline-flex items-center justify-center group mb-2.5">
+                    <div className="text-center mb-6 sm:mb-7">
+                        <Link href="/" className="inline-flex items-center justify-center group mb-5 sm:mb-6">
                             <span 
-                                className="font-etna font-bold text-4xl sm:text-5xl tracking-tight text-[#005792] dark:text-cyan-400 flex items-center gap-2 leading-none transition-all duration-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-300"
+                                className="font-etna font-bold text-2xl sm:text-[28px] tracking-tight text-[#005792] dark:text-cyan-400 flex items-center gap-1.5 leading-none transition-all duration-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-300"
                                 style={{ fontFamily: "'Etna Sans Serif', 'Etna', sans-serif" }}
                             >
                                 langit
-                                <span className="w-3 h-3 rounded-full bg-cyan-500 animate-hud-pulse shadow-[0_0_10px_rgba(6,182,212,0.8)] shrink-0"></span>
+                                <span className="w-2 h-2 rounded-full bg-cyan-500 animate-hud-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)] shrink-0"></span>
                             </span>
                         </Link>
-                        <h1 className="font-heading font-black text-2xl text-slate-900 dark:text-white tracking-tight">
+                        <h1 className="font-heading font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight">
                             Masuk ke Akun
                         </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-xs mx-auto leading-relaxed">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed">
                             Akses terpadu pengelolaan layanan dan dokumentasi Studio Langit.
                         </p>
                     </div>
@@ -176,7 +177,10 @@ export default function UnifiedLogin() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                             Kendala akun atau login? Hubungi kami via{' '}
                             <a 
-                                href="https://wa.me/6282246142791" 
+                                href={getWhatsAppUrl('login-help', {
+                                    clientName: data.login || '',
+                                    details: 'Kendala masuk akun / butuh verifikasi kredensial'
+                                })} 
                                 target="_blank" 
                                 rel="noreferrer"
                                 className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"

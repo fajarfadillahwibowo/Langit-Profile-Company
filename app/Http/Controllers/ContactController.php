@@ -27,10 +27,13 @@ class ContactController extends Controller
                     'sunday' => 'Emergency Service Only (Call)',
                 ],
                 'division_contacts' => [
-                    ['division' => 'Creative & Visual', 'pic' => 'Admin Visual', 'phone' => '+62 822-4614-2791', 'tag' => 'Photo / Video / Drone'],
-                    ['division' => 'Web & Engineering', 'pic' => 'Admin Tech', 'phone' => '+62 822-4614-2791', 'tag' => 'Software & Website'],
-                    ['division' => 'Rental Gear & Studio', 'pic' => 'Admin Rental', 'phone' => '+62 822-4614-2791', 'tag' => 'Sewa Kamera & Lampu'],
-                    ['division' => 'Computer Lab', 'pic' => 'Teknisi Lab', 'phone' => '+62 822-4614-2791', 'tag' => 'Servis & Diagnostik'],
+                    ['division' => 'Photo & Video Cinema', 'pic' => 'Admin Visual', 'phone' => '+62 822-4614-2791', 'tag' => 'Photo / Video / Drone', 'key' => 'photo-video'],
+                    ['division' => 'Web Development', 'pic' => 'Admin Tech & Arsitektur', 'phone' => '+62 822-4614-2791', 'tag' => 'Website & Sistem Informasi', 'key' => 'web-dev'],
+                    ['division' => 'Langit Education', 'pic' => 'Admin Academy', 'phone' => '+62 822-4614-2791', 'tag' => 'Kursus Coding & AI', 'key' => 'education'],
+                    ['division' => 'Computer Service Lab', 'pic' => 'Teknisi Lab Langit', 'phone' => '+62 822-4614-2791', 'tag' => 'Servis & Upgrade PC/Laptop', 'key' => 'computer-service'],
+                    ['division' => 'Sewa Alat Produksi', 'pic' => 'Admin Rental & Studio', 'phone' => '+62 822-4614-2791', 'tag' => 'Sewa Kamera, Lensa & Lighting', 'key' => 'sewa-alat'],
+                    ['division' => 'Internship Program', 'pic' => 'HR & Pembimbing Magang', 'phone' => '+62 822-4614-2791', 'tag' => 'Magang SMK & Mahasiswa', 'key' => 'internship'],
+                    ['division' => 'Kemitraan & B2B', 'pic' => 'Head of Partnership', 'phone' => '+62 822-4614-2791', 'tag' => 'Sponsorship & Kolaborasi', 'key' => 'kolaborasi'],
                 ]
             ],
             'faqs' => [
