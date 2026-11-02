@@ -100,14 +100,13 @@ export default function HomeIndex({
                             </span>
                             {[
                                 { id: 'cylinder', label: 'Cylinder' },
-                                { id: 'orbit', label: 'Orbit' },
                                 { id: 'panorama', label: 'Panorama' },
                             ].map(p => (
                                 <button
                                     key={p.id}
                                     type="button"
                                     onClick={() => setCarouselPreset(p.id)}
-                                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${
+                                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                                         carouselPreset === p.id
                                             ? 'bg-[#005792] text-white shadow-sm font-semibold shadow-[#005792]/25'
                                             : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/10'
