@@ -238,44 +238,34 @@ export default function FloatingHeadbar({
                             </button>
                         ) : null}
 
-                        {/* Segmented Dual-Theme Switcher (sm+ screens) */}
+                        {/* Segmented Dual-Theme Switcher (Icon-Only, No Text) */}
                         {setTheme ? (
-                            <div className={`hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 ${
-                                scrolled ? 'gap-0.5' : 'gap-1'
-                            }`}>
+                            <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 gap-0.5">
                                 <button
                                     type="button"
                                     onClick={() => setTheme('light')}
-                                    className={`flex items-center justify-center gap-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                                        scrolled ? 'p-1.5' : 'px-2 sm:px-2.5 py-1'
-                                    } ${
+                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
                                         theme === 'light'
-                                            ? 'bg-white text-amber-600 shadow-sm font-bold scale-[1.02]'
-                                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                                            ? 'bg-white text-amber-500 shadow-sm scale-[1.05]'
+                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                                     }`}
-                                    title="Pilih Tema Terang (Tema Utama)"
+                                    title="Mode Terang"
+                                    aria-label="Mode Terang"
                                 >
                                     <Sun className="w-3.5 h-3.5 shrink-0" />
-                                    {!scrolled && (
-                                        <span className="hidden sm:inline text-[11px]">Terang</span>
-                                    )}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setTheme('dark')}
-                                    className={`flex items-center justify-center gap-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                                        scrolled ? 'p-1.5' : 'px-2 sm:px-2.5 py-1'
-                                    } ${
+                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
                                         theme === 'dark'
-                                            ? 'bg-slate-900 text-indigo-300 shadow-sm font-bold scale-[1.02]'
-                                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                                            ? 'bg-slate-900 text-indigo-300 shadow-sm scale-[1.05]'
+                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                                     }`}
-                                    title="Pilih Tema Gelap (Tema Kedua)"
+                                    title="Mode Gelap"
+                                    aria-label="Mode Gelap"
                                 >
                                     <Moon className="w-3.5 h-3.5 shrink-0" />
-                                    {!scrolled && (
-                                        <span className="hidden sm:inline text-[11px]">Gelap</span>
-                                    )}
                                 </button>
                             </div>
                         ) : toggleTheme ? (
