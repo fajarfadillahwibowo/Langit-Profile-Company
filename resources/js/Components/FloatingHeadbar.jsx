@@ -226,19 +226,7 @@ export default function FloatingHeadbar({
 
                     {/* 3. RIGHT CONTROLS: THEME SWITCHER, CMS LINK & CTA (SD/HD moved in-place to Photo & Video sections) */}
                     <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
-                        {/* Compact Mobile Theme Switcher (< sm) */}
-                        {setTheme ? (
-                            <button
-                                type="button"
-                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                                className="sm:hidden w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-amber-400 border border-[#005792]/20 dark:border-[#005792]/30 transition-transform active:scale-95 shadow-xs"
-                                title="Ganti Tema (Terang / Gelap)"
-                            >
-                                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
-                            </button>
-                        ) : null}
-
-                        {/* Segmented Dual-Theme Switcher (Icon-Only, No Text) */}
+                        {/* Segmented Dual-Theme Switcher (Icon-Only, No Text - Responsive Mobile & Desktop) */}
                         {setTheme ? (
                             <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 gap-0.5">
                                 <button
