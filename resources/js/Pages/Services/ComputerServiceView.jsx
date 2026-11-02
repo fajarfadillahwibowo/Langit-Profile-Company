@@ -1,23 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
-import ServiceTrackerCard from '@/Components/ServiceTrackerCard';
 import { 
-    Activity, Wrench, Clock, CheckCircle2,
-    Laptop, Monitor, Apple, ArrowRight, PhoneCall
+    Wrench, Clock, CheckCircle2, ShieldCheck,
+    ArrowRight, PhoneCall, MessageSquare, Zap
 } from 'lucide-react';
 
-export default function ComputerServiceView({ service, initialTicket = null, initialReceiptQuery = '', galleries = [] }) {
-    // Interactive Symptom Diagnostic State (PRD 4.4)
-    const [selectedDevice, setSelectedDevice] = useState('laptop');
-    const [selectedSymptom, setSelectedSymptom] = useState('overheat');
-
-    const devices = [
-        { key: 'laptop', label: 'Laptop Windows / Gaming', icon: Laptop },
-        { key: 'macbook', label: 'Apple MacBook (M1/M2/Intel)', icon: Apple },
-        { key: 'pc_custom', label: 'PC Rakitan / Workstation', icon: Monitor },
-    ];
-
+export default function ComputerServiceView({ service, galleries = [] }) {
     const servicePresets = {
         software: {
             title: 'Installasi Software',
@@ -114,31 +103,6 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
         });
     }, [galleries]);
 
-
-    const symptomsMap = {
-        laptop: [
-            { id: 'install_software', title: 'Installasi Software & Optimasi', estCost: 'Rp 100.000 - Rp 150.000', estTime: '1 - 2 Jam', solution: 'Clean install Windows 11 Pro, driver update certified, software produktivitas & optimasi startup.' },
-            { id: 'upgrade_ssd', title: 'Upgrade SSD NVMe & Kloning Data', estCost: 'Rp 150.000 (+ SSD)', estTime: '1 Jam', solution: 'Instalasi SSD NVMe PCIe Gen4, cloning partisi Windows dan file tanpa kehilangan data.' },
-            { id: 'rakit_pc', title: 'Rakit PC / Upgrade Komponen', estCost: 'Rp 250.000 - Rp 350.000', estTime: '2 - 3 Jam', solution: 'Perakitan komponen presisi, repasting thermal paste, cable management rapi, stress test.' },
-            { id: 'penggantian_part', title: 'Penggantian Part (Layar, Baterai, Keyboard)', estCost: 'Rp 350.000 - Rp 1.500.000', estTime: '1 Hari', solution: 'Penggantian sparepart LCD original, baterai baru bergaransi, modul keyboard, atau engsel body.' },
-        ],
-        macbook: [
-            { id: 'install_software', title: 'Install Ulang macOS & Software', estCost: 'Rp 200.000 - Rp 300.000', estTime: '2 Jam', solution: 'Fresh restore macOS Sonoma/Sequoia, instalasi software kreatif, dan sinkronisasi iCloud.' },
-            { id: 'upgrade_ssd', title: 'Upgrade Storage & Pemulihan Data', estCost: 'Rp 350.000 - Rp 600.000', estTime: '2 - 3 Jam', solution: 'Direct Target Disk data recovery, pemindahan file ke storage eksternal super cepat.' },
-            { id: 'rakit_pc', title: 'Perawatan Internal & Thermal Service', estCost: 'Rp 300.000 - Rp 500.000', estTime: '2 Jam', solution: 'Pembersihan debu heatsink, repasting thermal paste processor Apple Silicon / Intel.' },
-            { id: 'penggantian_part', title: 'Penggantian Part Display & Baterai Mac', estCost: 'Rp 950.000 - Rp 3.500.000', estTime: '1 - 2 Hari', solution: 'Penggantian 1 set panel display Retina XDR atau baterai original cycle count 0.' },
-        ],
-        pc_custom: [
-            { id: 'install_software', title: 'Installasi Software & Driver GPU', estCost: 'Rp 100.000 - Rp 150.000', estTime: '1 Jam', solution: 'Instalasi Windows 11, setting D.O.C.P/XMP RAM di BIOS, dan driver game-ready.' },
-            { id: 'upgrade_ssd', title: 'Upgrade SSD High-Speed & Partition', estCost: 'Rp 150.000 (+ SSD)', estTime: '1 Jam', solution: 'Pemasangan SSD NVMe heatsink thermal pad + migrasi instalasi game / software.' },
-            { id: 'rakit_pc', title: 'Jasa Rakit PC Lengkap & Cable Management', estCost: 'Rp 250.000 - Rp 450.000', estTime: '3 - 5 Jam', solution: 'Perakitan PC custom baru, routing kabel rapi di balik casing, stress test 3DMark.' },
-            { id: 'penggantian_part', title: 'Penggantian Part Hardware & PSU', estCost: 'Rp 150.000 - Rp 400.000', estTime: '2 Jam', solution: 'Penggantian Power Supply modular, motherboard baru, upgrade RAM dual channel, atau GPU.' },
-        ],
-    };
-
-    const currentSymptomData = (symptomsMap[selectedDevice] || []).find(s => s.id === selectedSymptom) 
-        || symptomsMap[selectedDevice][0];
-
     return (
         <PublicLayout activeService="computer-service">
             <Head>
@@ -169,17 +133,19 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
                     <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                         <Link
                             href="/konsultasi"
-                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-500/30 transition-transform hover:scale-105 active:scale-95"
+                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-500/25 transition-transform hover:scale-105 active:scale-95"
                         >
                             <span>Konsultasi Servis Sekarang</span>
                             <ArrowRight className="w-4 h-4" />
                         </Link>
                         <a
-                            href="#live-tracker"
-                            className="px-5 py-3 rounded-xl bg-slate-200/70 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-colors flex items-center gap-2"
+                            href="https://wa.me/6282246142791?text=Halo%20Teknisi%20Langit,%20saya%20ingin%20konsultasi%20mengenai%20kendala%20komputer/laptop%20saya."
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-5 py-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 text-sm font-semibold transition-colors flex items-center gap-2 shadow-xs"
                         >
-                            <Activity className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                            <span>Cek Status Servis (Live Tracking)</span>
+                            <PhoneCall className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>WhatsApp Teknisi (Fast Response)</span>
                         </a>
                     </div>
                 </section>
@@ -271,118 +237,164 @@ export default function ComputerServiceView({ service, initialTicket = null, ini
                     </div>
                 </section>
 
-                {/* 1. Live Service Receipt Tracker (PRD 4.4) */}
-                <section id="live-tracker" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16 scroll-mt-20">
-                    <ServiceTrackerCard initialReceipt={initialReceiptQuery || 'SRV-2026-0089'} />
-                </section>
-
-                {/* 2. Interactive Symptom Diagnostic (PRD 4.4) */}
-                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                {/* 1. Alur Servis Komputer yang Sederhana & Masuk Akal */}
+                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
                     <div className="text-center max-w-2xl mx-auto mb-10">
                         <span className="text-xs font-mono text-orange-600 dark:text-orange-400 uppercase tracking-wider block mb-1 font-bold">
-                            Panduan Diagnosa Servis
+                            Alur Pengerjaan Servis
                         </span>
-                        <h2 className="font-heading font-extrabold text-3xl text-slate-900 dark:text-white">
-                            Cek Estimasi Kendala Komputer & Laptop
+                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
+                            4 Langkah Mudah Servis di Langit
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                            Pilih tipe perangkat dan gejala kendala yang Anda alami untuk melihat estimasi biaya serta solusi teknis dari teknisi kami.
+                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1.5">
+                            Proses servis yang terstruktur, transparan di depan Anda, dan tanpa biaya tersembunyi.
                         </p>
                     </div>
 
-                    <div className="max-w-5xl mx-auto rounded-3xl bg-white dark:bg-[#0B0703]/90 border border-slate-200 dark:border-orange-500/30 p-6 md:p-8 backdrop-blur-2xl shadow-xl dark:shadow-2xl">
-                        {/* Device Selector */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                            {devices.map((d) => {
-                                const Icon = d.icon;
-                                const isSelected = selectedDevice === d.key;
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {[
+                            {
+                                step: '01',
+                                title: 'Konsultasi & Bawa Unit',
+                                desc: 'Hubungi teknisi kami via WhatsApp atau bawa langsung laptop / PC Anda ke workshop Studio Langit.',
+                                icon: MessageSquare,
+                            },
+                            {
+                                step: '02',
+                                title: 'Pengecekan & Diagnosa Gratis',
+                                desc: 'Teknisi mengecek kendala di depan Anda secara langsung tanpa dipungut biaya pengecekan awal.',
+                                icon: Wrench,
+                            },
+                            {
+                                step: '03',
+                                title: 'Konfirmasi Estimasi Biaya',
+                                desc: 'Rincian biaya pengerjaan dan harga suku cadang disepakati di awal sebelum perbaikan dikerjakan.',
+                                icon: CheckCircle2,
+                            },
+                            {
+                                step: '04',
+                                title: 'Pengerjaan & Bergaransi',
+                                desc: 'Perangkat diservis dengan teliti, diuji stabilitasnya, dan diserahkan lengkap dengan garansi resmi toko.',
+                                icon: ShieldCheck,
+                            },
+                        ].map((item, idx) => {
+                            const Icon = item.icon;
+                            return (
+                                <div 
+                                    key={idx}
+                                    className="p-6 rounded-2xl bg-white dark:bg-[#0E0703]/80 border border-slate-200 dark:border-white/10 flex flex-col justify-between shadow-xs hover:border-orange-500/40 transition-colors"
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+                                            <span className="font-mono text-2xl font-black text-slate-300 dark:text-white/15">
+                                                {item.step}
+                                            </span>
+                                        </div>
+                                        <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">
+                                            {item.title}
+                                        </h3>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            {item.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                {/* 2. Jaminan & Standar Mutu Servis */}
+                <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-20">
+                    <div className="rounded-3xl bg-white dark:bg-[#0B0703]/90 border border-slate-200 dark:border-orange-500/30 p-6 sm:p-8 md:p-10 shadow-sm">
+                        <div className="text-center max-w-2xl mx-auto mb-8">
+                            <span className="text-xs font-mono text-orange-600 dark:text-orange-400 uppercase tracking-wider block mb-1 font-bold">
+                                Standar Kualitas Bengkel
+                            </span>
+                            <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
+                                Kenapa Mempercayakan Servis ke Langit?
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[
+                                {
+                                    title: 'Diagnosa Awal 100% Gratis',
+                                    desc: 'Gratis biaya konsultasi dan pengecekan awal jika kendala ternyata tidak dapat ditangani atau dibatalkan.',
+                                    icon: CheckCircle2,
+                                    badge: 'Bebas Risiko',
+                                },
+                                {
+                                    title: 'Bisa Ditunggu & Transparan',
+                                    desc: 'Instalasi OS, software, dan upgrade SSD rata-rata selesai dalam 1 - 2 jam kerja.',
+                                    icon: Clock,
+                                    badge: '1 - 2 Jam Jadi',
+                                },
+                                {
+                                    title: 'Privasi & Data 100% Aman',
+                                    desc: 'Dokumen kerja, foto pribadi, dan data rahasia Anda dijaga ketat tanpa risiko diintip atau disalin.',
+                                    icon: ShieldCheck,
+                                    badge: 'Privasi Terjamin',
+                                },
+                                {
+                                    title: 'Garansi Pengerjaan & Part',
+                                    desc: 'Setiap suku cadang baru bergaransi resmi distributor, didukung garansi instalasi langsung dari toko.',
+                                    icon: Zap,
+                                    badge: 'Garansi Toko',
+                                },
+                            ].map((item, idx) => {
+                                const Icon = item.icon;
                                 return (
-                                    <button
-                                        key={d.key}
-                                        onClick={() => {
-                                            setSelectedDevice(d.key);
-                                            setSelectedSymptom('overheat');
-                                        }}
-                                        className={`p-4 rounded-2xl border flex items-center gap-3 transition-all text-left ${
-                                            isSelected
-                                                ? 'bg-orange-500/15 border-orange-500 text-slate-900 dark:text-white shadow-md'
-                                                : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
-                                        }`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                                            isSelected ? 'bg-orange-500 text-slate-950 font-bold' : 'bg-slate-200 dark:bg-white/5 text-slate-600 dark:text-slate-400'
-                                        }`}>
-                                            <Icon className="w-5 h-5" />
+                                    <div key={idx} className="space-y-2.5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+                                                <Icon className="w-4 h-4" />
+                                            </div>
+                                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-white/10">
+                                                {item.badge}
+                                            </span>
                                         </div>
-                                        <div>
-                                            <span className="text-xs font-mono text-slate-500 uppercase block">Perangkat:</span>
-                                            <span className="text-sm font-bold block">{d.label}</span>
-                                        </div>
-                                    </button>
+                                        <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
+                                            {item.title}
+                                        </h4>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            {item.desc}
+                                        </p>
+                                    </div>
                                 );
                             })}
                         </div>
 
-                        {/* Symptoms Selector */}
-                        <div className="space-y-2 mb-8">
-                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400 block mb-2">Pilih Gejala Kendala:</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                {(symptomsMap[selectedDevice] || []).map((s) => {
-                                    const isSel = selectedSymptom === s.id;
-                                    return (
-                                        <div
-                                            key={s.id}
-                                            onClick={() => setSelectedSymptom(s.id)}
-                                            className={`cursor-pointer p-4 rounded-xl border transition-all flex items-center justify-between ${
-                                                isSel
-                                                    ? 'bg-orange-500/15 border-orange-500 text-slate-900 dark:text-white shadow-sm'
-                                                    : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
-                                            }`}
-                                        >
-                                            <span className="text-sm font-semibold">{s.title}</span>
-                                            <span className={`w-3.5 h-3.5 rounded-full border ${
-                                                isSel ? 'bg-orange-500 border-orange-400 ring-2 ring-orange-500/30' : 'border-slate-300 dark:border-slate-600'
-                                            }`}></span>
-                                        </div>
-                                    );
-                                })}
+                        {/* Callout Box Konsultasi Langsung */}
+                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-orange-50/60 dark:bg-orange-500/5 p-4 sm:p-5 rounded-2xl">
+                            <div className="text-center sm:text-left">
+                                <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
+                                    Laptop atau PC Anda Bermasalah Hari Ini?
+                                </h4>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                    Jelaskan kendala Anda ke teknisi kami untuk mendapatkan diagnosa awal dan rekomendasi solusi terbaik.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2.5 shrink-0">
+                                <a
+                                    href="https://wa.me/6282246142791?text=Halo%20Teknisi%20Langit,%20saya%20ingin%20konsultasi%20kendala%20laptop/komputer%20saya."
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 cursor-pointer"
+                                >
+                                    <PhoneCall className="w-3.5 h-3.5" />
+                                    <span>Chat Teknisi Sekarang</span>
+                                </a>
+                                <Link
+                                    href="/kontak"
+                                    className="px-4 py-2.5 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-300 dark:border-white/10 font-semibold text-xs transition-colors"
+                                >
+                                    Lokasi Bengkel
+                                </Link>
                             </div>
                         </div>
-
-                        {/* Diagnostic Result Box */}
-                        {currentSymptomData && (
-                            <div className="p-6 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-[#170E07] dark:to-[#0E0804] border border-orange-200 dark:border-orange-500/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase">Perkiraan Biaya Penanganan</span>
-                                    <div className="text-2xl font-bold font-mono text-orange-600 dark:text-orange-400">
-                                        {currentSymptomData.estCost}
-                                    </div>
-                                    <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                        <Clock className="w-3.5 h-3.5" />
-                                        Estimasi Waktu: {currentSymptomData.estTime}
-                                    </span>
-                                </div>
-
-                                <div className="md:col-span-2 space-y-2">
-                                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase">Tindakan Laboratorium Langit:</span>
-                                    <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans">
-                                        {currentSymptomData.solution}
-                                    </p>
-                                    <div className="pt-2 flex items-center gap-3">
-                                        <a
-                                            href={`https://wa.me/6282246142791?text=${encodeURIComponent(`Halo Teknisi Langit, saya ingin konsultasi servis ${selectedDevice} dengan kendala: ${currentSymptomData.title}`)}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-transform active:scale-95"
-                                        >
-                                            <PhoneCall className="w-3.5 h-3.5" />
-                                            <span>Hubungi Teknisi Lab Langit</span>
-                                        </a>
-                                        <span className="text-[11px] font-mono text-slate-500">Gratis Konsultasi Awal & Diagnosa</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </section>
             </div>
