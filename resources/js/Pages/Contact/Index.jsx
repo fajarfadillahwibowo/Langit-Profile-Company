@@ -32,7 +32,8 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
 
     const filteredFaqs = faqs.filter(f => 
         f.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
-        f.answer.toLowerCase().includes(faqSearch.toLowerCase())
+        f.answer.toLowerCase().includes(faqSearch.toLowerCase()) ||
+        (f.category && f.category.toLowerCase().includes(faqSearch.toLowerCase()))
     );
 
     return (
@@ -416,7 +417,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                             type="text"
                             value={faqSearch}
                             onChange={(e) => setFaqSearch(e.target.value)}
-                            placeholder="Cari pertanyaan seputar sewa alat, servis, atau website..."
+                            placeholder="Cari pertanyaan seputar photo & video, website, magang, kursus..."
                             className="w-full max-w-md mx-auto px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 shadow-sm"
                         />
                     </div>
@@ -431,11 +432,18 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 >
                                     <button
                                         onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                                        className="w-full p-5 text-left flex items-center justify-between gap-4 select-none"
+                                        className="w-full p-5 text-left flex items-center justify-between gap-4 select-none cursor-pointer"
                                     >
-                                        <span className="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-                                            {faq.question}
-                                        </span>
+                                        <div className="flex-1 pr-2">
+                                            {faq.category && (
+                                                <span className="inline-block text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border border-cyan-500/25 mb-1.5">
+                                                    {faq.category}
+                                                </span>
+                                            )}
+                                            <span className="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white block leading-snug">
+                                                {faq.question}
+                                            </span>
+                                        </div>
                                         <ChevronDown className={`w-5 h-5 text-cyan-600 dark:text-cyan-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     {isOpen && (

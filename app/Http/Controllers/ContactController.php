@@ -35,20 +35,39 @@ class ContactController extends Controller
             ],
             'faqs' => [
                 [
-                    'question' => 'Bagaimana alur penyewaan alat di Langit?',
-                    'answer' => 'Anda dapat memilih alat di katalog Sewa Alat, tentukan tanggal sewa, lalu klik Booking. Tim kami akan menyiapkan invoice dan konfirmasi syarat jaminan (KTP/SIM asli). Pengambilan alat dapat dilakukan di studio Langit atau dikirim kurir instan.'
+                    'category' => 'Photo & Video',
+                    'question' => 'Bagaimana proses pemesanan sesi foto/video dan pengambilan hasilnya?',
+                    'answer' => 'Anda dapat berkonsultasi mengenai jadwal dan konsep photoshoot (Wedding, Wisuda, Event, dll) via WhatsApp atau menu Konsultasi. Setelah sesi selesai dan proses editing rampung, hasil foto resolusi penuh dapat diunduh langsung melalui Portal Pelanggan Studio Langit menggunakan akun yang diberikan oleh admin.'
                 ],
                 [
-                    'question' => 'Apakah bisa melacak progres servis komputer secara online?',
-                    'answer' => 'Bisa! Setiap unit yang masuk akan mendapatkan Nomor Nota Servis (misal SRV-2026-0089). Anda dapat memasukkannya di halaman Computer Service untuk memantau status diagnosa, perbaikan, hingga uji kelayakan secara real-time.'
+                    'category' => 'Photo & Video',
+                    'question' => 'Apakah hasil foto dan video yang diberikan berkualitas resolusi penuh (High Definition)?',
+                    'answer' => 'Ya, seluruh berkas foto dan video diserahkan dalam resolusi asli tanpa kompresi paksa. Anda juga dapat mengunduh seluruh file dalam satu paket arsip ZIP atau mengunduh foto pilihan secara satuan dengan kecepatan maksimal.'
                 ],
                 [
-                    'question' => 'Apakah ada garansi untuk proyek pembuatan website?',
-                    'answer' => 'Ya, kami memberikan garansi pemeliharaan teknis & perbaikan bug selama 3 hingga 6 bulan penuh (tergantung paket), serta jaminan performa Google Lighthouse di atas 90.'
+                    'category' => 'Website',
+                    'question' => 'Berapa lama estimasi pembuatan website dan apakah ada garansi pemeliharaan?',
+                    'answer' => 'Estimasi waktu pengerjaan berkisar antara 7 hingga 30 hari kerja tergantung kompleksitas website (Company Profile, Toko Online, atau Sistem Informasi Kustom). Setiap proyek dilengkapi garansi teknis perbaikan bug, pemeliharaan rutin, serta optimasi performa berkecepatan tinggi.'
                 ],
                 [
-                    'question' => 'Apakah menerima program magang (internship) untuk siswa SMK dan mahasiswa?',
-                    'answer' => 'Tentu! Kami membuka batch magang secara berkala di divisi Web, Fotografi/Videografi, dan Servis Komputer. Silakan cek posisi yang aktif di halaman Internship.'
+                    'category' => 'Internship',
+                    'question' => 'Apakah Studio Langit menerima program magang / PKL untuk siswa SMK dan mahasiswa?',
+                    'answer' => 'Tentu! Kami membuka program Internship & PKL industri resmi secara berkala di bidang Fotografi, Videografi, Web Development, Desain Grafis, dan IT Support. Pendaftaran dapat diajukan langsung melalui halaman Layanan Magang.'
+                ],
+                [
+                    'category' => 'Education',
+                    'question' => 'Program pelatihan atau kursus apa saja yang tersedia di Langit Education?',
+                    'answer' => 'Langit Education menyediakan pelatihan praktis intensif, meliputi Kursus Web Development & Coding (pemula hingga mahir), Dasar Artificial Intelligence (AI), Perakitan PC & Hardware Komputer, serta pelatihan aplikasi perkantoran untuk persiapan dunia kerja.'
+                ],
+                [
+                    'category' => 'Servis Komputer',
+                    'question' => 'Berapa biaya pengecekan awal untuk perbaikan laptop atau komputer?',
+                    'answer' => 'Pengecekan dan diagnosa awal di workshop Lab Langit 100% Gratis. Biaya hanya dikenakan setelah teknisi mengonfirmasi kendala dan Anda menyetujui rincian perbaikan serta estimasi biaya di awal.'
+                ],
+                [
+                    'category' => 'Sewa Alat',
+                    'question' => 'Apa syarat untuk menyewa kamera, lensa, atau perlengkapan studio?',
+                    'answer' => 'Penyewa cukup menunjukkan dan menitipkan kartu identitas asli yang sah (KTP / SIM / KTM) serta mengisi formulir sewa. Kami menyediakan bodi kamera, lensa sinema, drone, tata cahaya (lighting), hingga perangkat audio berkualitas profesional.'
                 ],
             ]
         ]);
