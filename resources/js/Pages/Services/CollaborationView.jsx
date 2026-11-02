@@ -219,11 +219,9 @@ export default function CollaborationView({ service }) {
 
             {/* Main Outer Container with Dynamic Atmosphere */}
             <div className="relative min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#080206] dark:text-slate-100 overflow-hidden transition-colors duration-300">
-                {/* Ambient Blurred Glowing Blobs & Dot Grid Pattern */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[650px] pointer-events-none overflow-hidden z-0">
-                    <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-rose-500/10 dark:bg-rose-600/15 rounded-full blur-3xl" />
-                    <div className="absolute top-20 right-10 w-[420px] h-[420px] bg-purple-500/10 dark:bg-purple-600/15 rounded-full blur-3xl" />
-                    <div className="absolute top-60 left-10 w-[360px] h-[360px] bg-amber-500/10 dark:bg-amber-600/10 rounded-full blur-3xl" />
+                {/* Lightweight Ambient Background Gradient */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] pointer-events-none overflow-hidden z-0 opacity-40 dark:opacity-20">
+                    <div className="w-full h-full bg-gradient-to-b from-rose-500/15 via-purple-500/5 to-transparent" />
                 </div>
 
                 {/* Subtle Geometric Dot Mesh Overlay */}
@@ -237,20 +235,11 @@ export default function CollaborationView({ service }) {
                     }}
                 />
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-24 space-y-24">
-                    {/* SECTION 1: HERO HEADER (Awwwards / Linear Aesthetic) */}
-                    <motion.section 
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-center space-y-6 pt-4 sm:pt-8"
-                    >
-                        {/* Floating Live Indicator Badge */}
-                        <motion.div 
-                            animate={{ y: [0, -4, 0] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-white/[0.04] border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono shadow-sm backdrop-blur-md"
-                        >
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-20 space-y-16 sm:space-y-20">
+                    {/* SECTION 1: HERO HEADER (Performance Optimized) */}
+                    <section className="text-center space-y-5 pt-2 sm:pt-6">
+                        {/* Live Indicator Badge */}
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-white/[0.04] border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono shadow-xs backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -258,10 +247,10 @@ export default function CollaborationView({ service }) {
                             <span className="font-semibold tracking-wide uppercase text-[11px]">
                                 Ekosistem Kemitraan & Sinergi B2B Nasional
                             </span>
-                        </motion.div>
+                        </div>
 
                         {/* Expressive Headline with Text-Gradient */}
-                        <h1 className="font-heading font-extrabold text-4xl sm:text-6xl lg:text-7xl text-slate-900 dark:text-white tracking-tight leading-[1.1] max-w-5xl mx-auto">
+                        <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-slate-900 dark:text-white tracking-tight leading-[1.15] max-w-5xl mx-auto">
                             Kolaborasi Nyata, <br className="hidden sm:inline" />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-pink-500 to-amber-600 dark:from-rose-400 dark:via-pink-300 dark:to-amber-300">
                                 Ciptakan Dampak Bersama Langit.
@@ -269,7 +258,7 @@ export default function CollaborationView({ service }) {
                         </h1>
 
                         {/* Persuasive Narrative */}
-                        <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">
+                        <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
                             Kami menggabungkan kekuatan infrastruktur multimedia sinematik, kapabilitas software engineering, dan jejaring talenta digital untuk melipatgandakan nilai program Anda—mulai dari kampus, brand korporat, hingga event berskala besar.
                         </p>
 
@@ -323,7 +312,7 @@ export default function CollaborationView({ service }) {
                                 );
                             })}
                         </div>
-                    </motion.section>
+                    </section>
 
                     {/* SECTION 2: 4 MODEL SINERGI & BENTO GRID (Awwwards Caliber) */}
                     <section className="space-y-8">
@@ -342,28 +331,20 @@ export default function CollaborationView({ service }) {
                             </p>
                         </div>
 
-                        {/* Bento Grid */}
+                        {/* Bento Grid (Lightweight, High-Performance) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {schemes.map((scheme, idx) => {
+                            {schemes.map((scheme) => {
                                 const Icon = scheme.icon;
                                 return (
-                                    <motion.div
+                                    <div
                                         key={scheme.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.5, delay: idx * 0.1 }}
-                                        whileHover={{ y: -6 }}
-                                        className={`group relative p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#12050E]/80 border border-slate-200/90 dark:border-white/10 ${scheme.borderGlow} backdrop-blur-2xl shadow-lg dark:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer`}
+                                        className={`group relative p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#12050E]/80 border border-slate-200/90 dark:border-white/10 ${scheme.borderGlow} shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between overflow-hidden cursor-pointer`}
                                         onClick={() => handleSelectScheme(scheme.id)}
                                     >
-                                        {/* Corner Accent Glow on Hover */}
-                                        <div className={`absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br ${scheme.color} rounded-full blur-[80px] opacity-0 group-hover:opacity-25 transition-opacity duration-500 pointer-events-none`} />
-
                                         <div>
                                             {/* Header Card */}
                                             <div className="flex items-center justify-between gap-3 mb-5">
-                                                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${scheme.color} text-white flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                                                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${scheme.color} text-white flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform duration-200`}>
                                                     <Icon className="w-6 h-6" />
                                                 </div>
                                                 <span className={`text-[11px] font-mono px-3 py-1 rounded-full font-semibold border ${scheme.bgBadge}`}>
@@ -402,7 +383,7 @@ export default function CollaborationView({ service }) {
                                                 <ChevronRight className="w-4 h-4" />
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -451,10 +432,7 @@ export default function CollaborationView({ service }) {
 
                     {/* SECTION 4: PROPOSAL DROPZONE PORTAL & SUBMISSION FORM */}
                     <section id="dropzone-proposal" ref={formRef} className="scroll-mt-24">
-                        <div className="relative rounded-3xl bg-white dark:bg-[#10040C]/90 border border-slate-200/90 dark:border-rose-500/30 p-6 sm:p-10 md:p-12 backdrop-blur-2xl shadow-2xl overflow-hidden">
-                            {/* Ambient Form Glow */}
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-
+                        <div className="relative rounded-3xl bg-white dark:bg-[#10040C]/90 border border-slate-200/90 dark:border-rose-500/30 p-6 sm:p-10 md:p-12 shadow-xl overflow-hidden">
                             <div className="max-w-3xl mb-8 space-y-2">
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono font-bold tracking-wider">
                                     <FileCheck className="w-3.5 h-3.5" />
@@ -697,40 +675,6 @@ export default function CollaborationView({ service }) {
                                     </form>
                                 )}
                             </AnimatePresence>
-                        </div>
-                    </section>
-
-                    {/* SECTION 5: FAST-TRACK DIRECT PARTNERSHIP CONTACT */}
-                    <section className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-rose-500/10 via-pink-500/5 to-purple-500/10 border border-rose-500/20 backdrop-blur-xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="space-y-1 text-center md:text-left">
-                            <span className="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider block">
-                                Butuh Diskusi Cepat Hari Ini?
-                            </span>
-                            <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white">
-                                Hubungi Langsung Head of Strategic Partnership Kami
-                            </h3>
-                            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
-                                Jika instansi Anda memiliki kebutuhan mendesak atau ingin mengundang tim Langit sebagai pembicara, silakan kontak langsung melalui WhatsApp atau Email resmi.
-                            </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
-                            <a
-                                href="https://wa.me/6282246142791?text=Halo%20Tim%20Partnership%20Langit,%20kami%20ingin%20berdiskusi%20mengenai%20peluang%20kerja%20sama."
-                                target="_blank"
-                                rel="noreferrer"
-                                className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
-                            >
-                                <Phone className="w-4 h-4" />
-                                <span>WhatsApp Partnership</span>
-                            </a>
-                            <a
-                                href="mailto:langitbelitang@gmail.com"
-                                className="px-5 py-3 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-xs font-semibold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-                            >
-                                <Mail className="w-4 h-4 text-rose-500" />
-                                <span>partnership@langit.id</span>
-                            </a>
                         </div>
                     </section>
                 </div>
