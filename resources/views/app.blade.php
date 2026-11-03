@@ -6,7 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title inertia>{{ config('app.name', 'Langit Ecosystem') }}</title>
-    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
 
     <!-- Fonts: Etna Sans Serif (Local), Google Fonts: Instrument Serif, Playfair Display, Outfit, Plus Jakarta Sans, Inter -->
     <link rel="preload" href="/fonts/etna.woff2" as="font" type="font/woff2" crossorigin>
