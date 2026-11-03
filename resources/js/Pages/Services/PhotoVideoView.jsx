@@ -363,7 +363,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                 </section>
 
                 {/* 2. Unified Showcase: "6 Layanan Utama Visual Studio" & "Galeri Foto Mahakarya Langit" */}
-                <section id="gallery-section" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                <section id="gallery-section" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 border-t border-slate-200 dark:border-white/10 scroll-mt-28">
                     {/* Header & Dynamic Title */}
                     <div className="text-center max-w-3xl mx-auto mb-8">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold uppercase tracking-wider mb-3">
@@ -541,13 +541,13 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                                         </p>
 
                                                         {/* Feature Highlights Grid */}
-                                                        <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700 dark:text-slate-300 font-medium">
+                                                        <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-white/10 space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300 font-medium">
                                                             {pillar.features.map((feat, fIdx) => (
-                                                                <div key={fIdx} className="flex items-center gap-1.5 truncate">
+                                                                <div key={fIdx} className="flex items-center gap-2">
                                                                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: pillar.color }} />
-                                                                    <span className="truncate">{feat}</span>
+                                                                    <span className="leading-snug">{feat}</span>
                                                                 </div>
-                              ))}
+                                                            ))}
                                                         </div>
                                                     </div>
 
