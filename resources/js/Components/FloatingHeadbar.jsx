@@ -318,7 +318,7 @@ export default function FloatingHeadbar({
                                     </h3>
                                 </div>
                                 <span className="text-xs font-mono text-slate-500">
-                                    Hover tiap card untuk melihat Quick-HUD info
+                                    Pilih layanan untuk detail & konsultasi
                                 </span>
                             </div>
 
