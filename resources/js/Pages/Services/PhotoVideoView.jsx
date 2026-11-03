@@ -6,7 +6,9 @@ import LightboxModal from '@/Components/LightboxModal';
 import BeforeAfterSlider from '@/Components/BeforeAfterSlider';
 import { 
     Camera, Play, Pause, Volume2, VolumeX, SlidersHorizontal, Disc,
-    ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images, Zap
+    ArrowRight, CheckCircle2, Film, Sparkles, Layers, Images, Zap,
+    Heart, GraduationCap, Award, Calendar, Compass, Sun, Navigation,
+    Crosshair, Building2, MonitorPlay, ArrowUpRight
 } from 'lucide-react';
 import { useQuality } from '@/Context/QualityContext';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
@@ -95,49 +97,79 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
             num: '01',
             title: 'Wedding Photo & Video',
             slug: 'wedding',
+            badge: 'Cinema 4K',
             desc: 'Dokumentasi pernikahan sinematik dengan color grading berkelas film. Mengabadikan setiap momen sakral akad hingga kemeriahan resepsi.',
             features: ['Cinematic Highlight Film (4K)', 'Full Documentation Video', 'Unlimited Photo Shoot', 'Teaser Reel 60s Instagram/TikTok'],
             color: '#F59E0B',
+            gradient: 'from-amber-100/70 via-white/70 to-orange-100/40 dark:from-amber-950/25 dark:via-slate-900/50 dark:to-orange-950/20',
+            glow: 'rgba(245, 158, 11, 0.25)',
+            icon1: Heart,
+            icon2: Film,
         },
         {
             num: '02',
             title: 'Wisuda (Graduation)',
             slug: 'wisuda',
+            badge: 'Studio & Outdoor',
             desc: 'Sesi foto wisuda sarjana & magister studio maupun outdoor. Abadikan pencapaian akademis berharga bersama keluarga dan sahabat tercinta.',
             features: ['Indoor Studio / On-Campus Outdoor', 'Foto Portrait Individu & Grup', 'Cetak Frame Kanvas Premium', 'All High-Res Edited Files'],
             color: '#EC4899',
+            gradient: 'from-pink-100/70 via-white/70 to-purple-100/40 dark:from-pink-950/25 dark:via-slate-900/50 dark:to-purple-950/20',
+            glow: 'rgba(236, 72, 153, 0.25)',
+            icon1: GraduationCap,
+            icon2: Award,
         },
         {
             num: '03',
             title: 'Event & Festival',
             slug: 'event',
+            badge: 'Multi-Camera',
             desc: 'Liputan dokumentasi konser musik, seminar nasional, corporate gathering, peresmian, hingga festival budaya dengan multi-kamera.',
             features: ['Multi-Camera Setup', 'Same-Day Edit Video Reel', 'Live Feed Display Support', 'Dokumentasi Interaksi Audiens'],
             color: '#8B5CF6',
+            gradient: 'from-purple-100/70 via-white/70 to-indigo-100/40 dark:from-purple-950/25 dark:via-slate-900/50 dark:to-indigo-950/20',
+            glow: 'rgba(139, 92, 246, 0.25)',
+            icon1: Calendar,
+            icon2: Sparkles,
         },
         {
             num: '04',
             title: 'Traveling & Liburan',
             slug: 'traveling',
+            badge: 'Adventure Trip',
             desc: 'Fotografer & videografer personal yang menemani perjalanan wisata, liburan keluarga, maupun trip petualangan eksotis Anda.',
             features: ['Dokumentasi Perjalanan Alami & Estetis', 'Video Sinematik Liburan', 'Pilihan Destinasi Fleksibel', 'Konten Siap Upload Medsos'],
             color: '#10B981',
+            gradient: 'from-emerald-100/70 via-white/70 to-teal-100/40 dark:from-emerald-950/25 dark:via-slate-900/50 dark:to-teal-950/20',
+            glow: 'rgba(16, 185, 129, 0.25)',
+            icon1: Compass,
+            icon2: Sun,
         },
         {
             num: '05',
             title: 'Jasa Drone Aerial 4K',
             slug: 'drone',
+            badge: 'Aerial 5.1K HDR',
             desc: 'Pengambilan gambar sudut udara spektakuler menggunakan drone profesional beresolusi 4K/5.1K oleh pilot berlisensi resmi.',
             features: ['Pilot Drone Berlisensi', 'Aerial Mapping & Survey', 'Foto & Video Udara 4K/5.1K HDR', 'Izin Terbang & Safety Briefing'],
             color: '#06B6D4',
+            gradient: 'from-cyan-100/70 via-white/70 to-sky-100/40 dark:from-cyan-950/25 dark:via-slate-900/50 dark:to-sky-950/20',
+            glow: 'rgba(6, 182, 212, 0.25)',
+            icon1: Navigation,
+            icon2: Crosshair,
         },
         {
             num: '06',
             title: 'Company Profile',
             slug: 'company_profile',
+            badge: 'Corporate Grade',
             desc: 'Produksi video dan foto profil perusahaan berstandar korporasi modern untuk meningkatkan kredibilitas di mata klien & investor.',
             features: ['Konsep Storyboard & Scriptwriting', 'Video Tour Kantor & Pabrik', 'Wawancara Direksi & Testimoni Klien', 'Dukungan Dubbing & Subtitle'],
             color: '#3B82F6',
+            gradient: 'from-blue-100/70 via-white/70 to-indigo-100/40 dark:from-blue-950/25 dark:via-slate-900/50 dark:to-indigo-950/20',
+            glow: 'rgba(59, 130, 246, 0.25)',
+            icon1: Building2,
+            icon2: MonitorPlay,
         },
     ];
 
@@ -441,75 +473,118 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                 exit={{ opacity: 0, y: -16 }}
                                 transition={{ duration: 0.3, ease: 'easeOut' }}
                             >
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {servicePillars.map((pillar) => (
-                                        <div 
-                                            key={pillar.slug}
-                                            onClick={() => {
-                                                setSelectedCategory(pillar.slug);
-                                                setActiveTab('gallery');
-                                            }}
-                                            className="group p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-amber-400/60 hover:shadow-xl hover:shadow-amber-500/10"
-                                        >
-                                            <div>
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                                                        {pillar.num}
-                                                    </span>
-                                                    <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase tracking-widest font-bold group-hover:underline flex items-center gap-1">
-                                                        <span>Buka Galeri</span>
-                                                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                    </span>
-                                                </div>
+                                {/* Glassmorphism Card Canvas with Pastel Mesh Gradient Background (Matching Pinterest Ref) */}
+                                <div className="relative rounded-[32px] sm:rounded-[40px] p-4 sm:p-7 lg:p-9 bg-gradient-to-br from-emerald-100/50 via-sky-100/35 to-rose-100/45 dark:from-[#080E1B]/90 dark:via-[#070B14]/90 dark:to-[#0D101A]/90 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
+                                    {/* Ambient Pastel Mesh Gradient Blobs */}
+                                    <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-400/25 dark:bg-emerald-500/10 blur-[90px] pointer-events-none" />
+                                    <div className="absolute top-1/4 -right-24 w-96 h-96 rounded-full bg-pink-400/25 dark:bg-pink-500/10 blur-[90px] pointer-events-none" />
+                                    <div className="absolute -bottom-32 left-1/3 w-96 h-96 rounded-full bg-amber-400/25 dark:bg-amber-500/10 blur-[90px] pointer-events-none" />
+                                    <div className="absolute top-2/3 left-10 w-80 h-80 rounded-full bg-cyan-400/20 dark:bg-cyan-500/10 blur-[80px] pointer-events-none" />
 
-                                                <h3 className="font-heading font-bold text-xl text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                                                    {pillar.title}
-                                                </h3>
+                                    {/* 2 Rows x 3 Columns Responsive Grid */}
+                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                                        {servicePillars.map((pillar) => {
+                                            const Icon1 = pillar.icon1;
+                                            const Icon2 = pillar.icon2;
 
-                                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2.5">
-                                                    {pillar.desc}
-                                                </p>
-
-                                                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 space-y-2">
-                                                    {pillar.features.map((feat, fIdx) => (
-                                                        <div key={fIdx} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
-                                                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                                                            <span>{feat}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-6 pt-4 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
+                                            return (
+                                                <div 
+                                                    key={pillar.slug}
+                                                    onClick={() => {
                                                         setSelectedCategory(pillar.slug);
                                                         setActiveTab('gallery');
                                                     }}
-                                                    className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                                    className={`
+                                                        group relative p-6 sm:p-7 rounded-[26px] sm:rounded-[30px]
+                                                        flex flex-col justify-between cursor-pointer
+                                                        bg-white/60 dark:bg-[#0C1220]/55
+                                                        bg-gradient-to-br ${pillar.gradient}
+                                                        backdrop-blur-2xl
+                                                        border border-white/80 dark:border-white/15
+                                                        hover:border-white dark:hover:border-white/30
+                                                        shadow-[0_12px_32px_-10px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_40px_-10px_rgba(0,0,0,0.5)]
+                                                        hover:shadow-[0_24px_50px_-12px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)]
+                                                        transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+                                                        hover:-translate-y-2
+                                                    `}
                                                 >
-                                                    <span>Lihat Contoh Hasil</span>
-                                                    <ArrowRight className="w-3.5 h-3.5" />
-                                                </button>
+                                                    {/* Top Header: 2 Square Icons (Left) & Minimalist Indicator Badge (Right) */}
+                                                    <div>
+                                                        <div className="flex items-center justify-between mb-5">
+                                                            {/* Left: 2 Rounded-Square Icons Side-by-Side */}
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-11 h-11 rounded-2xl bg-white/95 dark:bg-white/10 border border-white/90 dark:border-white/10 shadow-sm flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3">
+                                                                    <Icon1 className="w-5 h-5 transition-colors" style={{ color: pillar.color }} />
+                                                                </div>
+                                                                <div className="w-11 h-11 rounded-2xl bg-white/95 dark:bg-white/10 border border-white/90 dark:border-white/10 shadow-sm flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+                                                                    <Icon2 className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+                                                                </div>
+                                                            </div>
 
-                                                <a
-                                                    href={getWhatsAppUrl('photo-video', {
-                                                        category: pillar.title,
-                                                        title: pillar.title,
-                                                        details: 'Saya ingin booking paket photoshoot / videography ini.'
-                                                    })}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition-transform hover:scale-105 active:scale-95 flex items-center gap-1 cursor-pointer"
-                                                >
-                                                    <span>Booking WhatsApp</span>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    ))}
+                                                            {/* Right: Modern Pill Indicator / Badge */}
+                                                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 dark:bg-white/10 border border-white/80 dark:border-white/10 shadow-xs backdrop-blur-md">
+                                                                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: pillar.color }} />
+                                                                <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200">
+                                                                    {pillar.badge}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Title */}
+                                                        <h3 className="font-heading font-extrabold text-xl sm:text-[22px] text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                                                            {pillar.title}
+                                                        </h3>
+
+                                                        {/* Description */}
+                                                        <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed mt-2.5">
+                                                            {pillar.desc}
+                                                        </p>
+
+                                                        {/* Feature Highlights Grid */}
+                                                        <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700 dark:text-slate-300 font-medium">
+                                                            {pillar.features.map((feat, fIdx) => (
+                                                                <div key={fIdx} className="flex items-center gap-1.5 truncate">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: pillar.color }} />
+                                                                    <span className="truncate">{feat}</span>
+                                                                </div>
+                              ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Card Footer: Buka Galeri Link (Left) & Pill Booking Button (Right) */}
+                                                    <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedCategory(pillar.slug);
+                                                                setActiveTab('gallery');
+                                                            }}
+                                                            className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 hover:underline flex items-center gap-1 transition-colors cursor-pointer"
+                                                        >
+                                                            <span>Buka Galeri Foto</span>
+                                                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                                        </button>
+
+                                                        <a
+                                                            href={getWhatsAppUrl('photo-video', {
+                                                                category: pillar.title,
+                                                                title: pillar.title,
+                                                                details: 'Saya ingin booking paket photoshoot / videography ini.'
+                                                            })}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="px-4 py-2 rounded-full bg-slate-900 hover:bg-[#005792] dark:bg-white dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all duration-300 hover:scale-105 active:scale-95 group/btn cursor-pointer shrink-0"
+                                                        >
+                                                            <span>Booking</span>
+                                                            <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </motion.div>
                         ) : (
