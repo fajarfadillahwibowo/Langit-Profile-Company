@@ -362,77 +362,56 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             }
                         </p>
 
-                        {/* Creative & Animative Pill Menu Switcher (Pemisah 2 Menu) */}
-                        <div className="mt-8 flex flex-col items-center">
-                            <div className="relative p-1.5 rounded-full bg-slate-100/95 dark:bg-white/[0.06] backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-amber-500/5 inline-flex items-center gap-1.5 sm:gap-2">
-                                {/* Button 1: 6 Layanan Utama Visual Studio */}
+                        {/* Clean Executive Segmented Tab Switcher (Professional, 1-Line, Mobile & Desktop Optimized) */}
+                        <div className="mt-7 sm:mt-8 flex justify-center">
+                            <div className="p-1 sm:p-1.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300/80 dark:border-white/10 backdrop-blur-xl shadow-inner inline-flex items-center gap-1 max-w-full">
+                                {/* Tab 1: 6 Layanan Utama */}
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('services')}
-                                    className={`relative z-10 px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                                    className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none whitespace-nowrap ${
                                         activeTab === 'services'
-                                            ? 'text-slate-950 font-extrabold'
+                                            ? 'text-slate-950 dark:text-white font-extrabold'
                                             : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     }`}
                                 >
                                     {activeTab === 'services' && (
                                         <motion.div
                                             layoutId="activeViewTabPill"
-                                            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 shadow-md shadow-amber-500/30"
+                                            className="absolute inset-0 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200/80 dark:border-white/15"
                                             transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                                         />
                                     )}
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        <Film className={`w-4 h-4 ${activeTab === 'services' ? 'text-slate-950' : 'text-amber-500'}`} />
-                                        <span>6 Layanan Utama Visual Studio</span>
-                                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                                            activeTab === 'services' 
-                                                ? 'bg-black/15 text-slate-950 font-bold' 
-                                                : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
-                                        }`}>
-                                            6 Divisi
-                                        </span>
+                                    <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                                        <Film className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'services' ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
+                                        <span className="sm:hidden">Layanan (6)</span>
+                                        <span className="hidden sm:inline">6 Layanan Utama</span>
                                     </span>
                                 </button>
 
-                                {/* Button 2: Galeri Foto Mahakarya Langit */}
+                                {/* Tab 2: Galeri Portofolio */}
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('gallery')}
-                                    className={`relative z-10 px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                                    className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none whitespace-nowrap ${
                                         activeTab === 'gallery'
-                                            ? 'text-slate-950 font-extrabold'
+                                            ? 'text-slate-950 dark:text-white font-extrabold'
                                             : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     }`}
                                 >
                                     {activeTab === 'gallery' && (
                                         <motion.div
                                             layoutId="activeViewTabPill"
-                                            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 shadow-md shadow-amber-500/30"
+                                            className="absolute inset-0 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200/80 dark:border-white/15"
                                             transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                                         />
                                     )}
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        <Camera className={`w-4 h-4 ${activeTab === 'gallery' ? 'text-slate-950' : 'text-amber-500'}`} />
-                                        <span>Galeri Foto Mahakarya Langit</span>
-                                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                                            activeTab === 'gallery' 
-                                                ? 'bg-black/15 text-slate-950 font-bold' 
-                                                : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
-                                        }`}>
-                                            Showcase
-                                        </span>
+                                    <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                                        <Camera className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'gallery' ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
+                                        <span className="sm:hidden">Galeri Karya</span>
+                                        <span className="hidden sm:inline">Galeri Portofolio</span>
                                     </span>
                                 </button>
-                            </div>
-
-                            {/* Animated bottom track line indicator (inspired by user screenshot's line) */}
-                            <div className="w-56 sm:w-72 h-1 mt-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden relative">
-                                <motion.div
-                                    className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full shadow-sm shadow-amber-500/50"
-                                    animate={{ x: activeTab === 'services' ? '0%' : '100%' }}
-                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                                />
                             </div>
                         </div>
                     </div>
