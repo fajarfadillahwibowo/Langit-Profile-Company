@@ -96,7 +96,7 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                 badge: g.exif_metadata_json?.lens || preset.badge,
                 badgeColor: preset.badgeColor,
                 image: g.file_webp_path || preset.image,
-                desc: preset.desc,
+                desc: g.exif_metadata_json?.description || g.exif_metadata_json?.desc || preset.desc,
                 items: preset.items,
                 estCost: g.exif_metadata_json?.aperture || preset.estCost,
                 estTime: g.exif_metadata_json?.shutter || preset.estTime,

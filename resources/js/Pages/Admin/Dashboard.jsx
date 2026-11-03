@@ -14,6 +14,7 @@ import {
 
 export default function AdminDashboard({
     metrics = {},
+    analytics = {},
     serviceTickets = [],
     rentalBookings = [],
     internshipApplications = [],
@@ -99,6 +100,7 @@ export default function AdminDashboard({
     const [galleryModalOpen, setGalleryModalOpen] = useState(false);
     const [newGalleryData, setNewGalleryData] = useState({
         title: '',
+        description: '',
         service_id: '',
         category: 'commercial',
         media_type: 'photo',
@@ -118,6 +120,7 @@ export default function AdminDashboard({
     const [editPhotoData, setEditPhotoData] = useState({
         id: null,
         title: '',
+        description: '',
         service_id: '',
         category: 'general',
         media_type: 'photo',
@@ -550,6 +553,7 @@ export default function AdminDashboard({
         e.preventDefault();
         const formData = new FormData();
         formData.append('title', newGalleryData.title);
+        formData.append('description', newGalleryData.description || '');
         if (newGalleryData.service_id) formData.append('service_id', newGalleryData.service_id);
         formData.append('category', newGalleryData.category);
         formData.append('media_type', newGalleryData.media_type);
@@ -569,6 +573,7 @@ export default function AdminDashboard({
                 setNewGalleryFilePhoto(null);
                 setNewGalleryData({
                     title: '',
+                    description: '',
                     service_id: '',
                     category: 'commercial',
                     media_type: 'photo',
@@ -590,6 +595,7 @@ export default function AdminDashboard({
         setEditPhotoData({
             id: item.id,
             title: item.title || '',
+            description: item.exif_metadata_json?.description || item.exif_metadata_json?.desc || '',
             service_id: targetServiceId,
             category: item.category || 'general',
             media_type: item.media_type || 'photo',
@@ -614,6 +620,7 @@ export default function AdminDashboard({
 
         const formData = new FormData();
         formData.append('title', editPhotoData.title);
+        formData.append('description', editPhotoData.description || '');
         if (editPhotoData.service_id) formData.append('service_id', editPhotoData.service_id);
         formData.append('category', editPhotoData.category);
         formData.append('media_type', editPhotoData.media_type);
@@ -783,76 +790,32 @@ export default function AdminDashboard({
 
                             {/* Nav Items Scrollable */}
                             <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1 -mr-1 sidebar-scroll">
-                                <button
-                                    onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'overview'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
-                                    <span>Executive Overview</span>
-                                </button>
+                                {/* KELOMPOK 1: KONTEN PUBLIK & INFORMASI */}
+                                <div className="pt-1 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                                    Konten & Foto Publik
+                                </div>
 
+                                {/* 1. Beranda (7 Kartu Layanan) */}
                                 <button
-                                    onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
+                                    onClick={() => { setActiveTab('services'); setMobileSidebarOpen(false); }}
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'client_deliveries'
+                                        activeTab === 'services'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-sky-300'}`} />
-                                        <span>Foto Pelanggan</span>
+                                        <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
+                                        <span>Beranda (7 Kartu Layanan)</span>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                        activeTab === 'services' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
                                     }`}>
-                                        {clientDeliveries.length}
+                                        {services.length}
                                     </span>
                                 </button>
 
-                                <button
-                                    onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'tickets'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
-                                        <span>Computer Servis</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'tickets' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {serviceTickets.length}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'rentals'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
-                                        <span>Sewa Alat & Gear</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {rentalBookings.length}
-                                    </span>
-                                </button>
-
-                                {/* Accordion Galeri */}
+                                {/* 2. Accordion Galeri & Foto Layanan */}
                                 <div className="space-y-1">
                                     <button
                                         onClick={() => {
@@ -870,8 +833,8 @@ export default function AdminDashboard({
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <Camera className={`w-4 h-4 shrink-0 ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                            <span>Galeri & EXIF Media</span>
+                                            <Camera className={`w-4 h-4 shrink-0 ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-cyan-300'}`} />
+                                            <span>Foto & Galeri Layanan</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
@@ -918,6 +881,85 @@ export default function AdminDashboard({
                                     )}
                                 </div>
 
+                                {/* 3. Foto Pelanggan (Delivery) */}
+                                <button
+                                    onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'client_deliveries'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
+                                        <span>Foto Pelanggan (Delivery)</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {clientDeliveries.length}
+                                    </span>
+                                </button>
+
+                                {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
+                                <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                                    Operasional & Pesanan
+                                </div>
+
+                                {/* 4. Overview */}
+                                <button
+                                    onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'overview'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
+                                    <span>Executive Overview</span>
+                                </button>
+
+                                {/* 5. Computer Servis */}
+                                <button
+                                    onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'tickets'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
+                                        <span>Computer Servis</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'tickets' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {serviceTickets.length}
+                                    </span>
+                                </button>
+
+                                {/* 6. Sewa Alat & Gear */}
+                                <button
+                                    onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'rentals'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
+                                        <span>Sewa Alat & Gear</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {rentalBookings.length}
+                                    </span>
+                                </button>
+
+                                {/* 7. Internship Pelamar */}
                                 <button
                                     onClick={() => { setActiveTab('internships'); setMobileSidebarOpen(false); }}
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -937,6 +979,7 @@ export default function AdminDashboard({
                                     </span>
                                 </button>
 
+                                {/* 8. Proposal Kerja Sama */}
                                 <button
                                     onClick={() => { setActiveTab('collaborations'); setMobileSidebarOpen(false); }}
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -956,6 +999,7 @@ export default function AdminDashboard({
                                     </span>
                                 </button>
 
+                                {/* 9. Jadwal Konsultasi */}
                                 <button
                                     onClick={() => { setActiveTab('consultations'); setMobileSidebarOpen(false); }}
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -972,25 +1016,6 @@ export default function AdminDashboard({
                                         activeTab === 'consultations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
                                     }`}>
                                         {recentConsultations.length}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => { setActiveTab('services'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'services'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                        <span>7 Divisi Layanan (VIP)</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'services' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {services.length}
                                     </span>
                                 </button>
                             </nav>
@@ -1052,83 +1077,34 @@ export default function AdminDashboard({
 
                     {/* Nav Items - Scrollable independently if items exceed viewport */}
                     <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll">
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
-                                activeTab === 'overview'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
-                            <span>Executive Overview</span>
-                        </button>
+                        {/* KELOMPOK 1: KONTEN PUBLIK & INFORMASI */}
+                        <div className="pt-1 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                            Konten & Foto Publik
+                        </div>
 
+                        {/* 1. Beranda (7 Kartu Layanan) */}
                         <button
-                            onClick={() => setActiveTab('tickets')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
-                                activeTab === 'tickets'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
-                                <span>Computer Servis</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                activeTab === 'tickets'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {serviceTickets.length}
-                            </span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveTab('rentals')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
-                                activeTab === 'rentals'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
-                                <span>Sewa Alat & Gear</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                activeTab === 'rentals'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {rentalBookings.length}
-                            </span>
-                        </button>
-
-                        {/* Layanan Foto Pelanggan (Delivery & Ambil Foto) */}
-                        <button
-                            onClick={() => setActiveTab('client_deliveries')}
+                            onClick={() => setActiveTab('services')}
                             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                activeTab === 'client_deliveries'
+                                activeTab === 'services'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-sky-300'}`} />
-                                <span>Foto Pelanggan</span>
+                                <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
+                                <span>Beranda (7 Kartu Layanan)</span>
                             </div>
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                activeTab === 'client_deliveries'
+                                activeTab === 'services'
                                     ? 'bg-[#005792]/15 text-[#005792]'
                                     : 'bg-white/20 text-white'
                             }`}>
-                                {clientDeliveries.length}
+                                {services.length}
                             </span>
                         </button>
 
-                        {/* Sub-Sidebar: Galeri & EXIF Media with Services Accordion */}
+                        {/* 2. Sub-Sidebar: Galeri & EXIF Media with Services Accordion */}
                         <div className="space-y-1">
                             <button
                                 onClick={() => {
@@ -1139,15 +1115,15 @@ export default function AdminDashboard({
                                         setIsGalleryMenuOpen(!isGalleryMenuOpen);
                                     }
                                 }}
-                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                     activeTab === 'galleries'
                                         ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                         : 'text-white/90 hover:text-white hover:bg-white/10'
                                 }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <Camera className={`w-4 h-4 shrink-0 ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                    <span>Galeri & EXIF Media</span>
+                                    <Camera className={`w-4 h-4 shrink-0 ${activeTab === 'galleries' ? 'text-[#005792]' : 'text-cyan-300'}`} />
+                                    <span>Foto & Galeri Layanan</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
@@ -1163,9 +1139,9 @@ export default function AdminDashboard({
                                 </div>
                             </button>
 
-                            {/* Sub Sidebar: Dropdown Daftar Layanan */}
+                            {/* Sub-menu accordion */}
                             {isGalleryMenuOpen && (
-                                <div className="ml-3 pl-2.5 border-l-2 border-white/30 space-y-1 pt-1.5 pb-1">
+                                <div className="ml-3 pl-2.5 border-l-2 border-white/30 space-y-1 pt-1 pb-1">
                                     {serviceNavItems.map((sItem) => {
                                         const isSelected = activeTab === 'galleries' && selectedGalleryService === sItem.slug;
                                         const count = getServiceGalleryCount(sItem.slug);
@@ -1178,7 +1154,7 @@ export default function AdminDashboard({
                                                     setSelectedGalleryService(sItem.slug);
                                                     setGallerySubCategoryFilter('all');
                                                 }}
-                                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex items-center justify-between group ${
+                                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
                                                     isSelected
                                                         ? 'bg-white text-[#005792] font-bold shadow-sm'
                                                         : 'text-white/85 hover:text-white hover:bg-white/10'
@@ -1214,9 +1190,94 @@ export default function AdminDashboard({
                             )}
                         </div>
 
+                        {/* 3. Layanan Foto Pelanggan (Delivery & Ambil Foto) */}
+                        <button
+                            onClick={() => setActiveTab('client_deliveries')}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                activeTab === 'client_deliveries'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <FolderHeart className={`w-4 h-4 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
+                                <span>Foto Pelanggan (Delivery)</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                activeTab === 'client_deliveries'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {clientDeliveries.length}
+                            </span>
+                        </button>
+
+                        {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
+                        <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                            Operasional & Pesanan
+                        </div>
+
+                        {/* 4. Overview */}
+                        <button
+                            onClick={() => setActiveTab('overview')}
+                            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                activeTab === 'overview'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
+                            <span>Executive Overview</span>
+                        </button>
+
+                        {/* 5. Computer Servis */}
+                        <button
+                            onClick={() => setActiveTab('tickets')}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                activeTab === 'tickets'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
+                                <span>Computer Servis</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                activeTab === 'tickets'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {serviceTickets.length}
+                            </span>
+                        </button>
+
+                        {/* 6. Sewa Alat & Gear */}
+                        <button
+                            onClick={() => setActiveTab('rentals')}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                activeTab === 'rentals'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
+                                <span>Sewa Alat & Gear</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                activeTab === 'rentals'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {rentalBookings.length}
+                            </span>
+                        </button>
+
+                        {/* 7. Internship Pelamar */}
                         <button
                             onClick={() => setActiveTab('internships')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'internships'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1235,9 +1296,10 @@ export default function AdminDashboard({
                             </span>
                         </button>
 
+                        {/* 8. Proposal Kerja Sama */}
                         <button
                             onClick={() => setActiveTab('collaborations')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'collaborations'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1256,9 +1318,10 @@ export default function AdminDashboard({
                             </span>
                         </button>
 
+                        {/* 9. Jadwal Konsultasi */}
                         <button
                             onClick={() => setActiveTab('consultations')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'consultations'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1274,27 +1337,6 @@ export default function AdminDashboard({
                                     : 'bg-white/20 text-white'
                             }`}>
                                 {recentConsultations.length}
-                            </span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveTab('services')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
-                                activeTab === 'services'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <SlidersHorizontal className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                <span>7 Divisi Layanan (VIP)</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                activeTab === 'services'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {services.length}
                             </span>
                         </button>
                     </nav>
@@ -1472,6 +1514,7 @@ export default function AdminDashboard({
                         {/* Interactive Animated Analytics Charts (Curved Spline Wave + 7-Divisions Donut + Velocity Meters) */}
                         <ExecutiveAnalyticsCharts
                             metrics={metrics}
+                            analytics={analytics}
                             serviceTickets={serviceTickets}
                             rentalBookings={rentalBookings}
                             internshipApplications={internshipApplications}
@@ -1479,6 +1522,9 @@ export default function AdminDashboard({
                             galleries={galleries}
                             recentConsultations={recentConsultations}
                             services={services}
+                            equipments={equipments}
+                            courses={courses}
+                            clientDeliveries={clientDeliveries}
                         />
 
                         {/* Recent Consultations Table */}

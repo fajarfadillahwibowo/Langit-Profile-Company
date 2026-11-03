@@ -11,6 +11,7 @@ use App\Models\Consultation;
 use App\Models\EducationCourse;
 use App\Models\Gallery;
 use App\Models\InternshipApplication;
+use App\Models\InternshipPosition;
 use App\Models\RentalBooking;
 use App\Models\RentalEquipment;
 use App\Models\Service;
@@ -46,8 +47,211 @@ class AdminDashboardController extends Controller
         $services = Service::all();
         $this->ensureServiceGalleriesExist($services);
 
+        // 1. Real Activity Time Series ('7d', '30d', 'year')
+        $sevenDaysData = [];
+        $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateStr = $date->toDateString();
+            $label = $dayNames[$date->dayOfWeek];
+            $formattedDate = $date->format('d M');
+
+            $p = ComputerServiceTicket::whereDate('created_at', $dateStr)->count()
+               + RentalBooking::whereDate('created_at', $dateStr)->count()
+               + ClientDelivery::whereDate('created_at', $dateStr)->count();
+
+            $s = Consultation::whereDate('created_at', $dateStr)->count()
+               + Collaboration::whereDate('created_at', $dateStr)->count()
+               + InternshipApplication::whereDate('created_at', $dateStr)->count();
+
+            $sevenDaysData[] = [
+                'label' => $label,
+                'date' => $formattedDate,
+                'primary' => $p,
+                'secondary' => $s,
+            ];
+        }
+
+        $thirtyDaysData = [];
+        for ($w = 3; $w >= 0; $w--) {
+            $startWeek = Carbon::now()->subWeeks($w)->startOfWeek();
+            $endWeek = Carbon::now()->subWeeks($w)->endOfWeek();
+
+            $p = ComputerServiceTicket::whereBetween('created_at', [$startWeek, $endWeek])->count()
+               + RentalBooking::whereBetween('created_at', [$startWeek, $endWeek])->count()
+               + ClientDelivery::whereBetween('created_at', [$startWeek, $endWeek])->count();
+
+            $s = Consultation::whereBetween('created_at', [$startWeek, $endWeek])->count()
+               + Collaboration::whereBetween('created_at', [$startWeek, $endWeek])->count()
+               + InternshipApplication::whereBetween('created_at', [$startWeek, $endWeek])->count();
+
+            $thirtyDaysData[] = [
+                'label' => 'Mgg ' . (4 - $w),
+                'date' => $startWeek->format('d M') . ' - ' . $endWeek->format('d M'),
+                'primary' => $p,
+                'secondary' => $s,
+            ];
+        }
+
+        $yearData = [];
+        $monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        for ($m = 5; $m >= 0; $m--) {
+            $month = Carbon::now()->subMonths($m);
+            $startMonth = $month->copy()->startOfMonth();
+            $endMonth = $month->copy()->endOfMonth();
+
+            $p = ComputerServiceTicket::whereBetween('created_at', [$startMonth, $endMonth])->count()
+               + RentalBooking::whereBetween('created_at', [$startMonth, $endMonth])->count()
+               + ClientDelivery::whereBetween('created_at', [$startMonth, $endMonth])->count();
+
+            $s = Consultation::whereBetween('created_at', [$startMonth, $endMonth])->count()
+               + Collaboration::whereBetween('created_at', [$startMonth, $endMonth])->count()
+               + InternshipApplication::whereBetween('created_at', [$startMonth, $endMonth])->count();
+
+            $yearData[] = [
+                'label' => $monthNames[$month->month] ?? $month->format('M'),
+                'date' => ($monthNames[$month->month] ?? $month->format('M')) . ' ' . $month->format('Y'),
+                'primary' => $p,
+                'secondary' => $s,
+            ];
+        }
+
+        // 2. Real Division Breakdown for Donut Chart
+        $photoService = $services->firstWhere('slug', 'photography-videography');
+        $webService = $services->firstWhere('slug', 'web-development');
+        $compService = $services->firstWhere('slug', 'computer-service');
+        $sewaService = $services->firstWhere('slug', 'sewa-alat');
+        $eduService = $services->firstWhere('slug', 'langit-education');
+        $internService = $services->firstWhere('slug', 'internship');
+        $collabService = $services->firstWhere('slug', 'kolaborasi');
+
+        $divVisualCount = Gallery::where('service_id', $photoService?->id)->count() + ClientDelivery::count();
+        $divWebCount = WebPortfolio::count() + Gallery::where('service_id', $webService?->id)->count();
+        $divCompCount = ComputerServiceTicket::count() + Gallery::where('service_id', $compService?->id)->count();
+        $divSewaCount = RentalEquipment::count() + RentalBooking::count() + Gallery::where('service_id', $sewaService?->id)->count();
+        $divEduCount = EducationCourse::count() + Gallery::where('service_id', $eduService?->id)->count();
+        $divInternCount = InternshipPosition::count() + InternshipApplication::count() + Gallery::where('service_id', $internService?->id)->count();
+        $divCollabCount = Collaboration::count();
+
+        $totalActiveProjects = $divVisualCount + $divWebCount + $divCompCount + $divSewaCount + $divEduCount + $divInternCount + $divCollabCount;
+
+        $divisionsData = [
+            [
+                'id' => 'visual-cinema',
+                'name' => 'Visual & Cinema',
+                'subtitle' => 'Wedding, Event & Showcase',
+                'count' => $divVisualCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divVisualCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#005792',
+                'gradFrom' => '#005792',
+                'gradTo' => '#007cc7',
+                'icon' => '🎬',
+            ],
+            [
+                'id' => 'web-dev',
+                'name' => 'Web Development',
+                'subtitle' => 'Aplikasi Web & Portofolio',
+                'count' => $divWebCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divWebCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#06b6d4',
+                'gradFrom' => '#06b6d4',
+                'gradTo' => '#3b82f6',
+                'icon' => '⚡',
+            ],
+            [
+                'id' => 'computer-servis',
+                'name' => 'Computer Servis',
+                'subtitle' => 'Hardware Lab & Tiket Servis',
+                'count' => $divCompCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divCompCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#f97316',
+                'gradFrom' => '#f97316',
+                'gradTo' => '#ea580c',
+                'icon' => '🛠️',
+            ],
+            [
+                'id' => 'sewa-alat',
+                'name' => 'Sewa Alat & Gear',
+                'subtitle' => 'Kamera, Lensa & Lighting',
+                'count' => $divSewaCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divSewaCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#14b8a6',
+                'gradFrom' => '#14b8a6',
+                'gradTo' => '#10b981',
+                'icon' => '📷',
+            ],
+            [
+                'id' => 'education',
+                'name' => 'Langit Education',
+                'subtitle' => 'Kursus & Sertifikasi IT',
+                'count' => $divEduCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divEduCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#8b5cf6',
+                'gradFrom' => '#8b5cf6',
+                'gradTo' => '#6366f1',
+                'icon' => '🎓',
+            ],
+            [
+                'id' => 'internship',
+                'name' => 'Internship Program',
+                'subtitle' => 'Talenta Magang & Pelamar',
+                'count' => $divInternCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divInternCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#a855f7',
+                'gradFrom' => '#a855f7',
+                'gradTo' => '#d946ef',
+                'icon' => '✨',
+            ],
+            [
+                'id' => 'collaborations',
+                'name' => 'Kolaborasi B2B',
+                'subtitle' => 'Kemitraan & Proposal Masuk',
+                'count' => $divCollabCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divCollabCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#f43f5e',
+                'gradFrom' => '#f43f5e',
+                'gradTo' => '#e11d48',
+                'icon' => '🤝',
+            ],
+        ];
+
+        // 3. Real Efficiency & Velocity KPI Meters
+        $totalLeads = Consultation::count() + Collaboration::count();
+        $respondedLeads = Consultation::where('status', '!=', 'pending')->count() + Collaboration::where('status', '!=', 'new')->count();
+        $leadResponseRate = $totalLeads > 0 ? round(($respondedLeads / $totalLeads) * 100, 1) : 100.0;
+
+        $totalTicketsCount = ComputerServiceTicket::count();
+        $completedTicketsCount = ComputerServiceTicket::whereIn('status', ['ready', 'completed'])->count();
+        $serviceCompletionRate = $totalTicketsCount > 0 ? round(($completedTicketsCount / $totalTicketsCount) * 100, 1) : 100.0;
+
+        $totalStock = (int) RentalEquipment::sum('stock_total');
+        $availableStock = (int) RentalEquipment::sum('stock_available');
+        $gearUtilityRate = $totalStock > 0 ? round(($availableStock / $totalStock) * 100, 1) : 100.0;
+
+        $analytics = [
+            'time_series' => [
+                '7d' => $sevenDaysData,
+                '30d' => $thirtyDaysData,
+                'year' => $yearData,
+            ],
+            'divisions_distribution' => $divisionsData,
+            'total_active_projects' => $totalActiveProjects,
+            'kpi' => [
+                'lead_response_rate' => $leadResponseRate,
+                'leads_responded' => $respondedLeads,
+                'leads_total' => $totalLeads,
+                'service_completion_rate' => $serviceCompletionRate,
+                'tickets_completed' => $completedTicketsCount,
+                'tickets_total' => $totalTicketsCount,
+                'gear_utility_rate' => $gearUtilityRate,
+                'stock_available' => $availableStock,
+                'stock_total' => $totalStock,
+            ],
+        ];
+
         return Inertia::render('Admin/Dashboard', [
             'metrics' => $metrics,
+            'analytics' => $analytics,
             'recentConsultations' => Consultation::latest()->take(5)->get(),
             'serviceTickets' => ComputerServiceTicket::latest()->take(10)->get(),
             'rentalBookings' => RentalBooking::latest()->take(10)->get(),
@@ -150,6 +354,7 @@ class AdminDashboardController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'service_id' => 'nullable|exists:services,id',
             'category' => 'required|string|max:100',
             'media_type' => 'required|string|in:photo,video,before_after',
@@ -179,7 +384,7 @@ class AdminDashboardController extends Controller
             return back()->withErrors(['file_webp_path' => 'Silakan upload berkas foto atau masukkan tautan URL foto valid.']);
         }
 
-        Gallery::create([
+        $gallery = Gallery::create([
             'service_id' => $validated['service_id'] ?? null,
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']).'-'.time(),
@@ -188,6 +393,7 @@ class AdminDashboardController extends Controller
             'file_webp_path' => $filePath,
             'before_file_path' => $validated['before_file_path'] ?? null,
             'exif_metadata_json' => [
+                'description' => $validated['description'] ?? '',
                 'camera' => $validated['camera'] ?? 'Sony FX3',
                 'lens' => $validated['lens'] ?? '24-70mm GM II',
                 'shutter' => $validated['shutter'] ?? '1/500s',
@@ -197,7 +403,28 @@ class AdminDashboardController extends Controller
             'is_featured' => true,
         ]);
 
-        return back()->with('success', 'Foto galeri baru berhasil ditambahkan!');
+        // Auto-sync if added under Sewa Alat or Web Dev
+        $service = $gallery->service ?: Service::find($gallery->service_id);
+        if ($service && $service->slug === 'sewa-alat') {
+            RentalEquipment::create([
+                'name' => $gallery->title,
+                'slug' => Str::slug($gallery->title).'-'.time(),
+                'brand' => $validated['camera'] ?? 'Langit Gear',
+                'category' => $gallery->category,
+                'price_per_day' => 250000,
+                'stock_total' => 4,
+                'stock_available' => 4,
+                'thumbnail_webp' => $filePath,
+                'specs_json' => [
+                    'Brand' => $validated['camera'] ?? 'Langit Gear',
+                    'Deskripsi' => $validated['description'] ?? 'Unit peralatan siap pakai berstandar produksi Langit.',
+                    'Spesifikasi' => $validated['lens'] ?? 'High Quality Gear',
+                ],
+                'is_active' => true,
+            ]);
+        }
+
+        return back()->with('success', 'Foto galeri baru berhasil ditambahkan dan disinkronkan ke halaman publik!');
     }
 
     /**
@@ -209,6 +436,7 @@ class AdminDashboardController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'service_id' => 'nullable|exists:services,id',
             'category' => 'required|string|max:100',
             'media_type' => 'required|string|in:photo,video,before_after',
@@ -263,6 +491,9 @@ class AdminDashboardController extends Controller
         }
 
         $exif = $gallery->exif_metadata_json ?? [];
+        if (isset($validated['description'])) {
+            $exif['description'] = $validated['description'];
+        }
         if (isset($validated['camera'])) {
             $exif['camera'] = $validated['camera'];
         }
