@@ -197,7 +197,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
             <div className="bg-amber-50/20 text-slate-900 dark:bg-[#050507] dark:text-slate-100 min-h-screen pt-2 sm:pt-6 transition-colors duration-300">
                 {/* 1. Full-Screen Showreel Header with Real Video Playback */}
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-2 sm:pt-4 pb-16">
-                    <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 min-h-[450px] sm:min-h-[490px] md:min-h-0 md:aspect-[21/9] flex items-center justify-center group">
+                    <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 min-h-[490px] sm:min-h-[520px] md:aspect-[21/9] md:min-h-[480px] flex flex-col justify-between p-4 sm:p-6 lg:p-8 group">
                         
                         {/* Real HTML5 Video Player with Guaranteed Autoplay */}
                         <video 
@@ -214,150 +214,124 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                         />
 
                         {/* Dark Gradient Overlay to ensure typography readability while video plays seamlessly */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-black/40 z-10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-black/55 z-10 pointer-events-none" />
 
-                        {/* Centered Typography & Controls (Always clear & readable over the moving video) */}
-                        <div className="relative z-20 text-center max-w-3xl px-6 space-y-4 pointer-events-auto">
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono uppercase tracking-widest font-bold backdrop-blur-md">
-                                <Film className="w-3.5 h-3.5" />
-                                <span>Cinema & Darkroom Showcase</span>
+                        {/* 1. TOP HEADER BAR: BADGE (LEFT) & IN-PLACE CONTROLS (RIGHT) - NO COLLISION */}
+                        <div className="relative z-30 flex items-center justify-between gap-2 w-full pointer-events-auto">
+                            {/* Left: Cinema Showcase Badge */}
+                            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-black/70 sm:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] sm:text-xs font-mono uppercase tracking-wider font-bold backdrop-blur-md shadow-sm shrink-0">
+                                <Film className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                                <span className="hidden sm:inline">Cinema & Darkroom</span>
+                                <span>Showcase</span>
                             </div>
 
-                            <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight drop-shadow-lg">
+                            {/* Right: In-Place SD/HD & Audio Pill Controls */}
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                {/* In-Place SD/HD Switcher */}
+                                <div className="flex items-center p-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/25 shadow-xl">
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuality('sd')}
+                                        className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                                            !isHd
+                                                ? 'bg-emerald-600 text-white shadow-xs'
+                                                : 'text-slate-300 hover:text-white'
+                                        }`}
+                                        title="Mode SD: Video ringan dan hemat kuota"
+                                    >
+                                        <Zap className={`w-3 h-3 shrink-0 ${!isHd ? 'text-white' : 'text-slate-400'}`} />
+                                        <span>SD</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuality('hd')}
+                                        className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                                            isHd
+                                                ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                                                : 'text-slate-300 hover:text-white'
+                                        }`}
+                                        title="Mode HD: Video resolusi sinema tinggi 4K"
+                                    >
+                                        <Sparkles className={`w-3 h-3 shrink-0 ${isHd ? 'text-white' : 'text-slate-400'}`} />
+                                        <span>HD</span>
+                                    </button>
+                                </div>
+
+                                {/* Audio Mute/Unmute Toggle Button */}
+                                <button
+                                    type="button"
+                                    onClick={toggleMute}
+                                    title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
+                                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-black/80 hover:bg-black/95 backdrop-blur-md border border-white/25 text-white transition-all hover:scale-105 cursor-pointer shadow-xl text-[11px] sm:text-xs font-mono"
+                                >
+                                    {isMuted ? (
+                                        <>
+                                            <VolumeX className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                            <span className="hidden sm:inline text-amber-200">Mute</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Volume2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                            <span className="hidden sm:inline text-emerald-200">Audio</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 2. CENTER TYPOGRAPHY & MAIN ACTIONS (BALANCED & PROPORTIONAL) */}
+                        <div className="relative z-20 text-center max-w-2xl mx-auto px-2 sm:px-6 my-auto py-4 sm:py-6 space-y-3 sm:space-y-4 pointer-events-auto">
+                            <h1 className="font-heading font-extrabold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white tracking-tight leading-tight drop-shadow-lg">
                                 Visual <span className="font-editorial italic font-normal text-amber-300 tracking-wide">Sinematik</span> Kelas Dunia.
                             </h1>
 
-                            <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto leading-relaxed drop-shadow">
+                            <p className="text-slate-200 text-xs sm:text-sm md:text-base max-w-lg mx-auto leading-relaxed drop-shadow">
                                 Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.
                             </p>
 
-                            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                            <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
+                                {/* Button 1: Play / Pause Showreel */}
                                 <button
                                     type="button"
                                     onClick={togglePlayShowreel}
-                                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                                    className="px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                                 >
                                     {showreelPlaying ? (
                                         <>
                                             <Pause className="w-4 h-4 fill-slate-950" />
-                                            <span>Jeda Video (Pause)</span>
+                                            <span>Jeda Video</span>
                                         </>
                                     ) : (
                                         <>
                                             <Play className="w-4 h-4 fill-slate-950" />
-                                            <span>Putar Video (Play)</span>
+                                            <span>Putar Video</span>
                                         </>
                                     )}
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={toggleMute}
-                                    className="px-4 py-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white border border-white/20 text-sm font-semibold flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
-                                    title={isMuted ? 'Nyalakan Audio' : 'Bisukan Audio'}
-                                >
-                                    {isMuted ? (
-                                        <>
-                                            <VolumeX className="w-4 h-4 text-amber-400" />
-                                            <span>Nyalakan Audio</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Volume2 className="w-4 h-4 text-emerald-400" />
-                                            <span>Bisukan Audio</span>
-                                        </>
-                                    )}
-                                </button>
-                                
-                                {/* Video HD Quality Toggle Button */}
-                                <button
-                                    type="button"
-                                    onClick={toggleQuality}
-                                    className={`px-4 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer ${
-                                        isHd
-                                            ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-500/30'
-                                            : 'bg-black/60 text-emerald-300 border-white/20 hover:bg-black/80'
-                                    }`}
-                                    title="Klik untuk mengubah kualitas video & foto (SD Cepat / HD)"
-                                >
-                                    {isHd ? (
-                                        <>
-                                            <Sparkles className="w-4 h-4 text-white" />
-                                            <span>Kualitas: HD Penuh</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Zap className="w-4 h-4 text-emerald-400" />
-                                            <span>Kualitas: SD Cepat</span>
-                                        </>
-                                    )}
-                                </button>
-                                
+                                {/* Button 2: Booking Jadwal Shoot */}
                                 <Link
                                     href="/konsultasi"
-                                    className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 text-sm font-bold transition-colors backdrop-blur-md"
+                                    className="px-4 sm:px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 text-xs sm:text-sm font-bold transition-all hover:scale-105 active:scale-95 backdrop-blur-md flex items-center gap-1.5 shadow-sm"
                                 >
-                                    Booking Jadwal Shoot
+                                    <span>Booking Jadwal Shoot</span>
+                                    <ArrowRight className="w-3.5 h-3.5" />
                                 </Link>
                             </div>
                         </div>
 
-                        {/* Top-Right Audio & Quality Floating Pill Controls (Ditempat Video) */}
-                        <div className="absolute top-4 sm:top-5 right-4 sm:right-5 z-30 flex items-center gap-2">
-                            {/* In-Place SD/HD Dual Pill Switcher */}
-                            <div className="flex items-center p-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/25 shadow-xl">
-                                <button
-                                    type="button"
-                                    onClick={() => setQuality('sd')}
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
-                                        !isHd
-                                            ? 'bg-emerald-600 text-white shadow-xs'
-                                            : 'text-slate-300 hover:text-white'
-                                    }`}
-                                    title="Mode SD: Video ringan dan hemat kuota"
-                                >
-                                    <Zap className={`w-3 h-3 shrink-0 ${!isHd ? 'text-white' : 'text-slate-400'}`} />
-                                    <span>SD</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setQuality('hd')}
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
-                                        isHd
-                                            ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                                            : 'text-slate-300 hover:text-white'
-                                    }`}
-                                    title="Mode HD: Video resolusi sinema tinggi 4K"
-                                >
-                                    <Sparkles className={`w-3 h-3 shrink-0 ${isHd ? 'text-white' : 'text-slate-400'}`} />
-                                    <span>HD</span>
-                                </button>
+                        {/* 3. BOTTOM BAR: LIVE STATUS PILL & METADATA (DEDICATED SLOT - NO OVERLAP) */}
+                        <div className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 text-[11px] font-mono text-slate-300 pointer-events-none">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 border border-amber-500/40 text-amber-300 text-[11px] font-mono backdrop-blur-md shadow-md pointer-events-auto">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+                                <span>
+                                    {showreelPlaying ? '▶ Playing Showreel' : '⏸ Video Dijeda'} • {isHd ? '4K Cinema (HD)' : 'Mode Cepat (SD)'}
+                                </span>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={toggleMute}
-                                title={isMuted ? 'Nyalakan Audio Video' : 'Bisukan Audio Video'}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 hover:bg-black/95 backdrop-blur-md border border-white/25 text-white transition-all hover:scale-105 cursor-pointer shadow-xl text-xs font-mono"
-                            >
-                                {isMuted ? (
-                                    <>
-                                        <VolumeX className="w-3.5 h-3.5 text-amber-400" />
-                                        <span className="hidden sm:inline text-amber-200">Audio: Mute</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                                        <span className="hidden sm:inline text-emerald-200">Audio: Nyala</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Bottom-Left Floating Video Autoplay Status Badge */}
-                        <div className="absolute bottom-4 left-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 border border-amber-500/50 text-amber-300 text-xs font-mono backdrop-blur-md">
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                            <span>{showreelPlaying ? '▶ Auto-Playing Reel' : '⏸ Video Dijeda'} • {isHd ? '4K Cinema Footage (HD)' : 'Mode Ringan (SD Cepat)'}</span>
+                            <div className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-300/80 font-mono">
+                                <span>Master: S-Cinetone 10-bit Rec.709</span>
+                            </div>
                         </div>
                     </div>
                 </section>
