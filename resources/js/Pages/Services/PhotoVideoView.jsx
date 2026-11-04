@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PublicLayout from '@/Layouts/PublicLayout';
@@ -187,8 +187,8 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
     }, [galleries]);
 
     const filteredGalleries = selectedCategory === 'all'
-        ? galleries.filter(g => g.media_type !== 'before_after')
-        : galleries.filter(g => g.category === selectedCategory && g.media_type !== 'before_after');
+        ? galleries.filter(g => g.media_type !== 'before_after' && g.category !== 'showreel')
+        : galleries.filter(g => g.category === selectedCategory && g.media_type !== 'before_after' && g.category !== 'showreel');
 
     const gearList = [
         { name: 'Sony FX3 Cinema Line', role: 'Main Cinema Camera (4K 120p 10-bit S-Cinetone)', tag: 'Body' },
@@ -289,14 +289,14 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                     </div>
 
                     {/* Animated View Transition Container */}
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence initial={false}>
                         {activeTab === 'services' ? (
                             <motion.div
                                 key="services-view"
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -16 }}
-                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
                             >
                                 {/* Glassmorphism Card Canvas with Pastel Mesh Gradient Background (Matching Pinterest Ref) */}
                                 <div className="relative rounded-[32px] sm:rounded-[40px] p-4 sm:p-7 lg:p-9 bg-gradient-to-br from-emerald-100/50 via-sky-100/35 to-rose-100/45 dark:from-[#080E1B]/90 dark:via-[#070B14]/90 dark:to-[#0D101A]/90 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
@@ -415,10 +415,10 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                         ) : (
                             <motion.div
                                 key="gallery-view"
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -16 }}
-                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
                             >
                                 {/* Category Filter Pills Bar (styled as in user uploaded screenshot) */}
                                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
@@ -477,11 +477,12 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
 
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-100 transition-opacity p-5 flex flex-col justify-end">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 uppercase font-bold">
+                                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 uppercase font-bold flex items-center gap-1">
+                                                            {item.media_type === 'video' ? <Play className="w-2.5 h-2.5 fill-current" /> : null}
                                                             {item.category}
                                                         </span>
                                                         <span className="text-[10px] font-mono text-slate-300">
-                                                            EXIF
+                                                            {item.media_type === 'video' ? 'VIDEO' : 'EXIF'}
                                                         </span>
                                                     </div>
                                                     <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">

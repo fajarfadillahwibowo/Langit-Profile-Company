@@ -23,11 +23,22 @@ export default function LightboxModal({ item, onClose }) {
 
                 {/* Main Media Preview with Interactive HD Switcher */}
                 <div className="lg:w-2/3 bg-slate-100 dark:bg-black/60 flex items-center justify-center p-4 relative group min-h-[350px] lg:min-h-[500px]">
-                    <img 
-                        src={optimizedImageSrc} 
-                        alt={item.title}
-                        className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl transition-all duration-300" 
-                    />
+                    {item.media_type === 'video' || item.video_url ? (
+                        <video 
+                            src={item.video_url} 
+                            poster={optimizedImageSrc}
+                            controls
+                            autoPlay
+                            playsInline
+                            className="max-h-[75vh] w-auto max-w-full rounded-lg shadow-2xl" 
+                        />
+                    ) : (
+                        <img 
+                            src={optimizedImageSrc} 
+                            alt={item.title}
+                            className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl transition-all duration-300" 
+                        />
+                    )}
 
                     {/* Floating HD Resolution Switcher Button */}
                     <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
