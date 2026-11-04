@@ -13,7 +13,21 @@ class HomeController extends Controller
     public function index()
     {
         $services = Service::where('is_active', true)->get();
-        $featuredGalleries = Gallery::where('is_featured', true)->take(10)->get();
+
+        // Ambil foto galeri mahakarya visual terbaru (otomatis terupdate mengikuti foto portofolio / galeri yang diedit admin)
+        $featuredGalleries = Gallery::where('is_featured', true)
+            ->latest('updated_at')
+            ->take(10)
+            ->get();
+
+        if ($featuredGalleries->count() < 10) {
+            $more = Gallery::whereNotIn('id', $featuredGalleries->pluck('id'))
+                ->latest('updated_at')
+                ->take(10 - $featuredGalleries->count())
+                ->get();
+            $featuredGalleries = $featuredGalleries->concat($more);
+        }
+
         $rentalHighlights = RentalEquipment::where('is_active', true)->take(4)->get();
         $internshipOpenings = InternshipPosition::where('is_open', true)->take(3)->get();
 

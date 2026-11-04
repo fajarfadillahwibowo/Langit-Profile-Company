@@ -90,7 +90,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/rentals/{id}/status', [AdminDashboardController::class, 'updateRentalBookingStatus'])->name('rentals.update-status');
         Route::put('/rentals/{id}', [AdminDashboardController::class, 'updateRentalBooking'])->name('rentals.update');
         Route::delete('/rentals/{id}', [AdminDashboardController::class, 'deleteRentalBooking'])->name('rentals.delete');
+        Route::post('/equipments', [AdminDashboardController::class, 'createEquipment'])->name('equipments.create');
         Route::put('/equipments/{id}', [AdminDashboardController::class, 'updateEquipment'])->name('equipments.update');
+        Route::delete('/equipments/{id}', [AdminDashboardController::class, 'deleteEquipment'])->name('equipments.delete');
 
         // Galleries & Photos
         Route::post('/galleries/before-after', [AdminDashboardController::class, 'updateBeforeAfter'])->name('galleries.before-after');

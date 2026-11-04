@@ -27,6 +27,41 @@ const COLOR_PRESETS = [
     { label: 'Indigo Blue', value: '#6366F1' },
 ];
 
+export const sanitizeTagList = (raw) => {
+    if (!raw) return [];
+    let list = raw;
+    if (typeof list === 'string') {
+        try {
+            list = JSON.parse(list);
+        } catch (e) {
+            list = list.split(',');
+        }
+    }
+    const cleanItems = [];
+    const walk = (val) => {
+        if (Array.isArray(val)) {
+            val.forEach(walk);
+        } else if (typeof val === 'string') {
+            let s = val.trim();
+            if ((s.startsWith('[') && s.endsWith(']')) || (s.startsWith('{') && s.endsWith('}'))) {
+                try {
+                    const dec = JSON.parse(s);
+                    if (Array.isArray(dec)) {
+                        dec.forEach(walk);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            s = s.replace(/^[\["'\\]+|[\]"'\\]+$/g, '').trim();
+            if (s) {
+                cleanItems.push(s);
+            }
+        }
+    };
+    walk(list);
+    return Array.from(new Set(cleanItems));
+};
+
 export default function AdminServiceCardsManager({ services = [] }) {
     const [editingService, setEditingService] = useState(null);
     const [inputMode, setInputMode] = useState('url'); // 'url' or 'upload'
@@ -37,14 +72,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     const [toastMessage, setToastMessage] = useState('');
 
     const openEditModal = (service) => {
-        let parsedTags = service.tags || [];
-        if (typeof parsedTags === 'string') {
-            try {
-                parsedTags = JSON.parse(parsedTags);
-            } catch (e) {
-                parsedTags = parsedTags.split(',').map(t => t.trim()).filter(Boolean);
-            }
-        }
+        const parsedTags = sanitizeTagList(service.tags);
 
         setEditingService({
             id: service.id,
@@ -57,7 +85,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
             vip_label: service.vip_label || '',
             ribbon_text: service.ribbon_text || 'PRO',
             serial_number: service.serial_number || '2280 ••••',
-            tags: Array.isArray(parsedTags) ? parsedTags : [],
+            tags: parsedTags,
             is_active: service.is_active ?? true,
         });
 
@@ -78,7 +106,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     const handleAddTag = (e) => {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
-            const trimmed = tagInput.trim().replace(/^,|,$/g, '');
+            const trimmed = tagInput.trim().replace(/^[\["'\\]+|[\]"'\\]+$/g, '').trim();
             if (trimmed && !editingService.tags.includes(trimmed)) {
                 setEditingService(prev => ({
                     ...prev,
@@ -86,6 +114,17 @@ export default function AdminServiceCardsManager({ services = [] }) {
                 }));
                 setTagInput('');
             }
+        }
+    };
+
+    const addTagManually = () => {
+        const trimmed = tagInput.trim().replace(/^[\["'\\]+|[\]"'\\]+$/g, '').trim();
+        if (trimmed && !editingService.tags.includes(trimmed)) {
+            setEditingService(prev => ({
+                ...prev,
+                tags: [...prev.tags, trimmed],
+            }));
+            setTagInput('');
         }
     };
 
@@ -455,14 +494,14 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                 {inputMode === 'url' ? (
                                     <div>
                                         <input
-                                            type="url"
+                                            type="text"
                                             value={editingService.image_url}
                                             onChange={(e) => {
                                                 const url = e.target.value;
                                                 setEditingService(prev => ({ ...prev, image_url: url }));
                                                 setPhotoPreview(url);
                                             }}
-                                            placeholder="https://images.unsplash.com/... atau /images/..."
+                                            placeholder="https://images.unsplash.com/... atau /images/... atau /uploads/..."
                                             className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-black/30 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#005792]"
                                         />
                                         <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1">
@@ -550,13 +589,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            const trimmed = tagInput.trim().replace(/^,|,$/g, '');
-                                            if (trimmed && !editingService.tags.includes(trimmed)) {
-                                                setEditingService(prev => ({ ...prev, tags: [...prev.tags, trimmed] }));
-                                                setTagInput('');
-                                            }
-                                        }}
+                                        onClick={addTagManually}
                                         className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-800 dark:text-white transition-colors"
                                     >
                                         Tambah

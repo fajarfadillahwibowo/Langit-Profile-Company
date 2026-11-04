@@ -160,6 +160,41 @@ const PALETTES_BY_SLUG = {
     },
 };
 
+function sanitizeTagList(raw) {
+    if (!raw) return [];
+    let list = raw;
+    if (typeof list === 'string') {
+        try {
+            list = JSON.parse(list);
+        } catch (e) {
+            list = list.split(',');
+        }
+    }
+    const cleanItems = [];
+    const walk = (val) => {
+        if (Array.isArray(val)) {
+            val.forEach(walk);
+        } else if (typeof val === 'string') {
+            let s = val.trim();
+            if ((s.startsWith('[') && s.endsWith(']')) || (s.startsWith('{') && s.endsWith('}'))) {
+                try {
+                    const dec = JSON.parse(s);
+                    if (Array.isArray(dec)) {
+                        dec.forEach(walk);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            s = s.replace(/^[\["'\\]+|[\]"'\\]+$/g, '').trim();
+            if (s) {
+                cleanItems.push(s);
+            }
+        }
+    };
+    walk(list);
+    return Array.from(new Set(cleanItems));
+}
+
 /* ── INTERACTIVE 3D VIP CARD COMPONENT WITH TOP PHOTO & DISTINCT COLORS ──── */
 
 function VIP3DCard({ card }) {
@@ -171,6 +206,10 @@ function VIP3DCard({ card }) {
     const springRotateX = useSpring(rotateX, { stiffness: 280, damping: 24 });
     const springRotateY = useSpring(rotateY, { stiffness: 280, damping: 24 });
     const CardIcon = card.icon || Camera;
+
+    const cleanTags = useMemo(() => {
+        return sanitizeTagList(card.tags || card.defaultTags);
+    }, [card.tags, card.defaultTags]);
 
     const handleMouseMove = useCallback((e) => {
         if (!cardRef.current || !isHd) return; // In SD mode, skip mouse RAF to keep 60fps silky smooth
@@ -222,7 +261,7 @@ function VIP3DCard({ card }) {
                 transformStyle: isHd ? 'preserve-3d' : 'flat',
                 transformPerspective: isHd ? 1000 : 0,
             }}
-            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[380px]' : 'min-h-[440px]'} will-change-transform`}
+            className={`group relative rounded-[28px] bg-gradient-to-br ${card.gradient} text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 select-none flex flex-col justify-between overflow-hidden border ${card.cardBorder} ${card.isWide ? 'lg:col-span-3 min-h-[460px]' : 'min-h-[490px]'} will-change-transform`}
         >
             {/* 3D Physical Embossed Plastic Bevel Highlight & Shadow */}
             <div 
@@ -247,8 +286,8 @@ function VIP3DCard({ card }) {
                 style={{ backgroundColor: card.glowColor }}
             />
 
-            {/* ── BAGIAN ATAS: FOTO VISUAL CARD ──────────────────────────── */}
-            <div className={`relative w-full ${card.isWide ? 'h-48 sm:h-56' : 'h-44 sm:h-48'} overflow-hidden rounded-t-[26px] bg-black/40 shrink-0`}>
+            {/* ── BAGIAN ATAS: FOTO VISUAL CARD (Proporsi Seimbang 50:50 dengan Deskripsi) ── */}
+            <div className={`relative w-full ${card.isWide ? 'h-64 sm:h-72' : 'h-56 sm:h-64'} overflow-hidden rounded-t-[26px] bg-black/40 shrink-0`}>
                 <img
                     src={getOptimizedImage(card.image_url || card.defaultImage, { sdWidth: 480, hdWidth: 1200 })}
                     alt={card.title}
@@ -287,8 +326,8 @@ function VIP3DCard({ card }) {
                 </div>
             </div>
 
-            {/* ── BAGIAN BAWAH: DESKRIPSI & INFORMASI CARD ───────────────── */}
-            <div className="relative z-10 p-5 sm:p-6 flex-1 flex flex-col justify-between">
+            {/* ── BAGIAN BAWAH: DESKRIPSI & INFORMASI CARD (Ringkas & Proporsional) ── */}
+            <div className="relative z-10 p-4 sm:p-5 flex-1 flex flex-col justify-between">
                 <div>
                     {/* Header: Title & VIP Subtitle */}
                     <div className="flex items-start justify-between">
@@ -307,14 +346,14 @@ function VIP3DCard({ card }) {
                     </div>
 
                     {/* Body: Deskripsi Card (Editable from Admin Portal) */}
-                    <p className="text-white/85 text-xs sm:text-[13px] leading-relaxed mt-3 line-clamp-3">
+                    <p className="text-white/85 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">
                         {card.description || card.defaultDesc}
                     </p>
 
                     {/* Tag Highlights / Key Features */}
-                    {card.tags && card.tags.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-3.5">
-                            {card.tags.map((tag, i) => (
+                    {cleanTags && cleanTags.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                            {cleanTags.map((tag, i) => (
                                 <span 
                                     key={i} 
                                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full backdrop-blur-sm border text-[10px] sm:text-[11px] font-mono shadow-xs ${card.tagBg}`}
@@ -328,7 +367,7 @@ function VIP3DCard({ card }) {
                 </div>
 
                 {/* ── FOOTER: SERIAL CODE & ACTION BUTTON ────────────────── */}
-                <div className="pt-4 mt-4 border-t border-white/15 flex items-center justify-between">
+                <div className="pt-3 mt-3.5 border-t border-white/15 flex items-center justify-between">
                     {/* Left: Serial Code */}
                     <div className="flex items-center gap-2">
                         <span className="font-mono text-xs sm:text-sm font-bold text-white/80 tracking-widest drop-shadow-sm">

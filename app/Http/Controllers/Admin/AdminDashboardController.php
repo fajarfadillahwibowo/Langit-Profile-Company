@@ -138,7 +138,7 @@ class AdminDashboardController extends Controller
         $divisionsData = [
             [
                 'id' => 'visual-cinema',
-                'name' => 'Visual & Cinema',
+                'name' => 'Photo & Video',
                 'subtitle' => 'Wedding, Event & Showcase',
                 'count' => $divVisualCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divVisualCount / $totalActiveProjects) * 100) : 0,
@@ -149,7 +149,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'web-dev',
-                'name' => 'Web Development',
+                'name' => 'Web Dev',
                 'subtitle' => 'Aplikasi Web & Portofolio',
                 'count' => $divWebCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divWebCount / $totalActiveProjects) * 100) : 0,
@@ -160,7 +160,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'computer-servis',
-                'name' => 'Computer Servis',
+                'name' => 'Servis Komputer',
                 'subtitle' => 'Hardware Lab & Tiket Servis',
                 'count' => $divCompCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divCompCount / $totalActiveProjects) * 100) : 0,
@@ -171,7 +171,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'sewa-alat',
-                'name' => 'Sewa Alat & Gear',
+                'name' => 'Sewa Alat',
                 'subtitle' => 'Kamera, Lensa & Lighting',
                 'count' => $divSewaCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divSewaCount / $totalActiveProjects) * 100) : 0,
@@ -182,7 +182,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'education',
-                'name' => 'Langit Education',
+                'name' => 'Edukasi & Kursus',
                 'subtitle' => 'Kursus & Sertifikasi IT',
                 'count' => $divEduCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divEduCount / $totalActiveProjects) * 100) : 0,
@@ -193,7 +193,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'internship',
-                'name' => 'Internship Program',
+                'name' => 'Internship PKL',
                 'subtitle' => 'Talenta Magang & Pelamar',
                 'count' => $divInternCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divInternCount / $totalActiveProjects) * 100) : 0,
@@ -204,7 +204,7 @@ class AdminDashboardController extends Controller
             ],
             [
                 'id' => 'collaborations',
-                'name' => 'Kolaborasi B2B',
+                'name' => 'Kerja Sama B2B',
                 'subtitle' => 'Kemitraan & Proposal Masuk',
                 'count' => $divCollabCount,
                 'percentage' => $totalActiveProjects > 0 ? round(($divCollabCount / $totalActiveProjects) * 100) : 0,
@@ -331,20 +331,108 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Update Rental Equipment Stock
+     * Create Rental Equipment
+     */
+    public function createEquipment(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'category' => 'required|string|max:100',
+            'price_per_day' => 'required|numeric|min:0',
+            'stock_total' => 'required|integer|min:1',
+            'stock_available' => 'nullable|integer|min:0',
+            'thumbnail_webp' => 'nullable|string',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+        ]);
+
+        $filePath = $validated['thumbnail_webp'] ?? 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80';
+        if ($request->hasFile('file_photo')) {
+            $file = $request->file('file_photo');
+            $dest = public_path('uploads/rentals');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'eq_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $filePath = '/uploads/rentals/'.$filename;
+        }
+
+        $stockTotal = (int) $validated['stock_total'];
+        $stockAvail = isset($validated['stock_available']) ? (int) $validated['stock_available'] : $stockTotal;
+
+        RentalEquipment::create([
+            'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']).'-'.time(),
+            'brand' => $validated['brand'] ?? 'Studio Langit',
+            'category' => $validated['category'],
+            'price_per_day' => $validated['price_per_day'],
+            'stock_total' => $stockTotal,
+            'stock_available' => $stockAvail,
+            'thumbnail_webp' => $filePath,
+            'specs_json' => [
+                'Brand' => $validated['brand'] ?? 'Studio Langit',
+                'Kondisi' => 'Unit terawat siap pakai',
+            ],
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Unit alat sewa baru berhasil ditambahkan.');
+    }
+
+    /**
+     * Update Rental Equipment Stock & Info
      */
     public function updateEquipment(Request $request, $id)
     {
         $equipment = RentalEquipment::findOrFail($id);
         $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:100',
+            'stock_total' => 'nullable|integer|min:0',
             'stock_available' => 'required|integer|min:0',
             'price_per_day' => 'required|numeric|min:0',
             'is_active' => 'required|boolean',
+            'thumbnail_webp' => 'nullable|string',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
         ]);
 
-        $equipment->update($validated);
+        $filePath = ! empty($validated['thumbnail_webp']) ? $validated['thumbnail_webp'] : $equipment->thumbnail_webp;
+        if ($request->hasFile('file_photo')) {
+            $file = $request->file('file_photo');
+            $dest = public_path('uploads/rentals');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $filename = 'eq_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $file->move($dest, $filename);
+            $filePath = '/uploads/rentals/'.$filename;
+        }
+
+        $equipment->update([
+            'name' => $validated['name'] ?? $equipment->name,
+            'brand' => $validated['brand'] ?? $equipment->brand,
+            'category' => $validated['category'] ?? $equipment->category,
+            'stock_total' => isset($validated['stock_total']) ? (int) $validated['stock_total'] : $equipment->stock_total,
+            'stock_available' => (int) $validated['stock_available'],
+            'price_per_day' => $validated['price_per_day'],
+            'thumbnail_webp' => $filePath,
+            'is_active' => $validated['is_active'],
+        ]);
 
         return back()->with('success', "Data alat {$equipment->name} berhasil disimpan.");
+    }
+
+    /**
+     * Delete Rental Equipment
+     */
+    public function deleteEquipment($id)
+    {
+        $equipment = RentalEquipment::findOrFail($id);
+        $equipment->delete();
+
+        return back()->with('success', 'Unit alat sewa berhasil dihapus.');
     }
 
     /**
@@ -1258,6 +1346,41 @@ class AdminDashboardController extends Controller
         }
     }
 
+    public static function sanitizeTagList($raw): array
+    {
+        if (empty($raw)) {
+            return [];
+        }
+        $cleanItems = [];
+        $walk = function ($val) use (&$walk, &$cleanItems) {
+            if (is_array($val)) {
+                foreach ($val as $sub) {
+                    $walk($sub);
+                }
+            } elseif (is_string($val)) {
+                $s = trim($val);
+                if ((str_starts_with($s, '[') && str_ends_with($s, ']')) || (str_starts_with($s, '{') && str_ends_with($s, '}'))) {
+                    $dec = json_decode($s, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($dec)) {
+                        foreach ($dec as $sub) {
+                            $walk($sub);
+                        }
+                        return;
+                    }
+                }
+                $s = stripslashes($s);
+                $s = preg_replace('/^[\["\'\\\\]+|[\]"\'\\\\]+$/u', '', $s);
+                $s = trim($s);
+                if (! empty($s)) {
+                    $cleanItems[] = $s;
+                }
+            }
+        };
+        $walk($raw);
+
+        return array_values(array_unique($cleanItems));
+    }
+
     /**
      * Update Service (Card Photo, Description, Colors, Badges, etc.)
      */
@@ -1292,11 +1415,8 @@ class AdminDashboardController extends Controller
             $imageUrl = '/uploads/services/'.$filename;
         }
 
-        // Parse tags if sent as string or array
-        $tags = $validated['tags'] ?? $service->tags;
-        if (is_string($tags)) {
-            $tags = array_values(array_filter(array_map('trim', explode(',', $tags))));
-        }
+        // Clean & sanitize tags safely
+        $tags = self::sanitizeTagList($validated['tags'] ?? $service->tags);
 
         $service->update([
             'name' => $validated['name'],

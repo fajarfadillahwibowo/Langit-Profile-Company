@@ -261,7 +261,7 @@ export default function ExecutiveAnalyticsCharts({
                         {[
                             { id: '7d', label: '7 Hari Terakhir' },
                             { id: '30d', label: '30 Hari Terakhir' },
-                            { id: 'year', label: 'Tahun 2026' }
+                            { id: 'year', label: `Tahun ${new Date().getFullYear()}` }
                         ].map((btn) => (
                             <button
                                 key={btn.id}
@@ -584,7 +584,7 @@ export default function ExecutiveAnalyticsCharts({
                     </div>
 
                     {/* Division Breakdown Progress Bars List */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/5 max-h-56 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-slate-100 dark:border-white/5 max-h-64 overflow-y-auto pr-1">
                         {divisionsDistribution.map((div) => {
                             const isHovered = hoveredDivision?.id === div.id;
                             return (
@@ -592,29 +592,26 @@ export default function ExecutiveAnalyticsCharts({
                                     key={div.id}
                                     onMouseEnter={() => setHoveredDivision(div)}
                                     onMouseLeave={() => setHoveredDivision(null)}
-                                    className={`p-2 rounded-xl transition-all cursor-pointer ${
+                                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                                         isHovered 
                                             ? 'bg-slate-100 dark:bg-white/10 shadow-sm' 
                                             : 'hover:bg-slate-50 dark:hover:bg-white/[0.03]'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between text-xs mb-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm">{div.icon}</span>
-                                            <div>
-                                                <span className="font-bold text-slate-800 dark:text-slate-200 block leading-tight">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="text-xs shrink-0">{div.icon}</span>
+                                            <div className="min-w-0">
+                                                <span className="font-bold text-slate-800 dark:text-slate-200 block text-[11px] truncate leading-tight">
                                                     {div.name}
-                                                </span>
-                                                <span className="text-[10px] text-slate-500 block leading-tight">
-                                                    {div.subtitle}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span className="font-extrabold text-slate-900 dark:text-white text-xs block">
+                                        <div className="text-right shrink-0 ml-1">
+                                            <span className="font-extrabold text-slate-900 dark:text-white text-[11px] block">
                                                 {div.percentage}%
                                             </span>
-                                            <span className="text-[10px] text-slate-500 font-medium block">
+                                            <span className="text-[9.5px] text-slate-500 font-medium block">
                                                 {div.count} unit
                                             </span>
                                         </div>
@@ -702,8 +699,8 @@ export default function ExecutiveAnalyticsCharts({
                         </div>
                         <span className="text-[11px] text-slate-500 block mt-0.5">
                             {kpi.stock_total - kpi.stock_available > 0
-                                ? `${kpi.stock_total - kpi.stock_available} unit sedang disewa aktif oleh klien`
-                                : 'Seluruh inventaris kamera & lighting siap pakai'}
+                                ? `${kpi.stock_available} unit siap pakai (${kpi.stock_total - kpi.stock_available} unit booked / standby)`
+                                : 'Seluruh inventaris kamera & lighting standby 100%'}
                         </span>
                     </div>
                 </div>
