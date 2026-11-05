@@ -42,9 +42,15 @@ export default function UnifiedLogin() {
         <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-8 font-sans relative overflow-hidden transition-colors duration-200">
             <Head title="Masuk ke Akun — Langit" />
 
-            {/* Ambient Background Glows */}
-            <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/15 dark:bg-cyan-600/20 rounded-full blur-[140px] pointer-events-none"></div>
-            <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-500/15 dark:bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none"></div>
+            {/* Ambient Background Glows (Zero-cost radial gradients, no GPU blur penalty) */}
+            <div 
+                className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.18) 0%, rgba(6,182,212,0.05) 45%, transparent 70%)' }}
+            />
+            <div 
+                className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, rgba(99,102,241,0.04) 45%, transparent 70%)' }}
+            />
 
             <div className="w-full max-w-md relative z-10">
                 {/* Top Bar Navigation */}
@@ -110,7 +116,7 @@ export default function UnifiedLogin() {
                                     required
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
-                                    placeholder="admin@langit.id atau nama pengguna Anda"
+                                    placeholder="Masukkan nama pengguna atau email"
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
                                     autoCapitalize="none"
                                 />

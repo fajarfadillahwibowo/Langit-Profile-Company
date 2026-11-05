@@ -34,7 +34,8 @@ class AdminDashboardController extends Controller
         $metrics = [
             'total_consultations' => Consultation::count(),
             'pending_service_tickets' => ComputerServiceTicket::whereIn('status', ['received', 'waiting_part', 'repairing', 'qc_testing'])->count(),
-            'active_rentals' => RentalBooking::whereIn('status', ['approved', 'picked_up'])->count(),
+            'active_rentals' => RentalBooking::whereIn('status', ['pending', 'approved', 'picked_up'])->count(),
+            'pending_rentals' => RentalBooking::where('status', 'pending')->count(),
             'internship_applicants' => InternshipApplication::count(),
             'total_galleries' => Gallery::count(),
             'total_equipments' => RentalEquipment::count(),
@@ -250,11 +251,12 @@ class AdminDashboardController extends Controller
         ];
 
         return Inertia::render('Admin/Dashboard', [
+            'teamMembers' => \App\Models\TeamMember::orderBy('sort_order')->orderBy('id')->get(),
             'metrics' => $metrics,
             'analytics' => $analytics,
             'recentConsultations' => Consultation::latest()->take(5)->get(),
             'serviceTickets' => ComputerServiceTicket::latest()->take(10)->get(),
-            'rentalBookings' => RentalBooking::latest()->take(10)->get(),
+            'rentalBookings' => RentalBooking::latest()->get(),
             'internshipApplications' => InternshipApplication::with('position')->latest()->take(10)->get(),
             'collaborations' => Collaboration::latest()->get(),
             'galleries' => Gallery::with('service')->latest()->get(),
@@ -343,7 +345,7 @@ class AdminDashboardController extends Controller
             'stock_total' => 'required|integer|min:1',
             'stock_available' => 'nullable|integer|min:0',
             'thumbnail_webp' => 'nullable|string',
-            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:2048',
         ]);
 
         $filePath = $validated['thumbnail_webp'] ?? 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80';
@@ -395,7 +397,7 @@ class AdminDashboardController extends Controller
             'price_per_day' => 'required|numeric|min:0',
             'is_active' => 'required|boolean',
             'thumbnail_webp' => 'nullable|string',
-            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:2048',
         ]);
 
         $filePath = ! empty($validated['thumbnail_webp']) ? $validated['thumbnail_webp'] : $equipment->thumbnail_webp;
@@ -440,6 +442,7 @@ class AdminDashboardController extends Controller
      */
     public function createGallery(Request $request)
     {
+        $albumPlan = \App\Support\GalleryAlbum::validate($request);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -447,8 +450,9 @@ class AdminDashboardController extends Controller
             'category' => 'required|string|max:100',
             'media_type' => 'required|string|in:photo,video,before_after',
             'file_webp_path' => 'nullable|string',
-            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif|max:10240',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif,avif,heic,heif,jfif|max:'.($albumPlan !== null ? 5120 : 2048),
             'before_file_path' => 'nullable|string',
+            'before_file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif,avif,heic,heif,jfif|max:2048',
             'camera' => 'nullable|string',
             'lens' => 'nullable|string',
             'shutter' => 'nullable|string',
@@ -457,15 +461,31 @@ class AdminDashboardController extends Controller
         ]);
 
         $filePath = $validated['file_webp_path'] ?? '';
-        if ($request->hasFile('file_photo')) {
+        if ($albumPlan !== null && $request->hasFile('file_photo')) {
+            $filePath = Storage::disk('public')->url($request->file('file_photo')->store('galleries/covers', 'public'));
+        } elseif ($request->hasFile('file_photo')) {
             $file = $request->file('file_photo');
             $dest = public_path('uploads/galleries');
             if (! file_exists($dest)) {
-                mkdir($dest, 0755, true);
+                mkdir($dest, 0777, true);
             }
-            $filename = time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $filename = time().'_'.Str::random(8).'.'.$ext;
             $file->move($dest, $filename);
             $filePath = '/uploads/galleries/'.$filename;
+        }
+
+        $beforeFilePath = $validated['before_file_path'] ?? null;
+        if ($request->hasFile('before_file_photo')) {
+            $file = $request->file('before_file_photo');
+            $dest = public_path('uploads/galleries');
+            if (! file_exists($dest)) {
+                mkdir($dest, 0777, true);
+            }
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $filename = 'before_'.time().'_'.Str::random(8).'.'.$ext;
+            $file->move($dest, $filename);
+            $beforeFilePath = '/uploads/galleries/'.$filename;
         }
 
         if (empty($filePath)) {
@@ -479,8 +499,9 @@ class AdminDashboardController extends Controller
             'category' => $validated['category'],
             'media_type' => $validated['media_type'],
             'file_webp_path' => $filePath,
-            'before_file_path' => $validated['before_file_path'] ?? null,
+            'before_file_path' => $beforeFilePath,
             'exif_metadata_json' => [
+                'sub_photos' => $albumPlan !== null ? \App\Support\GalleryAlbum::store($request, $albumPlan) : [],
                 'description' => $validated['description'] ?? '',
                 'camera' => $validated['camera'] ?? 'Sony FX3',
                 'lens' => $validated['lens'] ?? '24-70mm GM II',
@@ -521,6 +542,9 @@ class AdminDashboardController extends Controller
     public function updateGallery(Request $request, $id)
     {
         $gallery = Gallery::findOrFail($id);
+        $albumPlan = \App\Support\GalleryAlbum::validate($request, $gallery);
+        // Validate all incoming files before writing any gallery assets.
+        $request->validate(['file_video' => ['nullable', 'file', new \App\Rules\PhotoSizeLimit]]);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -529,8 +553,9 @@ class AdminDashboardController extends Controller
             'category' => 'required|string|max:100',
             'media_type' => 'required|string|in:photo,video,before_after',
             'file_webp_path' => 'nullable|string',
-            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif|max:10240',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif,avif,heic,heif,jfif|max:'.($albumPlan !== null ? 5120 : 2048),
             'before_file_path' => 'nullable|string',
+            'before_file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif,avif,heic,heif,jfif|max:2048',
             'camera' => 'nullable|string',
             'lens' => 'nullable|string',
             'shutter' => 'nullable|string',
@@ -539,7 +564,9 @@ class AdminDashboardController extends Controller
         ]);
 
         $filePath = ! empty($validated['file_webp_path']) ? $validated['file_webp_path'] : $gallery->file_webp_path;
-        if ($request->hasFile('file_photo')) {
+        if ($albumPlan !== null && $request->hasFile('file_photo')) {
+            $filePath = Storage::disk('public')->url($request->file('file_photo')->store('galleries/covers', 'public'));
+        } elseif ($request->hasFile('file_photo')) {
             $file = $request->file('file_photo');
             $dest = public_path('uploads/galleries');
             if (! file_exists($dest)) {
@@ -580,6 +607,7 @@ class AdminDashboardController extends Controller
 
         $exif = $gallery->exif_metadata_json ?? [];
         if (isset($validated['description'])) {
+            // Keep unrelated EXIF fields while updating album and description.
             $exif['description'] = $validated['description'];
         }
         if (isset($validated['camera'])) {
@@ -598,6 +626,10 @@ class AdminDashboardController extends Controller
             $exif['iso'] = $validated['iso'];
         }
 
+        if ($albumPlan !== null) {
+            $exif['sub_photos'] = \App\Support\GalleryAlbum::store($request, $albumPlan);
+        }
+        $oldCover = $gallery->file_webp_path;
         $gallery->update([
             'title' => $validated['title'],
             'service_id' => $validated['service_id'] ?? $gallery->service_id,
@@ -610,6 +642,12 @@ class AdminDashboardController extends Controller
         ]);
 
         // Sync with related model on the live pages
+        if ($albumPlan !== null) {
+            \App\Support\GalleryAlbum::deleteFiles($albumPlan['removed']);
+            if ($oldCover !== $filePath) {
+                \App\Support\GalleryAlbum::deleteFiles([$oldCover], 'covers');
+            }
+        }
         $service = $gallery->service ?: Service::find($gallery->service_id);
         if ($service && $service->slug === 'web-development') {
             $portfolio = WebPortfolio::where('title', $gallery->title)
@@ -640,9 +678,9 @@ class AdminDashboardController extends Controller
     public function updateBeforeAfter(Request $request)
     {
         $validated = $request->validate([
-            'before_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'before_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,avif,heic,heif,jfif,gif|max:2048',
             'before_file_path' => 'nullable|string',
-            'after_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'after_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,avif,heic,heif,jfif,gif|max:2048',
             'after_file_path' => 'nullable|string',
             'title' => 'nullable|string|max:255',
             'before_label' => 'nullable|string|max:100',
@@ -670,12 +708,13 @@ class AdminDashboardController extends Controller
             $file = $request->file('before_photo');
             $dest = public_path('uploads/galleries');
             if (! file_exists($dest)) {
-                mkdir($dest, 0755, true);
+                mkdir($dest, 0777, true);
             }
-            $filename = 'before_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $filename = 'before_'.time().'_'.Str::random(8).'.'.$ext;
             $file->move($dest, $filename);
             $gallery->before_file_path = '/uploads/galleries/'.$filename;
-        } elseif (! empty($validated['before_file_path'])) {
+        } elseif (! empty($validated['before_file_path']) && ! str_starts_with($validated['before_file_path'], 'blob:')) {
             $gallery->before_file_path = $validated['before_file_path'];
         }
 
@@ -684,12 +723,13 @@ class AdminDashboardController extends Controller
             $file = $request->file('after_photo');
             $dest = public_path('uploads/galleries');
             if (! file_exists($dest)) {
-                mkdir($dest, 0755, true);
+                mkdir($dest, 0777, true);
             }
-            $filename = 'after_'.time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $filename = 'after_'.time().'_'.Str::random(8).'.'.$ext;
             $file->move($dest, $filename);
             $gallery->file_webp_path = '/uploads/galleries/'.$filename;
-        } elseif (! empty($validated['after_file_path'])) {
+        } elseif (! empty($validated['after_file_path']) && ! str_starts_with($validated['after_file_path'], 'blob:')) {
             $gallery->file_webp_path = $validated['after_file_path'];
         }
 
@@ -719,7 +759,7 @@ class AdminDashboardController extends Controller
         $validated = $request->validate([
             'video_file' => 'nullable|file|mimes:mp4,mov,webm,mkv|max:102400', // max 100MB
             'video_url' => 'nullable|string',
-            'poster_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:10240',
+            'poster_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:2048',
             'poster_url' => 'nullable|string',
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string',
@@ -819,13 +859,15 @@ class AdminDashboardController extends Controller
         }
 
         // Delete physical file if uploaded in public/uploads/galleries
-        if ($gallery->file_webp_path && str_starts_with($gallery->file_webp_path, '/uploads/galleries/')) {
+        if ($gallery->file_webp_path && preg_match('~\A/uploads/galleries/[a-zA-Z0-9_-]+\.(?:jpe?g|png|webp|gif|avif|heic|heif|jfif)\z~i', $gallery->file_webp_path)) {
             $fullPath = public_path(ltrim($gallery->file_webp_path, '/'));
             if (file_exists($fullPath)) {
                 @unlink($fullPath);
             }
         }
 
+        \App\Support\GalleryAlbum::deleteFiles($gallery->exif_metadata_json['sub_photos'] ?? []);
+        \App\Support\GalleryAlbum::deleteFiles([$gallery->file_webp_path], 'covers');
         $gallery->delete();
 
         return back()->with('success', 'Foto galeri berhasil dihapus dan disinkronkan ke halaman publik.');
@@ -1243,7 +1285,7 @@ class AdminDashboardController extends Controller
                     'lens' => 'Python, React & ESP32 IoT',
                     'shutter' => '10 Minggu (30 Pertemuan)',
                     'aperture' => 'Capstone Web & AI Otomasi',
-                    'iso' => 'Mentor Rian Hidayat',
+                    'iso' => 'Instruktur Software Engineering',
                 ],
                 [
                     'title' => 'Kursus Office (Microsoft Office & Google Workspace)',
@@ -1254,7 +1296,7 @@ class AdminDashboardController extends Controller
                     'lens' => 'Word, Excel Advanced, PPT & Cloud',
                     'shutter' => '6 Minggu (18 Pertemuan)',
                     'aperture' => 'XLOOKUP & Dashboard Eksekutif',
-                    'iso' => 'Mentor Siti Nurhaliza',
+                    'iso' => 'Instruktur Administrasi Modern',
                 ],
                 [
                     'title' => 'Kursus Rakit Komputer & Hardware Lab',
@@ -1265,7 +1307,7 @@ class AdminDashboardController extends Controller
                     'lens' => 'ESD Safe Workbench & Soldering',
                     'shutter' => '4 Minggu (12 Pertemuan)',
                     'aperture' => 'Custom Assembly & BIOS UEFI',
-                    'iso' => 'Mentor Agus Prasetyo',
+                    'iso' => 'Instruktur Hardware Lab',
                 ],
             ],
             'internship' => [
@@ -1393,7 +1435,7 @@ class AdminDashboardController extends Controller
             'tagline' => 'nullable|string|max:255',
             'description' => 'required|string',
             'image_url' => 'nullable|string',
-            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif|max:10240',
+            'file_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg,gif|max:2048',
             'accent_color' => 'nullable|string|max:50',
             'vip_label' => 'nullable|string|max:100',
             'ribbon_text' => 'nullable|string|max:50',
@@ -1435,10 +1477,37 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Buat Layanan Pengambilan Foto Pelanggan Baru & Unggah Foto Asli (Tanpa Batasan Ukuran File)
+     * Buat Layanan Pengambilan Foto Pelanggan Baru & Unggah Foto Asli (Tanpa Batasan Nominal / Batch Unlimited)
      */
     public function createClientDelivery(Request $request)
     {
+        if ($request->has('creation_uuid')) {
+            abort_unless(in_array($request->user()?->role, ['admin', 'superadmin'], true), 403);
+            $request->validate(['creation_uuid' => 'required|uuid']);
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+                $db = \Illuminate\Support\Facades\DB::class;
+                $db::table('delivery_creations')->insertOrIgnore(['id' => $request->input('creation_uuid'),
+                    'user_id' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
+                $creation = $db::table('delivery_creations')->where('id', $request->input('creation_uuid'))->lockForUpdate()->first();
+                abort_unless($creation->user_id === $request->user()->id, 404);
+                if ($creation->client_delivery_id) {
+                    abort_unless(ClientDelivery::find($creation->client_delivery_id), 410);
+                    return response()->json(['success' => true, 'delivery_id' => $creation->client_delivery_id]);
+                }
+                // Reuse legacy validation/storage without recursively creating another key.
+                $inner = clone $request;
+                $inner->request->remove('creation_uuid');
+                if ($inner->isJson()) { $inner->json()->remove('creation_uuid'); }
+                $response = $this->createClientDelivery($inner);
+                $db::table('delivery_creations')->where('id', $creation->id)->update([
+                    'client_delivery_id' => $response->getData(true)['delivery_id'], 'updated_at' => now()]);
+                return $response;
+            }, 3);
+        }
+        @ini_set('max_execution_time', '0');
+        @ini_set('memory_limit', '2048M');
+        @set_time_limit(0);
+
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
             'client_username' => 'required|string|max:50|alpha_dash',
@@ -1448,8 +1517,8 @@ class AdminDashboardController extends Controller
             'title' => 'required|string|max:255',
             'notes' => 'nullable|string|max:1000',
             'expiry_days' => 'required|integer|min:1|max:365',
-            'photos' => 'required|array|min:1',
-            'photos.*' => 'file|max:102400', // Ukuran file foto hingga 100MB per file (tidak dibatasi 5MB)
+            'photos' => 'nullable|array',
+            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
         ], [
             'client_name.required' => 'Nama pelanggan wajib diisi.',
             'client_username.required' => 'Nama pengguna pelanggan wajib diisi.',
@@ -1458,7 +1527,6 @@ class AdminDashboardController extends Controller
             'client_password.min' => 'Kata sandi pelanggan minimal 4 karakter.',
             'title.required' => 'Judul sesi foto wajib diisi.',
             'expiry_days.required' => 'Hitungan hari aktif (expired) wajib diisi.',
-            'photos.required' => 'Minimal 1 foto wajib diunggah.',
         ]);
 
         $username = Str::lower($validated['client_username']);
@@ -1508,17 +1576,22 @@ class AdminDashboardController extends Controller
                 $mime = $file->getClientMimeType() ?: 'image/jpeg';
                 $path = $file->store("client_photos/{$delivery->id}", 'public');
 
-                ClientPhoto::create([
+                $pModel = ClientPhoto::create([
                     'client_delivery_id' => $delivery->id,
                     'file_path' => $path,
                     'original_name' => $origName,
                     'file_size' => $size,
                     'mime_type' => $mime,
                 ]);
+                \App\Support\ClientPhotoThumbnail::generate($pModel);
             }
         }
 
-        return back()->with('success', 'Layanan foto untuk "'.$validated['client_name'].'" berhasil dibuat. Username: '.$username.'. '.$delivery->photos()->count().' foto telah diunggah.');
+        return response()->json([
+            'success' => true,
+            'delivery_id' => $delivery->id,
+            'message' => 'Layanan foto untuk "'.$validated['client_name'].'" berhasil dibuat. Username: '.$username.'. '.$delivery->photos()->count().' foto telah diunggah.',
+        ]);
     }
 
     /**
@@ -1556,15 +1629,19 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Tambah Foto Tambahan ke Album Pelanggan yang Sudah Ada
+     * Tambah Foto Tambahan ke Album Pelanggan yang Sudah Ada (Mendukung Batch Ratusan/Ribuan Foto)
      */
     public function uploadAdditionalClientPhotos(Request $request, $id)
     {
+        @ini_set('max_execution_time', '0');
+        @ini_set('memory_limit', '2048M');
+        @set_time_limit(0);
+
         $delivery = ClientDelivery::findOrFail($id);
 
         $request->validate([
             'photos' => 'required|array|min:1',
-            'photos.*' => 'file|max:102400',
+            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
         ]);
 
         $count = 0;
@@ -1575,15 +1652,25 @@ class AdminDashboardController extends Controller
                 $mime = $file->getClientMimeType() ?: 'image/jpeg';
                 $path = $file->store("client_photos/{$delivery->id}", 'public');
 
-                ClientPhoto::create([
+                $pModel = ClientPhoto::create([
                     'client_delivery_id' => $delivery->id,
                     'file_path' => $path,
                     'original_name' => $origName,
                     'file_size' => $size,
                     'mime_type' => $mime,
                 ]);
+                \App\Support\ClientPhotoThumbnail::generate($pModel);
                 $count++;
             }
+        }
+
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'uploaded_count' => $count,
+                'total_photos' => $delivery->photos()->count(),
+                'message' => $count.' foto berhasil diunggah ke album "'.$delivery->title.'".',
+            ]);
         }
 
         return back()->with('success', $count.' foto tambahan berhasil diunggah ke album "'.$delivery->title.'".');
@@ -1625,6 +1712,7 @@ class AdminDashboardController extends Controller
     public function deleteClientPhoto($photoId)
     {
         $photo = ClientPhoto::findOrFail($photoId);
+        \App\Support\ClientPhotoThumbnail::deleteThumbnail($photo);
         Storage::disk('public')->delete($photo->file_path);
         $photo->delete();
 
@@ -1637,6 +1725,9 @@ class AdminDashboardController extends Controller
     public function deleteClientDelivery($id)
     {
         $delivery = ClientDelivery::with('photos')->findOrFail($id);
+        foreach ($delivery->photos as $photo) {
+            \App\Support\ClientPhotoThumbnail::deleteThumbnail($photo);
+        }
         Storage::disk('public')->deleteDirectory("client_photos/{$delivery->id}");
         $delivery->delete();
 

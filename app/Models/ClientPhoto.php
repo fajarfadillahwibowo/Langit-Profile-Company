@@ -26,6 +26,7 @@ class ClientPhoto extends Model
     protected $appends = [
         'formatted_size',
         'file_url',
+        'thumbnail_url',
     ];
 
     public function delivery(): BelongsTo
@@ -51,8 +52,16 @@ class ClientPhoto extends Model
     /**
      * URL pratinjau foto
      */
-    public function getFileUrlAttribute(): string
+     public function getFileUrlAttribute(): string
+     {
+         return Storage::disk('public')->url($this->file_path);
+     }
+
+    /**
+     * URL thumbnail terkompresi (~40-80KB WebP) untuk tampilan galeri instan & ringan
+     */
+    public function getThumbnailUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->file_path);
+        return \App\Support\ClientPhotoThumbnail::url($this);
     }
 }

@@ -85,7 +85,7 @@ class ClientPortalController extends Controller
         $user = Auth::user();
 
         if (!$user) {
-            return redirect()->route('client.login');
+            return redirect()->route('login');
         }
 
         $deliveries = ClientDelivery::where('user_id', $user->id)
@@ -99,6 +99,26 @@ class ClientPortalController extends Controller
             'client' => $user,
             'deliveries' => $deliveries,
         ]);
+    }
+
+    /**
+     * Pratinjau Thumbnail Terkompresi (~40-80KB WebP)
+     * Mengalirkan thumbnail ringan dengan HTTP caching untuk rendering galeri yang instan dan hemat kuota.
+     */
+    public function previewPhoto($id)
+    {
+        $photo = ClientPhoto::with('delivery')->findOrFail($id);
+        $user = Auth::user();
+
+        if (!$user || ($user->id !== $photo->delivery->user_id && !in_array($user->role, ['superadmin', 'admin'], true))) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        if ($photo->delivery->is_expired) {
+            abort(403, 'Masa aktif pengunduhan foto ini telah kedaluwarsa.');
+        }
+
+        return \App\Support\ClientPhotoThumbnail::previewResponse($photo);
     }
 
     /**

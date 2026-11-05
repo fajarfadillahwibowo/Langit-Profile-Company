@@ -85,7 +85,10 @@ class ClientDelivery extends Model
      */
     public function getTotalSizeFormattedAttribute(): string
     {
-        $bytes = $this->photos()->sum('file_size');
+        $bytes = $this->relationLoaded('photos')
+            ? $this->photos->sum('file_size')
+            : $this->photos()->sum('file_size');
+
         if ($bytes >= 1073741824) {
             return number_format($bytes / 1073741824, 2) . ' GB';
         }
@@ -97,6 +100,8 @@ class ClientDelivery extends Model
 
     public function getPhotoCountAttribute(): int
     {
-        return $this->photos()->count();
+        return $this->relationLoaded('photos')
+            ? $this->photos->count()
+            : $this->photos()->count();
     }
 }

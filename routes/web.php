@@ -36,6 +36,7 @@ Route::prefix('layanan')->group(function () {
 
 // Main Topbar Direct Pages
 Route::get('/portofolio', [PortfolioController::class, 'index'])->name('portfolio.index');
+Route::get('/our-team', [\App\Http\Controllers\TeamController::class, 'index'])->name('team.index');
 Route::get('/internship', fn () => redirect()->route('services.internship'));
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');
 Route::get('/konsultasi', [ConsultationController::class, 'wizard'])->name('consultation.wizard');
@@ -51,6 +52,7 @@ Route::prefix('pelanggan')->name('client.')->group(function () {
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/galeri', [ClientPortalController::class, 'gallery'])->name('gallery');
+    Route::get('/foto/{id}/preview', [ClientPortalController::class, 'previewPhoto'])->name('photo.preview');
     Route::get('/foto/{id}/download', [ClientPortalController::class, 'downloadPhoto'])->name('photo.download');
     Route::get('/album/{id}/download-all', [ClientPortalController::class, 'downloadAllZip'])->name('album.download-all');
 });
@@ -77,8 +79,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        Route::post('/team-members', [\App\Http\Controllers\Admin\TeamMemberController::class, 'store'])->name('team-members.store');
+        Route::post('/team-members/{id}/update', [\App\Http\Controllers\Admin\TeamMemberController::class, 'update'])->name('team-members.update');
+        Route::delete('/team-members/{id}', [\App\Http\Controllers\Admin\TeamMemberController::class, 'destroy'])->name('team-members.destroy');
 
         // Computer Service Tickets
         Route::post('/tickets', [AdminDashboardController::class, 'createTicket'])->name('tickets.create');
@@ -120,6 +126,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Services Management (Kartu 7 Divisi Layanan)
         Route::put('/services/{id}', [AdminDashboardController::class, 'updateService'])->name('services.update');
         Route::post('/services/{id}/update', [AdminDashboardController::class, 'updateService'])->name('services.update-post');
+
+        Route::post('/client-deliveries/{id}/uploads/{upload}', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'start']);
+        Route::post('/client-deliveries/{id}/uploads/{upload}/chunks', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'chunk']);
+        Route::post('/client-deliveries/{id}/uploads/{upload}/complete', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'complete']);
 
         // Layanan Pengambilan Foto Pelanggan (Client Deliveries)
         Route::post('/client-deliveries', [AdminDashboardController::class, 'createClientDelivery'])->name('client-deliveries.create');
