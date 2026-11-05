@@ -153,18 +153,12 @@ export default function Hero3DCinemaStage() {
                             <img
                                 src="/images/laptop-3d-transparent.png"
                                 alt="3D Laptop Website Showcase"
-                                className="w-full h-auto object-contain drop-shadow-[0_25px_45px_rgba(0,0,0,0.65)] hover:scale-105 transition-transform duration-500"
+                                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
-                            />
-
-                            {/* Floating Cyber Highlight on Laptop Screen */}
-                            <div 
-                                className="absolute top-[28%] left-[45%] w-20 h-20 rounded-full pointer-events-none opacity-30 blur-2xl animate-pulse"
-                                style={{ background: '#38BDF8' }}
                             />
                         </motion.div>
 
-                        {/* 2. 3D CAMERA (Aman di Mobile, Berjarak Lega di Desktop/Laptop) */}
+                        {/* 2. 3D CAMERA (Aman di Mobile, Berjarak Lega di Desktop/Laptop, Tanpa Background Kotak / Artifact) */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ 
@@ -188,14 +182,8 @@ export default function Hero3DCinemaStage() {
                             <img
                                 src="/images/camera-3d-transparent.png"
                                 alt="3D DSLR Camera Showcase"
-                                className="w-full h-auto object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.75)] hover:scale-105 hover:-rotate-2 transition-transform duration-500"
+                                className="w-full h-auto object-contain hover:scale-105 hover:-rotate-2 transition-transform duration-500"
                                 draggable="false"
-                            />
-
-                            {/* Red ring specular glow pulse */}
-                            <div 
-                                className="absolute top-[38%] left-[28%] w-10 sm:w-12 h-10 sm:h-12 rounded-full pointer-events-none opacity-40 blur-xl animate-pulse"
-                                style={{ background: '#EF4444' }}
                             />
                         </motion.div>
 
@@ -227,13 +215,8 @@ export default function Hero3DCinemaStage() {
                             <img
                                 src="/images/camera-3d-transparent.png"
                                 alt="3D Camera Showcase"
-                                className="w-full h-auto object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.85)] hover:scale-105 transition-transform duration-500"
+                                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
-                            />
-
-                            {/* Floating Lens Ring Accent */}
-                            <div 
-                                className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-36 sm:w-44 h-36 sm:h-44 rounded-full border border-sky-400/40 pointer-events-none animate-ping opacity-25"
                             />
                         </motion.div>
                     </div>
@@ -264,7 +247,7 @@ export default function Hero3DCinemaStage() {
                             <img
                                 src="/images/laptop-3d-transparent.png"
                                 alt="3D Laptop Showcase"
-                                className="w-full h-auto object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.85)] hover:scale-105 transition-transform duration-500"
+                                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
                             />
                         </motion.div>

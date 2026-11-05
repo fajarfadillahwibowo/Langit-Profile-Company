@@ -62,19 +62,6 @@ export default function HeroLangit() {
                 style={{ background: 'radial-gradient(circle, rgba(0,100,180,0.2) 0%, rgba(0,50,100,0.06) 45%, transparent 70%)' }}
             />
 
-            {/* Large watermark text */}
-            <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
-                aria-hidden="true"
-            >
-                <span
-                    className="font-heading font-black tracking-tighter leading-none whitespace-nowrap"
-                    style={{ fontSize: '22vw', color: 'rgba(255,255,255,0.016)' }}
-                >
-                    LANGIT
-                </span>
-            </div>
-
             {/* Bottom fade */}
             <div
                 className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none z-0"
