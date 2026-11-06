@@ -1,18 +1,37 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import LightboxModal from '@/Components/LightboxModal';
 import KineticPortfolioMarquee from '@/Components/KineticPortfolioMarquee';
 import { 
     Camera, ArrowRight, Eye, Phone, SlidersHorizontal,
-    MoveHorizontal, Grid, Sparkles, Zap
+    MoveHorizontal, Grid, Sparkles, Zap, Calendar, ArrowUpDown, RotateCcw
 } from 'lucide-react';
 import { useQuality } from '@/Context/QualityContext';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
+function formatIndoDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return '';
+    }
+}
+
 export default function PortfolioIndex({ galleries = [] }) {
     const { isHd, setQuality, toggleQuality, getOptimizedImage } = useQuality();
     const [selectedTab, setSelectedTab] = useState('all');
+    const [dateSort, setDateSort] = useState('newest'); // 'newest' (Foto Terbaru - default) | 'oldest' (Foto Terlama)
+    const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'this_month' | 'this_year' | 'custom'
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
     const gridRef = useRef(null);
     const marqueeRef = useRef(null);
@@ -36,10 +55,57 @@ export default function PortfolioIndex({ galleries = [] }) {
         'company_profile': 'Company Profile',
     };
 
-    const photoGalleries = galleries.filter(g => g.media_type !== 'before_after');
-    const displayedGalleries = selectedTab === 'all' 
-        ? photoGalleries 
-        : photoGalleries.filter(g => g.category === selectedTab);
+    // Filter valid non-before_after photos with default newest first
+    const photoGalleries = useMemo(() => {
+        const list = (galleries || []).filter(g => g.media_type !== 'before_after');
+        return [...list].sort((a, b) => {
+            const timeA = a.created_at ? new Date(a.created_at).getTime() : (a.id || 0);
+            const timeB = b.created_at ? new Date(b.created_at).getTime() : (b.id || 0);
+            return timeB - timeA;
+        });
+    }, [galleries]);
+
+    const displayedGalleries = useMemo(() => {
+        let list = selectedTab === 'all' 
+            ? [...photoGalleries] 
+            : photoGalleries.filter(g => g.category === selectedTab);
+
+        // Filter berdasarkan tanggal
+        if (dateFilter === 'this_month') {
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            list = list.filter(item => {
+                if (!item.created_at) return false;
+                const d = new Date(item.created_at);
+                return d.getFullYear() === curYear && d.getMonth() === curMonth;
+            });
+        } else if (dateFilter === 'this_year') {
+            const curYear = new Date().getFullYear();
+            list = list.filter(item => {
+                if (!item.created_at) return false;
+                const d = new Date(item.created_at);
+                return d.getFullYear() === curYear;
+            });
+        } else if (dateFilter === 'custom' && (startDate || endDate)) {
+            list = list.filter(item => {
+                if (!item.created_at) return false;
+                const itemTime = new Date(item.created_at).setHours(0, 0, 0, 0);
+                if (startDate && itemTime < new Date(startDate).setHours(0, 0, 0, 0)) return false;
+                if (endDate && itemTime > new Date(endDate).setHours(23, 59, 59, 999)) return false;
+                return true;
+            });
+        }
+
+        // Urutan tanggal: Default Foto Terbaru (newest first)
+        list.sort((a, b) => {
+            const timeA = a.created_at ? new Date(a.created_at).getTime() : (a.id || 0);
+            const timeB = b.created_at ? new Date(b.created_at).getTime() : (b.id || 0);
+            return dateSort === 'oldest' ? (timeA - timeB) : (timeB - timeA);
+        });
+
+        return list;
+    }, [photoGalleries, selectedTab, dateFilter, startDate, endDate, dateSort]);
 
     const scrollToGrid = () => {
         gridRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -143,6 +209,7 @@ export default function PortfolioIndex({ galleries = [] }) {
 
                 {/* Photo & Video Showcase Grid */}
                 <div className="space-y-6">
+                    {/* Header Controls: Count, SD/HD Switcher & Link */}
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
                         <div className="min-w-0 flex flex-wrap items-center gap-3 text-sm font-bold text-slate-900 dark:text-white">
                             <div className="flex items-center gap-1.5">
@@ -189,6 +256,118 @@ export default function PortfolioIndex({ galleries = [] }) {
                         </Link>
                     </div>
 
+                    {/* Date Filter & Sort Control Toolbar */}
+                    <div className="p-3 sm:p-4 rounded-2xl bg-white/70 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-xs backdrop-blur-md space-y-3">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            {/* Left: Quick Date Filter Pills */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mr-1">
+                                    <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>Filter Tanggal:</span>
+                                </span>
+
+                                {[
+                                    { id: 'all', label: 'Semua Waktu' },
+                                    { id: 'this_month', label: 'Bulan Ini' },
+                                    { id: 'this_year', label: 'Tahun Ini' },
+                                    { id: 'custom', label: 'Pilih Tanggal' },
+                                ].map(f => (
+                                    <button
+                                        key={f.id}
+                                        type="button"
+                                        onClick={() => setDateFilter(f.id)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                                            dateFilter === f.id
+                                                ? 'bg-amber-600 text-white font-bold shadow-sm'
+                                                : 'bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+
+                                {(dateFilter !== 'all' || dateSort !== 'newest' || startDate || endDate) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDateFilter('all');
+                                            setDateSort('newest');
+                                            setStartDate('');
+                                            setEndDate('');
+                                        }}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-mono text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer ml-1"
+                                        title="Reset Filter Tanggal"
+                                    >
+                                        <RotateCcw className="w-3 h-3" />
+                                        <span>Reset</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Right: Date Sorting Order (Default: Terbaru) */}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-xs font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                    <ArrowUpDown className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Urutan:</span>
+                                </span>
+
+                                <div className="flex items-center p-0.5 rounded-xl bg-slate-200/80 dark:bg-white/10 border border-slate-300/80 dark:border-white/10 shadow-inner">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDateSort('newest')}
+                                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                                            dateSort === 'newest'
+                                                ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white font-bold shadow-xs'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        Foto Terbaru (Default)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDateSort('oldest')}
+                                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                                            dateSort === 'oldest'
+                                                ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white font-bold shadow-xs'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        Foto Terlama
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Custom Date Range Inputs when 'custom' is selected */}
+                        {dateFilter === 'custom' && (
+                            <div className="pt-2 border-t border-slate-200/60 dark:border-white/10 flex flex-wrap items-center gap-3 text-xs font-mono">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-500 dark:text-slate-400">Dari:</span>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-200 text-xs focus:ring-1 focus:ring-amber-500 outline-none"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-500 dark:text-slate-400">Sampai:</span>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-200 text-xs focus:ring-1 focus:ring-amber-500 outline-none"
+                                    />
+                                </div>
+                                {(startDate || endDate) && (
+                                    <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                                        Menyaring rentang tanggal yang dipilih
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {displayedGalleries.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {displayedGalleries.map((item) => (
@@ -211,20 +390,28 @@ export default function PortfolioIndex({ galleries = [] }) {
                                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider font-semibold">
                                                 {categoryLabels[item.category] || item.category}
                                             </span>
-                                            <span className="text-[10px] font-mono text-slate-300 flex items-center gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Eye className="w-3 h-3 text-amber-400" />
-                                                Buka EXIF
-                                            </span>
+                                            {item.created_at && (
+                                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-black/60 text-amber-300 border border-white/15 flex items-center gap-1 backdrop-blur-md">
+                                                    <Calendar className="w-3 h-3 text-amber-400" />
+                                                    {formatIndoDate(item.created_at)}
+                                                </span>
+                                            )}
                                         </div>
 
                                         <h3 className="break-words text-base font-bold text-white mt-2 leading-snug group-hover:text-amber-300 transition-colors">
                                             {item.title}
                                         </h3>
 
-                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-300 mt-1.5 pt-2 border-t border-white/10">
-                                            <Camera className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                            <span className="truncate">
-                                                {item.exif_metadata_json?.camera || 'Sony FX3'} • {item.exif_metadata_json?.lens || '24-70mm GM II'}
+                                        <div className="flex items-center justify-between gap-2 text-xs font-mono text-slate-300 mt-1.5 pt-2 border-t border-white/10">
+                                            <div className="flex items-center gap-1.5 truncate">
+                                                <Camera className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                                <span className="truncate">
+                                                    {item.exif_metadata_json?.camera || 'Sony FX3'} • {item.exif_metadata_json?.lens || '24-70mm GM II'}
+                                                </span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-300 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0">
+                                                <Eye className="w-3 h-3 text-amber-400" />
+                                                <span>EXIF</span>
                                             </span>
                                         </div>
                                     </div>
@@ -233,15 +420,22 @@ export default function PortfolioIndex({ galleries = [] }) {
                         </div>
                     ) : (
                         <div className="p-6 sm:p-12 text-center rounded-3xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
-                            <Camera className="w-8 h-8 text-slate-400 mx-auto" />
+                            <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                Belum ada karya di kategori ini.
+                                Tidak ada karya foto yang cocok dengan filter tanggal ini.
                             </p>
                             <button
-                                onClick={() => setSelectedTab('all')}
-                                className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline"
+                                type="button"
+                                onClick={() => {
+                                    setDateFilter('all');
+                                    setDateSort('newest');
+                                    setStartDate('');
+                                    setEndDate('');
+                                    setSelectedTab('all');
+                                }}
+                                className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                             >
-                                Kembali ke Semua Karya
+                                Reset Semua Filter Tanggal & Kategori
                             </button>
                         </div>
                     )}

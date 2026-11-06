@@ -11,7 +11,8 @@ class PortfolioController extends Controller
 {
     public function index()
     {
-        $galleries = Gallery::all();
+        // Default urutan foto terbaru (latest)
+        $galleries = Gallery::latest('created_at')->latest('id')->get();
 
         return Inertia::render('Portfolio/Index', [
             'galleries' => $galleries,
