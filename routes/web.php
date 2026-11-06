@@ -57,6 +57,9 @@ Route::prefix('pelanggan')->name('client.')->group(function () {
     Route::get('/album/{id}/download-all', [ClientPortalController::class, 'downloadAllZip'])->name('album.download-all');
 });
 
+// Media Optimization Endpoint (Public, Ultra-Fast Cached WebP Resizer)
+Route::get('/media/optimized', [\App\Http\Controllers\MediaOptimizationController::class, 'optimize'])->name('media.optimized');
+
 // Interactive Action Endpoints (Public)
 Route::get('/api/service-tracker/{receipt_number}', [InteractiveActionController::class, 'serviceTracker'])->name('api.service-tracker');
 Route::post('/sewa-alat/checkout', [InteractiveActionController::class, 'rentalCheckout'])->name('rental.checkout');

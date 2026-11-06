@@ -289,10 +289,11 @@ function VIP3DCard({ card }) {
             {/* ── BAGIAN ATAS: FOTO VISUAL CARD (Proporsi Seimbang 50:50 dengan Deskripsi) ── */}
             <div className={`relative w-full ${card.isWide ? 'h-64 sm:h-72' : 'h-56 sm:h-64'} overflow-hidden rounded-t-[26px] bg-black/40 shrink-0`}>
                 <img
-                    src={getOptimizedImage(card.image_url || card.defaultImage, { sdWidth: 480, hdWidth: 1200 })}
+                    src={getOptimizedImage(card.image_url || card.defaultImage, { sdWidth: 480, hdWidth: 1000 })}
                     alt={card.title}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                     loading="lazy"
+                    decoding="async"
                 />
 
                 {/* Dark Vignette & Gradient Overlay to smoothly blend into the card body */}

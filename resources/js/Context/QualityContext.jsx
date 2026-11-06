@@ -2,6 +2,50 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 const QualityContext = createContext(null);
 
+function formatOptimizedUrl(url, options = {}, isHd = false) {
+    if (!url || typeof url !== 'string') return '';
+
+    // 1. Optimize Unsplash images dynamically
+    if (url.includes('images.unsplash.com')) {
+        const baseUrl = url.split('?')[0];
+        if (isHd) {
+            const width = options.hdWidth || 1400;
+            const q = options.hdQuality || 85;
+            return `${baseUrl}?auto=format&fit=crop&w=${width}&q=${q}`;
+        } else {
+            // In SD mode, scale down width and quality for ultra-fast loading and minimal RAM usage
+            const width = options.sdWidth || 480;
+            const q = options.sdQuality || 55;
+            return `${baseUrl}?auto=format&fit=crop&w=${width}&q=${q}`;
+        }
+    }
+
+    // 2. Optimize local storage / uploads / images dynamically
+    const isLocal = url.startsWith('/') 
+        || url.includes('langitcreative.pro')
+        || (typeof window !== 'undefined' && url.includes(window.location.hostname));
+
+    if (isLocal && (url.includes('/storage/') || url.includes('/uploads/') || url.includes('/images/'))) {
+        let cleanPath = url;
+        try {
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                const u = new URL(url);
+                cleanPath = u.pathname;
+            }
+        } catch (e) {}
+        cleanPath = cleanPath.replace(/^\/+/, '');
+
+        if (cleanPath.endsWith('.svg')) return url;
+
+        const width = isHd ? (options.hdWidth || 1400) : (options.sdWidth || 480);
+        const q = isHd ? (options.hdQuality || 85) : (options.sdQuality || 78);
+
+        return `/media/optimized?p=${encodeURIComponent(cleanPath)}&w=${width}&q=${q}`;
+    }
+
+    return url;
+}
+
 export function QualityProvider({ children }) {
     // Quality Mode: 'sd' (Standard / Ringan / Hemat Kuota - Default) or 'hd' (High Definition / Tajam Maksimal)
     const [quality, setQualityState] = useState(() => {
@@ -36,24 +80,7 @@ export function QualityProvider({ children }) {
 
     // Helper to dynamically scale images according to quality mode
     const getOptimizedImage = useCallback((url, options = {}) => {
-        if (!url) return '';
-        
-        // Optimize Unsplash images dynamically
-        if (typeof url === 'string' && url.includes('images.unsplash.com')) {
-            const baseUrl = url.split('?')[0];
-            if (isHd) {
-                const width = options.hdWidth || 1400;
-                const q = options.hdQuality || 85;
-                return `${baseUrl}?auto=format&fit=crop&w=${width}&q=${q}`;
-            } else {
-                // In SD mode, scale down width and quality for ultra-fast loading and minimal RAM usage
-                const width = options.sdWidth || 480;
-                const q = options.sdQuality || 55;
-                return `${baseUrl}?auto=format&fit=crop&w=${width}&q=${q}`;
-            }
-        }
-        
-        return url;
+        return formatOptimizedUrl(url, options, isHd);
     }, [isHd]);
 
     const value = {
@@ -81,13 +108,7 @@ export function useQuality() {
             setQuality: () => {},
             toggleQuality: () => {},
             getOptimizedImage: (url, options = {}) => {
-                if (!url) return '';
-                if (typeof url === 'string' && url.includes('images.unsplash.com')) {
-                    const baseUrl = url.split('?')[0];
-                    const width = options.sdWidth || 480;
-                    return `${baseUrl}?auto=format&fit=crop&w=${width}&q=55`;
-                }
-                return url;
+                return formatOptimizedUrl(url, options, false);
             },
         };
     }

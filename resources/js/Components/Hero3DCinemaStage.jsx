@@ -63,7 +63,7 @@ export default function Hero3DCinemaStage() {
         >
             {/* Ambient Volumetric Glow Spotlights - Softened for 60fps GPU Compositing */}
             <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] h-[440px] rounded-full pointer-events-none opacity-25"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[440px] aspect-square rounded-full pointer-events-none opacity-25"
                 style={{
                     background: 'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.12) 45%, transparent 70%)',
                 }}
@@ -141,18 +141,19 @@ export default function Hero3DCinemaStage() {
                             transition={{
                                 opacity: { duration: 0.4 },
                                 scale: { duration: 0.4 },
-                                y: { duration: 5.8, repeat: Infinity, ease: 'easeInOut' },
-                                rotateZ: { duration: 7, repeat: Infinity, ease: 'easeInOut' },
+                                y: { duration: 5.5, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
+                                rotateZ: { duration: 7, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
                             }}
                             style={{ 
                                 transform: 'translateZ(40px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[23%] sm:top-[18%] lg:top-[14%] right-1 sm:right-3 lg:right-[-35px] xl:right-[-45px] z-10 w-[180px] sm:w-[240px] lg:w-[265px] xl:w-[285px] pointer-events-auto"
+                            className="absolute top-[23%] sm:top-[18%] lg:top-[14%] right-1 sm:right-3 lg:right-[-35px] xl:right-[-45px] z-10 w-[52%] max-w-[180px] sm:max-w-none sm:w-[240px] lg:w-[265px] xl:w-[285px] pointer-events-auto"
                         >
                             <img
-                                src="/images/laptop-3d-transparent.png"
+                                src="/images/laptop-3d-transparent.webp"
                                 alt="3D Laptop Website Showcase"
+                                decoding="async"
                                 className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
                             />
@@ -170,18 +171,19 @@ export default function Hero3DCinemaStage() {
                             transition={{
                                 opacity: { duration: 0.4, delay: 0.1 },
                                 scale: { duration: 0.4, delay: 0.1 },
-                                y: { duration: 5.2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 },
-                                rotateZ: { duration: 6.5, repeat: Infinity, ease: 'easeInOut' },
+                                y: { duration: 5.2, repeat: isHd ? Infinity : 0, ease: 'easeInOut', delay: 0.3 },
+                                rotateZ: { duration: 6.5, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
                             }}
                             style={{ 
                                 transform: 'translateZ(75px)',
                                 transformStyle: 'preserve-3d',
                             }}
-                            className="absolute top-[30%] sm:top-[25%] lg:top-[20%] left-2 sm:left-4 lg:left-[-55px] xl:left-[-65px] z-20 w-[138px] sm:w-[195px] lg:w-[215px] xl:w-[235px] pointer-events-auto"
+                            className="absolute top-[30%] sm:top-[25%] lg:top-[20%] left-2 sm:left-4 lg:left-[-55px] xl:left-[-65px] z-20 w-[40%] max-w-[138px] sm:max-w-none sm:w-[195px] lg:w-[215px] xl:w-[235px] pointer-events-auto"
                         >
                             <img
-                                src="/images/camera-3d-transparent.png"
+                                src="/images/camera-3d-transparent.webp"
                                 alt="3D DSLR Camera Showcase"
+                                decoding="async"
                                 className="w-full h-auto object-contain hover:scale-105 hover:-rotate-2 transition-transform duration-500"
                                 draggable="false"
                             />
@@ -206,15 +208,16 @@ export default function Hero3DCinemaStage() {
                             transition={{
                                 opacity: { duration: 0.4 },
                                 scale: { duration: 0.4 },
-                                y: { duration: 5, repeat: Infinity, ease: 'easeInOut' },
-                                rotateZ: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+                                y: { duration: 5, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
+                                rotateZ: { duration: 6, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
                             }}
                             style={{ transform: 'translateZ(65px)', transformStyle: 'preserve-3d' }}
-                            className="relative z-20 w-[240px] sm:w-[320px] lg:w-[380px] pointer-events-auto"
+                            className="relative z-20 w-[76%] max-w-[240px] sm:max-w-none sm:w-[320px] lg:w-[380px] pointer-events-auto"
                         >
                             <img
-                                src="/images/camera-3d-transparent.png"
+                                src="/images/camera-3d-transparent.webp"
                                 alt="3D Camera Showcase"
+                                decoding="async"
                                 className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
                             />
@@ -238,15 +241,16 @@ export default function Hero3DCinemaStage() {
                             transition={{
                                 opacity: { duration: 0.4 },
                                 scale: { duration: 0.4 },
-                                y: { duration: 5.5, repeat: Infinity, ease: 'easeInOut' },
-                                rotateZ: { duration: 6.5, repeat: Infinity, ease: 'easeInOut' },
+                                y: { duration: 5.5, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
+                                rotateZ: { duration: 6.5, repeat: isHd ? Infinity : 0, ease: 'easeInOut' },
                             }}
                             style={{ transform: 'translateZ(65px)', transformStyle: 'preserve-3d' }}
-                            className="relative z-20 w-[260px] sm:w-[350px] lg:w-[420px] pointer-events-auto"
+                            className="relative z-20 w-[82%] max-w-[260px] sm:max-w-none sm:w-[350px] lg:w-[420px] pointer-events-auto"
                         >
                             <img
-                                src="/images/laptop-3d-transparent.png"
+                                src="/images/laptop-3d-transparent.webp"
                                 alt="3D Laptop Showcase"
+                                decoding="async"
                                 className="w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                                 draggable="false"
                             />

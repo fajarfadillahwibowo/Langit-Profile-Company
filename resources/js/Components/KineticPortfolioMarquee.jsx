@@ -91,9 +91,10 @@ export default function KineticPortfolioMarquee({
                 className="group relative shrink-0 h-52 sm:h-64 md:h-72 aspect-[4/3] sm:aspect-[16/11] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-slate-900 shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer mr-3 sm:mr-4 select-none"
             >
                 <img
-                    src={getOptimizedImage(item.file_webp_path, { sdWidth: 380, hdWidth: 1200 })}
+                    src={getOptimizedImage(item.file_webp_path, { sdWidth: 360, hdWidth: 720, sdQuality: 75, hdQuality: 82 })}
                     alt={item.title}
                     loading="lazy"
+                    decoding="async"
                     draggable={false}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />

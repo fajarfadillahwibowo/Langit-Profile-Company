@@ -282,6 +282,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                             ref={videoRef}
                             src={activeVideoUrl}
                             poster={activePosterUrl}
+                            preload="metadata"
                             autoPlay
                             muted={isMuted}
                             playsInline
@@ -697,6 +698,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                                                     src={getOptimizedImage(item.file_webp_path, { sdWidth: 480, hdWidth: 1400 })}
                                                     alt={item.title}
                                                     loading="lazy"
+                                                    decoding="async"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
 
