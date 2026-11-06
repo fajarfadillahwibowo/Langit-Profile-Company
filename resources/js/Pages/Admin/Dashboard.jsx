@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { guardPhotoSelection, photoLimitMiB, photoUploadError } from '@/Utils/photoUploadPolicy.mjs';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
 import AdminServiceCardsManager from '@/Components/AdminServiceCardsManager';
 import AdminClientDeliveryManager from '@/Components/AdminClientDeliveryManager';
+import AdminTeamManager from '@/Components/AdminTeamManager';
+import AdminGalleryAlbum, { GalleryPhotoPreview } from '@/Components/AdminGalleryAlbum';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
     Phone, Calendar, FileText, Download, Eye, Filter,
     ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu, Users
 } from 'lucide-react';
 
 export default function AdminDashboard({
@@ -26,14 +29,15 @@ export default function AdminDashboard({
     webPortfolios = [],
     recentConsultations = [],
     clientDeliveries = [],
+    teamMembers = [],
 }) {
     const { auth } = usePage().props;
-    // Theme Management: Primary is 'light', Secondary is 'dark'
+    // Theme Management: Primary is 'dark', Secondary is 'light'
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('langit_theme') || 'light';
+            return localStorage.getItem('langit_theme_v2') || 'dark';
         }
-        return 'light';
+        return 'dark';
     });
 
     useEffect(() => {
@@ -47,11 +51,35 @@ export default function AdminDashboard({
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
         }
+        localStorage.setItem('langit_theme_v2', theme);
         localStorage.setItem('langit_theme', theme);
     }, [theme]);
 
     const [activeTab, setActiveTab] = useState('overview'); // overview, tickets, rentals, galleries, internships, collaborations, consultations
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const mobileDrawerRef = useRef(null);
+
+    useEffect(() => {
+        if (!mobileSidebarOpen) return;
+        const previousFocus = document.activeElement;
+        const drawer = mobileDrawerRef.current;
+        const focusableElements = () => Array.from(drawer?.querySelectorAll('a[href], button:not([disabled]), [tabindex="0"]') || []).filter(element => element.getClientRects().length);
+        focusableElements()[0]?.focus();
+        const handleKeyDown = event => {
+            if (event.key === 'Escape') setMobileSidebarOpen(false);
+            if (event.key !== 'Tab') return;
+            const elements = focusableElements();
+            const first = elements[0];
+            const last = elements[elements.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            previousFocus?.focus();
+        };
+    }, [mobileSidebarOpen]);
 
     // Gallery Sub-Sidebar & Filtering State
     const [isGalleryMenuOpen, setIsGalleryMenuOpen] = useState(true);
@@ -61,6 +89,30 @@ export default function AdminDashboard({
     // Collaboration Detail & Filter State
     const [selectedCollabDetail, setSelectedCollabDetail] = useState(null);
     const [collabFilter, setCollabFilter] = useState('all');
+
+    // Realtime calculation for rental queue/bookings (pending / active antrean sewa)
+    const pendingRentalCount = useMemo(() => {
+        if (metrics.pending_rentals !== undefined && metrics.pending_rentals !== null) {
+            return metrics.pending_rentals;
+        }
+        return rentalBookings.filter(b => b.status === 'pending').length;
+    }, [metrics, rentalBookings]);
+
+    const activeRentalCount = useMemo(() => {
+        if (metrics.active_rentals !== undefined && metrics.active_rentals !== null) {
+            return metrics.active_rentals;
+        }
+        return rentalBookings.filter(b => ['pending', 'approved', 'picked_up'].includes(b.status)).length;
+    }, [metrics, rentalBookings]);
+
+    // Active rental queue to display on sidebar badge (prioritizing pending queue or active rentals)
+    const sidebarRentalBadge = useMemo(() => {
+        // If there are pending bookings awaiting confirmation, show pending count.
+        // If no pending but there are active rentals, show active count. Otherwise total bookings.
+        if (pendingRentalCount > 0) return pendingRentalCount;
+        if (activeRentalCount > 0) return activeRentalCount;
+        return rentalBookings.length;
+    }, [pendingRentalCount, activeRentalCount, rentalBookings]);
 
     // Realtime Clock Ticker for relative times (ticks every second)
     const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -114,6 +166,17 @@ export default function AdminDashboard({
 
     // New Gallery Modal State
     const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+    const [newAlbumFiles, setNewAlbumFiles] = useState([]);
+    const [editAlbumFiles, setEditAlbumFiles] = useState([]);
+    const [removedAlbumPhotos, setRemovedAlbumPhotos] = useState([]);
+    const [albumError, setAlbumError] = useState('');
+    useEffect(() => {
+        if (galleryModalOpen) {
+            setNewAlbumFiles([]);
+            setAlbumError('');
+        }
+    }, [galleryModalOpen]);
+    const albumEnabled = (data) => data.media_type === 'photo' && services.some(s => String(s.id) === String(data.service_id) && s.slug === 'photography-videography');
     const [newGalleryData, setNewGalleryData] = useState({
         title: '',
         description: '',
@@ -634,7 +697,15 @@ export default function AdminDashboard({
 
     const handleCreateGallerySubmit = (e) => {
         e.preventDefault();
+        const sizeError = photoUploadError(newGalleryFilePhoto, photoLimitMiB(newGalleryData, services));
+        if (sizeError) { setAlbumError(sizeError); return; }
+        if (albumEnabled(newGalleryData) && (!newAlbumFiles.length || newAlbumFiles.length > 10)) {
+            setAlbumError('Upload 1 sampai 10 foto album, terpisah dari thumbnail.');
+            return;
+        }
+        setAlbumError('');
         const formData = new FormData();
+        if (albumEnabled(newGalleryData)) newAlbumFiles.forEach(file => formData.append('album_photos[]', file));
         formData.append('title', newGalleryData.title);
         formData.append('description', newGalleryData.description || '');
         if (newGalleryData.service_id) formData.append('service_id', newGalleryData.service_id);
@@ -653,6 +724,7 @@ export default function AdminDashboard({
             forceFormData: true,
             onSuccess: () => {
                 setGalleryModalOpen(false);
+                setNewAlbumFiles([]);
                 setNewGalleryFilePhoto(null);
                 setNewGalleryData({
                     title: '',
@@ -667,13 +739,17 @@ export default function AdminDashboard({
                     aperture: 'f/2.8',
                     iso: '100',
                 });
-            }
+            },
+            onError: errors => setAlbumError(Object.values(errors).join(' ')),
         });
     };
 
     // Open Replace Photo Modal
     const openEditPhotoModal = (item) => {
         setEditingGalleryItem(item);
+        setEditAlbumFiles([]);
+        setRemovedAlbumPhotos([]);
+        setAlbumError('');
         const targetServiceId = item.service_id || (services.find(s => s.slug === selectedGalleryService)?.id || '');
         setEditPhotoData({
             id: item.id,
@@ -699,9 +775,22 @@ export default function AdminDashboard({
     const handleUpdatePhotoSubmit = (e) => {
         e.preventDefault();
         if (!editPhotoData.id) return;
+        const sizeError = photoUploadError(editFilePhoto, photoLimitMiB(editPhotoData, services));
+        if (sizeError) { setAlbumError(sizeError); return; }
+        const existingCount = editingGalleryItem?.exif_metadata_json?.sub_photos?.length || 0;
+        const albumCount = existingCount - removedAlbumPhotos.length + editAlbumFiles.length;
+        if (albumEnabled(editPhotoData) && (albumCount > 10 || (existingCount > 0 && albumCount < 1))) {
+            setAlbumError('Album wajib berisi 1 sampai 10 foto, terpisah dari thumbnail.');
+            return;
+        }
+        setAlbumError('');
         setIsSubmittingPhoto(true);
 
         const formData = new FormData();
+        if (albumEnabled(editPhotoData)) {
+            editAlbumFiles.forEach(file => formData.append('album_photos[]', file));
+            removedAlbumPhotos.forEach(index => formData.append('remove_album_photos[]', index));
+        }
         formData.append('title', editPhotoData.title);
         formData.append('description', editPhotoData.description || '');
         if (editPhotoData.service_id) formData.append('service_id', editPhotoData.service_id);
@@ -722,7 +811,8 @@ export default function AdminDashboard({
                 setEditPhotoModalOpen(false);
                 setIsSubmittingPhoto(false);
             },
-            onError: () => {
+            onError: errors => {
+                setAlbumError(Object.values(errors).join(' '));
                 setIsSubmittingPhoto(false);
             }
         });
@@ -730,6 +820,7 @@ export default function AdminDashboard({
 
     // Handle Local File Selection
     const handleEditFileChange = (e) => {
+        if (!guardPhotoSelection(e, photoLimitMiB(editPhotoData, services))) return;
         const file = e.target.files?.[0];
         if (file) {
             setEditFilePhoto(file);
@@ -771,10 +862,18 @@ export default function AdminDashboard({
         e.preventDefault();
         setIsSubmittingBeforeAfter(true);
         const formData = new FormData();
-        if (beforePhotoFile) formData.append('before_photo', beforePhotoFile);
-        if (beforeAfterData.before_file_path) formData.append('before_file_path', beforeAfterData.before_file_path);
-        if (afterPhotoFile) formData.append('after_photo', afterPhotoFile);
-        if (beforeAfterData.after_file_path) formData.append('after_file_path', beforeAfterData.after_file_path);
+        if (beforePhotoFile) {
+            formData.append('before_photo', beforePhotoFile);
+        } else if (beforeAfterData.before_file_path && !beforeAfterData.before_file_path.startsWith('blob:')) {
+            formData.append('before_file_path', beforeAfterData.before_file_path);
+        }
+
+        if (afterPhotoFile) {
+            formData.append('after_photo', afterPhotoFile);
+        } else if (beforeAfterData.after_file_path && !beforeAfterData.after_file_path.startsWith('blob:')) {
+            formData.append('after_file_path', beforeAfterData.after_file_path);
+        }
+
         formData.append('title', beforeAfterData.title || 'Cinema Color Grading Master Showcase');
         formData.append('before_label', beforeAfterData.before_label || 'Sony S-Log3 RAW Flat');
         formData.append('after_label', beforeAfterData.after_label || 'Langit Cinema Grade (Kodak 2383)');
@@ -787,6 +886,12 @@ export default function AdminDashboard({
                 setBeforeAfterModalOpen(false);
                 setBeforePhotoFile(null);
                 setAfterPhotoFile(null);
+                alert('Foto Before / After Color Grading berhasil diperbarui ke website!');
+            },
+            onError: (errors) => {
+                console.error('Before/After Upload Error:', errors);
+                const msg = Object.values(errors).flat().join('\n') || 'Gagal menyimpan foto. Maksimal 5 MiB untuk foto album PhotoVideo; foto lainnya 2 MiB.';
+                alert('Gagal Mengunggah Foto:\n' + msg);
             }
         });
     };
@@ -829,7 +934,7 @@ export default function AdminDashboard({
     };
 
     return (
-        <div className="h-screen h-[100dvh] overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
+        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title="Admin CMS Executive Dashboard — Langit" />
 
             {/* Mobile Sidebar Overlay & Slide-Over Drawer */}
@@ -842,10 +947,10 @@ export default function AdminDashboard({
                     />
                     
                     {/* Drawer Content */}
-                    <aside className="relative w-72 max-w-[85vw] h-full bg-[#005792] flex flex-col justify-between p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+                    <aside ref={mobileDrawerRef} id="admin-mobile-navigation" role="dialog" aria-modal="true" aria-label="Navigasi administrator" className="relative w-72 max-w-[90vw] h-full max-h-[100dvh] bg-[#005792] flex flex-col justify-between p-3 sm:p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200">
                         <div className="flex-1 min-h-0 flex flex-col space-y-4">
                             {/* Drawer Header: Logo + Close Button */}
-                            <div className="flex items-center justify-between pb-3 border-b border-white/20">
+                            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/20">
                                 <Link href="/" onClick={() => setMobileSidebarOpen(false)} className="block px-1 group">
                                     <div className="flex items-center gap-1.5">
                                         <span 
@@ -881,7 +986,7 @@ export default function AdminDashboard({
                                 {/* 1. Beranda (7 Kartu Layanan) */}
                                 <button
                                     onClick={() => { setActiveTab('services'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'services'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -909,7 +1014,7 @@ export default function AdminDashboard({
                                                 setIsGalleryMenuOpen(!isGalleryMenuOpen);
                                             }
                                         }}
-                                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                             activeTab === 'galleries'
                                                 ? 'bg-white text-[#005792] font-bold shadow-md'
                                                 : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -946,7 +1051,7 @@ export default function AdminDashboard({
                                                             setGallerySubCategoryFilter('all');
                                                             setMobileSidebarOpen(false);
                                                         }}
-                                                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex items-center justify-between cursor-pointer ${
+                                                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 cursor-pointer ${
                                                             isSelected ? 'bg-white text-[#005792] font-bold shadow-xs' : 'text-white/85 hover:bg-white/10'
                                                         }`}
                                                     >
@@ -968,8 +1073,15 @@ export default function AdminDashboard({
 
                                 {/* 3. Foto Pelanggan (Delivery) */}
                                 <button
+                                    onClick={() => { setActiveTab('our_team'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-colors ${activeTab === 'our_team' ? 'bg-white text-[#005792] font-bold shadow-md' : 'text-white/90 hover:bg-white/10'}`}
+                                >
+                                    <span className="flex items-center gap-3"><Users className="h-4 w-4" />Our Team</span>
+                                    <span className="text-xs">{teamMembers.length}</span>
+                                </button>
+                                <button
                                     onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'client_deliveries'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1007,7 +1119,7 @@ export default function AdminDashboard({
                                 {/* 5. Computer Servis */}
                                 <button
                                     onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'tickets'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1024,10 +1136,10 @@ export default function AdminDashboard({
                                     </span>
                                 </button>
 
-                                {/* 6. Sewa Alat & Gear */}
+                                {/* 6. Sewa Alat */}
                                 <button
                                     onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'rentals'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1040,14 +1152,14 @@ export default function AdminDashboard({
                                     <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
                                         activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
                                     }`}>
-                                        {metrics.active_rentals ?? rentalBookings.length}
+                                        {sidebarRentalBadge}
                                     </span>
                                 </button>
 
                                 {/* 7. Internship Pelamar */}
                                 <button
                                     onClick={() => { setActiveTab('internships'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'internships'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1067,7 +1179,7 @@ export default function AdminDashboard({
                                 {/* 8. Proposal Kerja Sama */}
                                 <button
                                     onClick={() => { setActiveTab('collaborations'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'collaborations'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1087,7 +1199,7 @@ export default function AdminDashboard({
                                 {/* 9. Jadwal Konsultasi */}
                                 <button
                                     onClick={() => { setActiveTab('consultations'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'consultations'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1128,7 +1240,7 @@ export default function AdminDashboard({
                             </Link>
 
                             <Link
-                                href="/logout"
+                                href="/admin/logout"
                                 method="post"
                                 as="button"
                                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-200 hover:text-white hover:bg-rose-500/25 transition-colors cursor-pointer text-left"
@@ -1170,7 +1282,7 @@ export default function AdminDashboard({
                         {/* 1. Beranda (7 Kartu Layanan) */}
                         <button
                             onClick={() => setActiveTab('services')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'services'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1200,7 +1312,7 @@ export default function AdminDashboard({
                                         setIsGalleryMenuOpen(!isGalleryMenuOpen);
                                     }
                                 }}
-                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                     activeTab === 'galleries'
                                         ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                         : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1239,7 +1351,7 @@ export default function AdminDashboard({
                                                     setSelectedGalleryService(sItem.slug);
                                                     setGallerySubCategoryFilter('all');
                                                 }}
-                                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
+                                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 group cursor-pointer ${
                                                     isSelected
                                                         ? 'bg-white text-[#005792] font-bold shadow-sm'
                                                         : 'text-white/85 hover:text-white hover:bg-white/10'
@@ -1277,8 +1389,15 @@ export default function AdminDashboard({
 
                         {/* 3. Layanan Foto Pelanggan (Delivery & Ambil Foto) */}
                         <button
+                            onClick={() => setActiveTab('our_team')}
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-colors ${activeTab === 'our_team' ? 'bg-white text-[#005792] font-bold shadow-md' : 'text-white/90 hover:bg-white/10'}`}
+                        >
+                            <span className="flex items-center gap-3"><Users className="h-4 w-4" />Our Team</span>
+                            <span className="text-xs">{teamMembers.length}</span>
+                        </button>
+                        <button
                             onClick={() => setActiveTab('client_deliveries')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'client_deliveries'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1318,7 +1437,7 @@ export default function AdminDashboard({
                         {/* 5. Computer Servis */}
                         <button
                             onClick={() => setActiveTab('tickets')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'tickets'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1340,7 +1459,7 @@ export default function AdminDashboard({
                         {/* 6. Sewa Alat & Gear */}
                         <button
                             onClick={() => setActiveTab('rentals')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'rentals'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1355,14 +1474,14 @@ export default function AdminDashboard({
                                     ? 'bg-[#005792]/15 text-[#005792]'
                                     : 'bg-white/20 text-white'
                             }`}>
-                                {metrics.active_rentals ?? rentalBookings.length}
+                                {sidebarRentalBadge}
                             </span>
                         </button>
 
                         {/* 7. Internship Pelamar */}
                         <button
                             onClick={() => setActiveTab('internships')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'internships'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1384,7 +1503,7 @@ export default function AdminDashboard({
                         {/* 8. Proposal Kerja Sama */}
                         <button
                             onClick={() => setActiveTab('collaborations')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'collaborations'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1406,7 +1525,7 @@ export default function AdminDashboard({
                         {/* 9. Jadwal Konsultasi */}
                         <button
                             onClick={() => setActiveTab('consultations')}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                            className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                 activeTab === 'consultations'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1450,26 +1569,29 @@ export default function AdminDashboard({
             </aside>
 
             {/* Main Content Dashboard - Scrolls independently */}
-            <main className="flex-1 h-full min-w-0 p-4 sm:p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
+            <main inert={mobileSidebarOpen ? true : undefined} className="flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-[#EDF9FC] dark:bg-[#07090E]">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-[#005792]/15 dark:border-white/10">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="contents md:flex md:items-center md:gap-3">
                             {/* Mobile Hamburger Button to Open Sidebar Drawer */}
                             <button
                                 type="button"
                                 onClick={() => setMobileSidebarOpen(true)}
                                 className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#005792] hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-[#005792]/25 cursor-pointer active:scale-95 transition-all shrink-0"
                                 aria-label="Buka Menu Sidebar"
+                                aria-expanded={mobileSidebarOpen}
+                                aria-controls="admin-mobile-navigation"
                             >
                                 <Menu className="w-4 h-4" />
                                 <span>Menu</span>
                             </button>
 
-                            <div>
+                            <div className="order-last w-full md:order-none md:w-auto">
                                 <h1 className="font-heading font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white leading-tight">
                                     {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
                                     {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan'}
+                                    {activeTab === 'our_team' && 'Manajemen Our Team'}
                                     {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
                                     {activeTab === 'rentals' && 'Manajemen Sewa Alat & Gear'}
                                     {activeTab === 'galleries' && 'Manajemen Galeri & EXIF'}
@@ -1527,12 +1649,13 @@ export default function AdminDashboard({
                 </div>
 
                 {/* Mobile Tabs Quick Switcher */}
-                <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-5 no-scrollbar text-xs font-medium">
+                <div className="flex min-w-0 max-w-full md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-5 text-xs font-medium" aria-label="Tab dashboard">
                     {[
                         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                        { id: 'our_team', label: `Our Team (${teamMembers.length})`, icon: Users },
                         { id: 'client_deliveries', label: `Foto Pelanggan (${clientDeliveries.length})`, icon: FolderHeart },
                         { id: 'tickets', label: `Servis (${serviceTickets.length})`, icon: Cpu },
-                        { id: 'rentals', label: `Rental (${rentalBookings.length})`, icon: PackageCheck },
+                        { id: 'rentals', label: `Rental (${sidebarRentalBadge})`, icon: PackageCheck },
                         { id: 'galleries', label: `Galeri (${galleries.length})`, icon: Camera },
                         { id: 'internships', label: `Magang (${internshipApplications.length})`, icon: Sparkles },
                         { id: 'collaborations', label: `Kerja Sama (${collaborations.length})`, icon: Handshake },
@@ -1572,14 +1695,14 @@ export default function AdminDashboard({
                             </div>
                             <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 cursor-pointer hover:border-teal-400 dark:hover:border-teal-500/60 transition-all shadow-sm">
                                 <span className="text-[11px] text-teal-700 dark:text-teal-400 uppercase block font-semibold tracking-wider">Alat Sedang Disewa</span>
-                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.active_rentals || 0}</span>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{sidebarRentalBadge}</span>
                             </div>
                             <div onClick={() => setActiveTab('internships')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500/60 transition-all shadow-sm">
                                 <span className="text-[11px] text-purple-700 dark:text-purple-400 uppercase block font-semibold tracking-wider">Pelamar Magang</span>
                                 <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.internship_applicants || 0}</span>
                             </div>
                             <div onClick={() => setActiveTab('collaborations')} className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 cursor-pointer hover:border-rose-400 dark:hover:border-rose-500/60 transition-all hover:scale-[1.02] shadow-sm">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="text-[11px] text-rose-700 dark:text-rose-400 uppercase block font-semibold tracking-wider">Kerja Sama & B2B</span>
                                     <Handshake className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                                 </div>
@@ -1613,8 +1736,8 @@ export default function AdminDashboard({
                         />
 
                         {/* Recent Consultations Table */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
-                            <div className="flex items-center justify-between">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                     <Ticket className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
                                     <span>Jadwal Konsultasi Terbaru Masuk</span>
@@ -1624,8 +1747,8 @@ export default function AdminDashboard({
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-3 w-12 text-center">No</th>
@@ -1723,8 +1846,8 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Recent Collaborations Table */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
-                            <div className="flex items-center justify-between">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                     <Handshake className="w-5 h-5 text-rose-500 dark:text-rose-400" />
                                     <span>Pengajuan Proposal Kerja Sama Terbaru</span>
@@ -1734,8 +1857,8 @@ export default function AdminDashboard({
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-3 w-12 text-center">No</th>
@@ -1858,7 +1981,7 @@ export default function AdminDashboard({
                 {/* TAB 2: COMPUTER SERVICE TICKETS (PRD 6.5) */}
                 {activeTab === 'tickets' && (
                     <div className="space-y-6">
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             {/* Card Header with Action Button */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-100 dark:border-white/10">
                                 <div>
@@ -1879,8 +2002,8 @@ export default function AdminDashboard({
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -1979,10 +2102,10 @@ export default function AdminDashboard({
                 {/* TAB 3: RENTAL GEAR & BOOKINGS (PRD 6.4) */}
                 {activeTab === 'rentals' && (
                     <div className="space-y-6">
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Daftar Booking Sewa Alat</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2076,7 +2199,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Equipment Inventory Manager */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -2108,8 +2231,8 @@ export default function AdminDashboard({
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2207,7 +2330,7 @@ export default function AdminDashboard({
                 {activeTab === 'galleries' && (
                     <div className="space-y-6">
                         {/* Service Cockpit Header */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-center gap-3.5">
                                     <div
@@ -2238,6 +2361,15 @@ export default function AdminDashboard({
                                 </div>
 
                                 <div className="flex items-center gap-2 flex-wrap">
+                                    <Link
+                                        href="/portofolio"
+                                        target="_blank"
+                                        className="px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                                    >
+                                        <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
+                                        <span>Buka Halaman Publik Portofolio</span>
+                                    </Link>
+
                                     {selectedGalleryService !== 'all' && (
                                         <Link
                                             href={`/layanan/${selectedGalleryService}`}
@@ -2277,7 +2409,7 @@ export default function AdminDashboard({
 
                             {/* Service Quick-Switch Tabs & Sub-Category Pills */}
                             <div className="pt-3 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-medium">
+                                <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium">
                                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1">
                                         <Filter className="w-3.5 h-3.5" /> Kategori:
                                     </span>
@@ -2317,7 +2449,7 @@ export default function AdminDashboard({
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Card 1: Video Showreel Showcase */}
                                 <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/40 to-slate-950 border border-amber-500/30 dark:border-amber-500/20 shadow-xl flex flex-col justify-between space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
                                                 <Film className="w-5 h-5" />
@@ -2374,7 +2506,7 @@ export default function AdminDashboard({
                                         )}
                                     </div>
 
-                                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
                                         <span className="truncate max-w-[280px]">
                                             Status: <strong className="text-slate-700 dark:text-slate-200">{currentShowreelItem?.video_url ? 'File Video Kustom Aktif' : 'Default Cinematic Demo Reel'}</strong>
                                         </span>
@@ -2386,7 +2518,7 @@ export default function AdminDashboard({
 
                                 {/* Card 2: Interactive Before / After Color Grading */}
                                 <div className="p-5 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-slate-900/40 to-slate-950 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xl flex flex-col justify-between space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30">
                                                 <SlidersHorizontal className="w-5 h-5" />
@@ -2440,7 +2572,7 @@ export default function AdminDashboard({
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
                                         <span>
                                             Status: <strong className="text-emerald-500 font-semibold">Tampil Aktif di Website</strong>
                                         </span>
@@ -2534,7 +2666,7 @@ export default function AdminDashboard({
                                                 </div>
 
                                                 {/* Title & Service */}
-                                                <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={g.title}>
+                                                <h4 className="break-words font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={g.title}>
                                                     {g.title}
                                                 </h4>
                                                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5 truncate">
@@ -2543,15 +2675,15 @@ export default function AdminDashboard({
 
                                                 {/* EXIF / Specs Metadata Pill */}
                                                 <div className="mt-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5 space-y-1 text-[11px] font-sans">
-                                                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 text-slate-600 dark:text-slate-300">
                                                         <span className="text-slate-400 dark:text-slate-500 font-medium">Kamera:</span>
                                                         <span className="font-semibold truncate max-w-[140px] text-right text-slate-800 dark:text-slate-200">{g.exif_metadata_json?.camera || 'Sony FX3'}</span>
                                                     </div>
-                                                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 text-slate-600 dark:text-slate-300">
                                                         <span className="text-slate-400 dark:text-slate-500 font-medium">Lensa:</span>
                                                         <span className="font-semibold truncate max-w-[140px] text-right text-slate-800 dark:text-slate-200">{g.exif_metadata_json?.lens || '24-70mm GM II'}</span>
                                                     </div>
-                                                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 text-slate-600 dark:text-slate-300">
                                                         <span className="text-slate-400 dark:text-slate-500 font-medium">Shutter / Spek:</span>
                                                         <span className="font-semibold text-slate-800 dark:text-slate-200">{g.exif_metadata_json?.shutter || '1/500s'}</span>
                                                     </div>
@@ -2559,7 +2691,7 @@ export default function AdminDashboard({
                                             </div>
 
                                             {/* Action Bar: Ganti Foto & Edit EXIF */}
-                                            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-1.5">
+                                            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex flex-wrap items-center justify-between gap-1.5">
                                                 <button
                                                     onClick={() => openEditPhotoModal(g)}
                                                     className="flex-1 py-1.5 px-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] flex items-center justify-center gap-1.5 shadow-sm transition-transform active:scale-95"
@@ -2596,9 +2728,9 @@ export default function AdminDashboard({
                 {/* TAB 5: INTERNSHIP APPLICANTS (PRD 6.6) */}
                 {activeTab === 'internships' && (
                     <div className="space-y-6">
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2730,10 +2862,10 @@ export default function AdminDashboard({
                 {/* TAB 6: CONSULTATIONS & PROPOSALS (PRD 6.7) */}
                 {activeTab === 'consultations' && (
                     <div className="space-y-6">
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Seluruh Tiket Jadwal Konsultasi Klien</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2835,6 +2967,7 @@ export default function AdminDashboard({
                 )}
 
                 {/* TAB: LAYANAN FOTO PELANGGAN (DELIVERY & AMBIL FOTO) */}
+                {activeTab === 'our_team' && <AdminTeamManager teamMembers={teamMembers} />}
                 {activeTab === 'client_deliveries' && (
                     <AdminClientDeliveryManager clientDeliveries={clientDeliveries} />
                 )}
@@ -2875,9 +3008,9 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Collaborations Table */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs font-sans">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -3013,7 +3146,7 @@ export default function AdminDashboard({
             {/* Modal: New Service Ticket */}
             {ticketModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-lg w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
+                    <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain relative max-w-lg w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
                         <button onClick={() => setTicketModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -3029,7 +3162,7 @@ export default function AdminDashboard({
                                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-orange-500"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">WhatsApp *</label>
                                     <input
@@ -3083,7 +3216,7 @@ export default function AdminDashboard({
             {/* Modal: Tambah Foto Baru Layanan Langit */}
             {galleryModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[92vh] overflow-y-auto">
+                    <div className="relative max-w-xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <button
                             onClick={() => setGalleryModalOpen(false)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -3106,6 +3239,11 @@ export default function AdminDashboard({
                         </div>
 
                         <form onSubmit={handleCreateGallerySubmit} className="space-y-4">
+                            {albumEnabled(newGalleryData) && <div className="space-y-3">
+                                <p className="text-sm font-bold">1 Thumbnail / Cover (foto utama kartu)</p>
+                                <GalleryPhotoPreview file={newGalleryFilePhoto} url={newGalleryData.file_webp_path} />
+                                <AdminGalleryAlbum files={newAlbumFiles} removed={[]} onFiles={setNewAlbumFiles} onRemoved={() => {}} error={albumError} />
+                            </div>}
                             {/* Target Service Selector */}
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -3181,10 +3319,11 @@ export default function AdminDashboard({
                                     <div className="border-2 border-dashed border-slate-300 dark:border-white/20 rounded-2xl p-4 text-center hover:border-amber-500 transition-colors bg-slate-50 dark:bg-slate-900/40">
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.jfif"
                                             required={!newGalleryData.file_webp_path}
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
+                                                if (!guardPhotoSelection(e, photoLimitMiB(newGalleryData, services))) return;
                                                 if (file) setNewGalleryFilePhoto(file);
                                             }}
                                             id="new-gallery-file-input"
@@ -3199,7 +3338,7 @@ export default function AdminDashboard({
                                                 {newGalleryFilePhoto ? newGalleryFilePhoto.name : 'Pilih file foto dari laptop/PC'}
                                             </span>
                                             <span className="text-[10px] text-slate-500 font-medium">
-                                                WebP, PNG, JPG • Maksimal 10MB
+                                                WebP, PNG, JPG • Maksimal {photoLimitMiB(newGalleryData, services)} MiB/foto
                                             </span>
                                         </label>
                                     </div>
@@ -3213,12 +3352,23 @@ export default function AdminDashboard({
                                     required
                                     value={newGalleryData.title}
                                     onChange={(e) => setNewGalleryData({ ...newGalleryData, title: e.target.value })}
-                                    placeholder="e.g. Sesi Dokumentasi Praktikum Siswa"
+                                    placeholder="e.g. Royal Heritage Wedding Film / Sesi Dokumentasi"
                                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Deskripsi Singkat Karya (Tampil di Popup Galeri)</label>
+                                <textarea
+                                    rows="2"
+                                    value={newGalleryData.description || ''}
+                                    onChange={(e) => setNewGalleryData({ ...newGalleryData, description: e.target.value })}
+                                    placeholder="e.g. Mahakarya visual sinematik dengan kalibrasi warna presisi dan komposisi artistik."
+                                    className="w-full px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 resize-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Kategori / Tag *</label>
                                     <input
@@ -3249,7 +3399,7 @@ export default function AdminDashboard({
                                 <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
                                     Parameter Teknis EXIF (Opsional):
                                 </span>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[10px] font-medium text-slate-500 mb-1">Kamera / Engine</label>
                                         <input
@@ -3271,7 +3421,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="pt-3 flex items-center justify-end gap-3">
+                            <div className="pt-3 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setGalleryModalOpen(false)}
@@ -3294,7 +3444,7 @@ export default function AdminDashboard({
             {/* Modal: Ganti Foto & Edit Metadata EXIF */}
             {editPhotoModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[92vh] overflow-y-auto">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <button
                             onClick={() => setEditPhotoModalOpen(false)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -3317,9 +3467,13 @@ export default function AdminDashboard({
                         </div>
 
                         <form onSubmit={handleUpdatePhotoSubmit} className="space-y-5">
+                            {albumEnabled(editPhotoData) && <div className="space-y-3">
+                                <p className="text-sm font-bold">1 Thumbnail / Cover — penggantian opsional</p>
+                                <AdminGalleryAlbum existing={editingGalleryItem?.exif_metadata_json?.sub_photos || []} files={editAlbumFiles} removed={removedAlbumPhotos} onFiles={setEditAlbumFiles} onRemoved={setRemovedAlbumPhotos} error={albumError} />
+                            </div>}
                             {/* Live Preview Box */}
                             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 space-y-3">
-                                <div className="flex items-center justify-between text-xs font-semibold">
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
                                     <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                         <ImageIcon className="w-3.5 h-3.5 text-amber-500" /> Preview Tampilan Baru
                                     </span>
@@ -3354,7 +3508,7 @@ export default function AdminDashboard({
                                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                                     Metode Penggantian Foto:
                                 </label>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     {[
                                         { id: 'url', label: 'Tautan URL / WebP', icon: ExternalLink },
                                         { id: 'upload', label: 'Upload Berkas File', icon: Upload },
@@ -3409,7 +3563,7 @@ export default function AdminDashboard({
                                     <div className="border-2 border-dashed border-slate-300 dark:border-white/20 rounded-2xl p-4 text-center hover:border-amber-500 transition-colors bg-slate-50 dark:bg-slate-900/40">
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.jfif"
                                             onChange={handleEditFileChange}
                                             id="edit-photo-file-input"
                                             className="hidden"
@@ -3423,7 +3577,7 @@ export default function AdminDashboard({
                                                 {editFilePhoto ? editFilePhoto.name : 'Klik untuk memilih file gambar (WebP, JPG, PNG)'}
                                             </span>
                                             <span className="text-[10px] text-slate-500 font-medium">
-                                                Maksimal 10MB • Auto Kompresi WebP
+                                                Maksimal {photoLimitMiB(editPhotoData, services)} MiB/foto
                                             </span>
                                         </label>
                                     </div>
@@ -3464,6 +3618,17 @@ export default function AdminDashboard({
                                         required
                                         value={editPhotoData.title}
                                         onChange={(e) => setEditPhotoData({ ...editPhotoData, title: e.target.value })}
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Deskripsi Singkat Karya</label>
+                                    <input
+                                        type="text"
+                                        value={editPhotoData.description || ''}
+                                        onChange={(e) => setEditPhotoData({ ...editPhotoData, description: e.target.value })}
+                                        placeholder="Deskripsi karya visual..."
                                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500"
                                     />
                                 </div>
@@ -3570,7 +3735,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* Submit & Cancel */}
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditPhotoModalOpen(false)}
@@ -3595,7 +3760,7 @@ export default function AdminDashboard({
             {/* Modal: Collaboration Detail */}
             {selectedCollabDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-rose-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-rose-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedCollabDetail(null)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -3743,7 +3908,7 @@ export default function AdminDashboard({
             {/* Modal: Computer Service Ticket Detail */}
             {selectedTicketDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedTicketDetail(null)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -3858,7 +4023,7 @@ export default function AdminDashboard({
             {/* Modal: Rental Booking Detail */}
             {selectedRentalDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-teal-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-teal-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedRentalDetail(null)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -3950,7 +4115,7 @@ export default function AdminDashboard({
                                     <p className="text-xs text-slate-500 italic">Tidak ada rincian item alat spesifik tertera.</p>
                                 ) : (
                                     (selectedRentalDetail.rented_items_json || []).map((item, idx) => (
-                                        <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-slate-200/60 dark:border-white/5 last:border-none">
+                                        <div key={idx} className="flex flex-wrap items-center justify-between gap-2 text-xs py-1 border-b border-slate-200/60 dark:border-white/5 last:border-none">
                                             <span className="font-semibold text-slate-800 dark:text-slate-200">
                                                 {item.name || item.title || 'Alat Sinema'}
                                             </span>
@@ -3989,7 +4154,7 @@ export default function AdminDashboard({
             {/* Modal: Internship Application Detail */}
             {selectedInternshipDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-purple-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-purple-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedInternshipDetail(null)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -4141,7 +4306,7 @@ export default function AdminDashboard({
             {/* Modal: Consultation Ticket Detail */}
             {selectedConsultationDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-cyan-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedConsultationDetail(null)}
                             className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -4266,7 +4431,7 @@ export default function AdminDashboard({
             {/* Modal: Kelola Foto Before / After Color Grading */}
             {beforeAfterModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-4xl w-full bg-white dark:bg-[#090D16] border border-indigo-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-4xl w-full bg-white dark:bg-[#090D16] border border-indigo-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             type="button"
                             onClick={() => setBeforeAfterModalOpen(false)}
@@ -4308,7 +4473,7 @@ export default function AdminDashboard({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* KIRI: FOTO BEFORE (RAW FLAT) */}
                                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-amber-500/30 space-y-4">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-500 dark:text-amber-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-amber-500/30">
                                             Sisi Kiri: Foto Before (RAW Flat)
                                         </span>
@@ -4353,14 +4518,15 @@ export default function AdminDashboard({
                                                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                                                     {beforePhotoFile ? beforePhotoFile.name : 'Pilih file gambar (.jpg, .png, .webp)'}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 10MB</span>
+                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 2 MiB/foto</span>
                                                 <input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.jfif"
                                                     className="hidden"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
+                                                            if (!guardPhotoSelection(e)) return;
                                                             setBeforePhotoFile(file);
                                                             setBeforeAfterData({ ...beforeAfterData, before_file_path: URL.createObjectURL(file) });
                                                         }
@@ -4402,7 +4568,7 @@ export default function AdminDashboard({
 
                                 {/* KANAN: FOTO AFTER (CINEMA GRADE) */}
                                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-cyan-500/30 space-y-4">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-500 dark:text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-cyan-500/30">
                                             Sisi Kanan: Foto After (Cinema Grade)
                                         </span>
@@ -4447,14 +4613,15 @@ export default function AdminDashboard({
                                                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                                                     {afterPhotoFile ? afterPhotoFile.name : 'Pilih file gambar (.jpg, .png, .webp)'}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 10MB</span>
+                                                <span className="text-[10px] text-slate-500 mt-0.5">Maks. 2 MiB/foto</span>
                                                 <input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.jfif"
                                                     className="hidden"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
+                                                            if (!guardPhotoSelection(e)) return;
                                                             setAfterPhotoFile(file);
                                                             setBeforeAfterData({ ...beforeAfterData, after_file_path: URL.createObjectURL(file) });
                                                         }
@@ -4496,7 +4663,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* Actions */}
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setBeforeAfterModalOpen(false)}
@@ -4521,7 +4688,7 @@ export default function AdminDashboard({
             {/* Modal: Upload Video Showreel Cinema & Poster */}
             {showreelModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="relative max-w-3xl w-full bg-white dark:bg-[#090D16] border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+                    <div className="relative max-w-3xl w-full bg-white dark:bg-[#090D16] border border-amber-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             type="button"
                             onClick={() => setShowreelModalOpen(false)}
@@ -4575,7 +4742,7 @@ export default function AdminDashboard({
 
                             {/* Section: File Video */}
                             <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-amber-500/30 space-y-3">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         <Video className="w-4 h-4 text-amber-500" />
                                         <span className="text-xs font-bold text-slate-900 dark:text-white">
@@ -4659,7 +4826,7 @@ export default function AdminDashboard({
 
                             {/* Section: Thumbnail / Poster Video */}
                             <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-3">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         <ImageIcon className="w-4 h-4 text-cyan-500" />
                                         <span className="text-xs font-bold text-slate-900 dark:text-white">
@@ -4688,16 +4855,17 @@ export default function AdminDashboard({
                                     <label className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-cyan-500/40 hover:border-cyan-500 bg-cyan-500/5 cursor-pointer transition-all">
                                         <Upload className="w-5 h-5 text-cyan-500 mb-1" />
                                         <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                            {posterFile ? posterFile.name : 'Pilih poster gambar (.jpg, .png, .webp)'}
+                                            {posterFile ? posterFile.name : 'Pilih poster gambar (.jpg, .png, .webp; maks. 2 MiB)'}
                                         </span>
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp"
                                             className="hidden"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
-                                                    setPosterFile(file);
+                                                    if (!guardPhotoSelection(e)) return;
+                                                            setPosterFile(file);
                                                     setShowreelData({ ...showreelData, poster_url: URL.createObjectURL(file) });
                                                 }
                                             }}
@@ -4725,7 +4893,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* Actions */}
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setShowreelModalOpen(false)}
@@ -4749,8 +4917,8 @@ export default function AdminDashboard({
             {/* Modal: Edit Computer Service Ticket */}
             {editingTicket && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
                                     <Edit3 className="w-5 h-5" />
@@ -4884,7 +5052,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingTicket(null)}
@@ -4909,8 +5077,8 @@ export default function AdminDashboard({
             {/* Modal: Edit Rental Equipment Booking */}
             {editingRental && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-2xl bg-teal-500/10 text-teal-500 border border-teal-500/20">
                                     <Edit3 className="w-5 h-5" />
@@ -5061,7 +5229,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingRental(null)}
@@ -5086,8 +5254,8 @@ export default function AdminDashboard({
             {/* Modal: Edit Internship Application */}
             {editingInternship && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
                                     <Edit3 className="w-5 h-5" />
@@ -5195,7 +5363,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingInternship(null)}
@@ -5220,8 +5388,8 @@ export default function AdminDashboard({
             {/* Modal: Edit Consultation Ticket */}
             {editingConsultation && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
                                     <Edit3 className="w-5 h-5" />
@@ -5379,7 +5547,7 @@ export default function AdminDashboard({
                                 />
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingConsultation(null)}
@@ -5404,8 +5572,8 @@ export default function AdminDashboard({
             {/* Modal: Edit Collaboration Proposal */}
             {editingCollaboration && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
                                     <Edit3 className="w-5 h-5" />
@@ -5539,7 +5707,7 @@ export default function AdminDashboard({
                                 />
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingCollaboration(null)}
@@ -5564,8 +5732,8 @@ export default function AdminDashboard({
             {/* MODAL TAMBAH UNIT ALAT SEWA BARU */}
             {equipmentModalOpen && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-lg shadow-2xl my-8">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-lg shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
                                     <PackageCheck className="w-5 h-5 text-teal-500" />
@@ -5599,7 +5767,7 @@ export default function AdminDashboard({
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Brand / Merk *
@@ -5632,7 +5800,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Harga / Hari (Rp) *
@@ -5707,14 +5875,14 @@ export default function AdminDashboard({
                                 ) : (
                                     <input
                                         type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setEquipmentFilePhoto(e.target.files[0] || null)}
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(e) => { if (guardPhotoSelection(e)) setEquipmentFilePhoto(e.target.files[0] || null); }} title="Maksimal 2 MiB/foto"
                                         className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white"
                                     />
                                 )}
                             </div>
 
-                            <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2">
+                            <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setEquipmentModalOpen(false)}
@@ -5738,8 +5906,8 @@ export default function AdminDashboard({
             {/* MODAL EDIT UNIT ALAT SEWA */}
             {editingEquipment && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-lg shadow-2xl my-8">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-lg shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
                                     <Edit3 className="w-5 h-5 text-teal-500" />
@@ -5772,7 +5940,7 @@ export default function AdminDashboard({
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Brand / Merk
@@ -5803,7 +5971,7 @@ export default function AdminDashboard({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Harga / Hari (Rp) *
@@ -5891,14 +6059,14 @@ export default function AdminDashboard({
                                 ) : (
                                     <input
                                         type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setEquipmentFilePhoto(e.target.files[0] || null)}
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(e) => { if (guardPhotoSelection(e)) setEquipmentFilePhoto(e.target.files[0] || null); }} title="Maksimal 2 MiB/foto"
                                         className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white"
                                     />
                                 )}
                             </div>
 
-                            <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2">
+                            <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setEditingEquipment(null)}

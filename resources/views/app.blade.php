@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title inertia>{{ config('app.name', 'Langit Ecosystem') }}</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=5">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=5">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=5">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5">
+    <link rel="shortcut icon" href="/favicon.ico?v=5">
 
     <!-- Fonts: Etna Sans Serif (Local), Google Fonts: Instrument Serif, Playfair Display, Outfit, Plus Jakarta Sans, Inter -->
     <link rel="preload" href="/fonts/etna.woff2" as="font" type="font/woff2" crossorigin>
@@ -18,26 +18,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Theme Initializer: Default Light Mode, Toggleable to Dark Mode -->
+    <!-- Theme Initializer: Default Dark Mode, Toggleable to Light Mode -->
     <script>
         (function() {
             try {
-                const storedTheme = localStorage.getItem('langit_theme');
-                if (storedTheme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
+                const storedTheme = localStorage.getItem('langit_theme_v2');
+                if (storedTheme === 'light') {
                     document.documentElement.classList.add('light');
                     document.documentElement.classList.remove('dark');
                     document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.setAttribute('data-theme', 'dark');
                     if (!storedTheme) {
-                        localStorage.setItem('langit_theme', 'light');
+                        localStorage.setItem('langit_theme_v2', 'dark');
+                        localStorage.setItem('langit_theme', 'dark');
                     }
                 }
             } catch (e) {
-                document.documentElement.classList.add('light');
-                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
             }
         })();
     </script>

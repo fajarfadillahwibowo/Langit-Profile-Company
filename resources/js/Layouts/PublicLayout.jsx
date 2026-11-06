@@ -26,12 +26,12 @@ export default function PublicLayout({ children, activeService = null }) {
     };
     const footerWhatsAppDivision = serviceDivisionMap[activeService] || 'general';
 
-    // Theme Management: Primary is 'light', Secondary is 'dark'
+    // Theme Management: Primary is 'dark', Secondary is 'light'
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('langit_theme') || 'light';
+            return localStorage.getItem('langit_theme_v2') || 'dark';
         }
-        return 'light';
+        return 'dark';
     });
 
     useEffect(() => {
@@ -45,6 +45,7 @@ export default function PublicLayout({ children, activeService = null }) {
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
         }
+        localStorage.setItem('langit_theme_v2', theme);
         localStorage.setItem('langit_theme', theme);
     }, [theme]);
 
@@ -148,13 +149,13 @@ export default function PublicLayout({ children, activeService = null }) {
             />
 
             {/* Main Content Area */}
-            <main className="flex-1 relative z-10 pt-24 md:pt-28 pb-16 bg-[#EDF9FC] dark:bg-transparent">
+            <main className="min-w-0 flex-1 relative z-10 pt-24 md:pt-28 pb-16 bg-[#EDF9FC] dark:bg-transparent">
                 {children}
             </main>
 
             {/* Footer */}
             <footer className="relative z-10 border-t border-[#005792]/15 dark:border-white/10 bg-[#EDF9FC]/95 dark:bg-[#05070B]/90 backdrop-blur-xl transition-colors duration-300">
-                <div className="max-w-7xl mx-auto px-6 py-14 lg:py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
                         {/* Col 1: Brand Info */}
                         <div className="lg:col-span-2 space-y-4">

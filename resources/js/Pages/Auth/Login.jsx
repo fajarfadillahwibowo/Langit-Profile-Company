@@ -11,12 +11,12 @@ export default function UnifiedLogin() {
         remember: true,
     });
 
-    // Theme Management: Light or Dark
+    // Theme Management: Primary is Dark, Secondary is Light
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('langit_theme') || 'light';
+            return localStorage.getItem('langit_theme_v2') || 'dark';
         }
-        return 'light';
+        return 'dark';
     });
 
     useEffect(() => {
@@ -30,6 +30,7 @@ export default function UnifiedLogin() {
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
         }
+        localStorage.setItem('langit_theme_v2', theme);
         localStorage.setItem('langit_theme', theme);
     }, [theme]);
 
@@ -39,25 +40,27 @@ export default function UnifiedLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-8 font-sans relative overflow-hidden transition-colors duration-200">
+        <div className="min-h-dvh bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex flex-col justify-center items-center px-4 py-6 sm:py-8 font-sans relative transition-colors duration-200">
             <Head title="Masuk ke Akun — Langit" />
 
             {/* Ambient Background Glows (Zero-cost radial gradients, no GPU blur penalty) */}
-            <div 
-                className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.18) 0%, rgba(6,182,212,0.05) 45%, transparent 70%)' }}
-            />
-            <div 
-                className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, rgba(99,102,241,0.04) 45%, transparent 70%)' }}
-            />
+            <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div
+                    className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.18) 0%, rgba(6,182,212,0.05) 45%, transparent 70%)' }}
+                />
+                <div
+                    className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, rgba(99,102,241,0.04) 45%, transparent 70%)' }}
+                />
+            </div>
 
-            <div className="w-full max-w-md relative z-10">
+            <div className="w-full min-w-0 max-w-md relative z-10">
                 {/* Top Bar Navigation */}
                 <div className="mb-6 flex flex-wrap gap-2 justify-between items-center">
                     <Link
                         href="/"
-                        className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#005792] dark:hover:text-cyan-400 flex items-center gap-1.5 transition-colors"
+                        className="min-h-11 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#005792] dark:hover:text-cyan-400 flex items-center gap-1.5 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span>Kembali ke Beranda</span>
@@ -69,7 +72,7 @@ export default function UnifiedLogin() {
                             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                             aria-label="Ganti Tema Tampilan"
                             title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-white/10 transition-transform active:scale-95 shadow-xs cursor-pointer"
+                            className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-white/10 transition-transform active:scale-95 shadow-xs cursor-pointer"
                         >
                             {theme === 'dark' ? (
                                 <Sun className="w-4 h-4 text-amber-400" />
@@ -83,7 +86,7 @@ export default function UnifiedLogin() {
                     </div>
                 </div>
 
-                <div className="rounded-3xl bg-white/95 dark:bg-[#090D16]/95 border border-slate-200/90 dark:border-white/10 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl shadow-slate-200/60 dark:shadow-black/60 transition-colors duration-200">
+                <div className="rounded-3xl bg-white/95 dark:bg-[#090D16]/95 border border-slate-200/90 dark:border-white/10 backdrop-blur-2xl p-5 sm:p-9 shadow-2xl shadow-slate-200/60 dark:shadow-black/60 transition-colors duration-200">
                     {/* Header Brand */}
                     <div className="text-center mb-6 sm:mb-7">
                         <Link href="/" className="inline-flex items-center justify-center group mb-5 sm:mb-6">
@@ -117,7 +120,7 @@ export default function UnifiedLogin() {
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
                                     placeholder="Masukkan nama pengguna atau email"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
+                                    className="w-full min-w-0 min-h-11 pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
                                     autoCapitalize="none"
                                 />
                             </div>
@@ -138,12 +141,12 @@ export default function UnifiedLogin() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="Masukkan kata sandi"
-                                    className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
+                                    className="w-full min-w-0 min-h-11 pl-10 pr-12 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
+                                    className="absolute right-0.5 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
                                     title={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                                 >
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -155,12 +158,12 @@ export default function UnifiedLogin() {
                         </div>
 
                         <div className="flex items-center justify-between text-xs pt-1">
-                            <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
+                            <label className="min-h-11 flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
                                 <input
                                     type="checkbox"
                                     checked={data.remember}
                                     onChange={(e) => setData('remember', e.target.checked)}
-                                    className="rounded border-slate-300 text-[#005792] focus:ring-[#005792] dark:bg-black/30 dark:border-white/10"
+                                    className="shrink-0 rounded border-slate-300 text-[#005792] focus:ring-[#005792] dark:bg-black/30 dark:border-white/10"
                                 />
                                 <span>Ingat saya di perangkat ini</span>
                             </label>

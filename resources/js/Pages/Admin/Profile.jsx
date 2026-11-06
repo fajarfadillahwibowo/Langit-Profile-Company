@@ -11,10 +11,10 @@ import {
 export default function Profile({ admin }) {
     const { flash = {}, errors = {} } = usePage().props;
 
-    // Theme state
+    // Theme state: Primary is dark, secondary is light
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('langit_theme') || 'dark';
+            return localStorage.getItem('langit_theme_v2') || 'dark';
         }
         return 'dark';
     });
@@ -23,9 +23,14 @@ export default function Profile({ admin }) {
         const root = document.documentElement;
         if (theme === 'dark') {
             root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
         } else {
+            root.classList.add('light');
             root.classList.remove('dark');
+            root.setAttribute('data-theme', 'light');
         }
+        localStorage.setItem('langit_theme_v2', theme);
         localStorage.setItem('langit_theme', theme);
     }, [theme]);
 
@@ -159,6 +164,7 @@ export default function Profile({ admin }) {
         ctx.drawImage(video, 0, 0, width, height);
 
         const dataUrl = canvas.toDataURL('image/png', 0.95);
+        if (atob(dataUrl.split(',')[1]).length > 2 * 1024 * 1024) { alert('Ukuran foto kamera maksimal 2 MiB.'); return; }
         setCapturedPhotoUrl(dataUrl);
         stopCamera();
     };
@@ -194,8 +200,8 @@ export default function Profile({ admin }) {
             alert('Silakan pilih berkas format gambar (JPG, PNG, atau WebP).');
             return;
         }
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran gambar maksimal 5 MB.');
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran gambar maksimal 2 MiB.');
             return;
         }
 
@@ -292,7 +298,7 @@ export default function Profile({ admin }) {
     }, [activeModal]);
 
     return (
-        <div className="h-screen h-[100dvh] overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200">
+        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title="Profil Administrator — Langit Back-Office" />
 
             {/* Hidden canvas for taking snapshot */}
@@ -352,7 +358,7 @@ export default function Profile({ admin }) {
             </aside>
 
             {/* Main Content Area - Scrolls independently */}
-            <main className="flex-1 h-full min-w-0 p-6 md:p-8 overflow-y-auto bg-[#EDF9FC] dark:bg-[#07090E]">
+            <main className="flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-[#EDF9FC] dark:bg-[#07090E]">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#005792]/15 dark:border-white/10">
                     <div className="flex items-center gap-3">
@@ -369,13 +375,13 @@ export default function Profile({ admin }) {
                                     Admin Security & Identity
                                 </span>
                             </div>
-                            <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-0.5">
+                            <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white mt-0.5">
                                 Profil Administrator
                             </h1>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <ThemeToggle theme={theme} setTheme={setTheme} />
                         <Link
                             href="/admin/dashboard"
@@ -384,12 +390,14 @@ export default function Profile({ admin }) {
                             <LayoutDashboard className="w-3.5 h-3.5" />
                             <span>Kembali ke Dashboard</span>
                         </Link>
+                        <Link href="/" className="md:hidden min-h-10 flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs dark:border-white/10"><ExternalLink className="h-4 w-4" />Website Publik</Link>
+                        <Link href="/admin/logout" method="post" as="button" className="md:hidden min-h-10 flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-rose-600 dark:text-rose-300"><LogOut className="h-4 w-4" />Logout</Link>
                     </div>
                 </div>
 
                 {/* Flash Messages */}
                 {flash.success && (
-                    <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-sm animate-fadeIn">
+                    <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 flex flex-wrap items-center justify-between gap-3 shadow-sm animate-fadeIn">
                         <div className="flex items-center gap-2.5 text-xs font-semibold">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             <span>{flash.success}</span>
@@ -397,7 +405,7 @@ export default function Profile({ admin }) {
                     </div>
                 )}
                 {flash.error && (
-                    <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex items-center justify-between shadow-sm animate-fadeIn">
+                    <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex flex-wrap items-center justify-between gap-3 shadow-sm animate-fadeIn">
                         <div className="flex items-center gap-2.5 text-xs font-semibold">
                             <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                             <span>{flash.error}</span>
@@ -495,7 +503,7 @@ export default function Profile({ admin }) {
                                 <span>Panduan Foto Profil</span>
                             </div>
                             <p className="text-[11px] leading-relaxed text-sky-800 dark:text-sky-300">
-                                Foto profil digunakan pada sidebar dashboard, topbar, dan tanda tangan digital saat merespons tiket layanan pelanggan. Format yang didukung: JPG, PNG, dan WebP hingga ukuran 5MB.
+                                Maksimal 2 MiB per foto, termasuk kamera. Foto profil digunakan pada sidebar dashboard, topbar, dan tanda tangan digital saat merespons tiket layanan pelanggan. Format yang didukung: JPG, PNG, dan WebP hingga ukuran 2 MiB.
                             </p>
                         </div>
                     </div>
@@ -503,8 +511,8 @@ export default function Profile({ admin }) {
                     {/* RIGHT COLUMN: Edit Info & Password Forms */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* FORM 1: Informasi Administrator */}
-                        <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
-                            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
+                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                         <User className="w-5 h-5 text-[#005792] dark:text-sky-400" />
@@ -624,8 +632,8 @@ export default function Profile({ admin }) {
                         </div>
 
                         {/* FORM 2: Keamanan Akun & Ubah Password */}
-                        <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
-                            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
+                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                         <Key className="w-5 h-5 text-amber-500" />
@@ -741,9 +749,9 @@ export default function Profile({ admin }) {
             {/* ======================================================== */}
             {activeModal === 'camera' && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-                    <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col">
+                    <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain flex flex-col shrink-0">
                         {/* Modal Header */}
-                        <div className="p-4 px-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+                        <div className="p-4 sm:px-6 shrink-0 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-lg bg-[#005792]/15 text-[#005792] dark:text-sky-400 flex items-center justify-center">
                                     <Camera className="w-4 h-4" />
@@ -766,7 +774,7 @@ export default function Profile({ admin }) {
                         </div>
 
                         {/* Modal Body / Camera Viewport */}
-                        <div className="p-6 space-y-4">
+                        <div className="p-4 sm:p-6 space-y-4 shrink-0">
                             {cameraError ? (
                                 <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-center space-y-3">
                                     <VideoOff className="w-8 h-8 text-rose-500 mx-auto" />
@@ -814,7 +822,7 @@ export default function Profile({ admin }) {
 
                             {/* Camera Selector Switcher */}
                             {availableCameras.length > 1 && !capturedPhotoUrl && (
-                                <div className="flex items-center justify-between text-xs font-mono">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
                                     <span className="text-slate-500 flex items-center gap-1">
                                         <SwitchCamera className="w-3.5 h-3.5" />
                                         Pilih Kamera:
@@ -825,7 +833,7 @@ export default function Profile({ admin }) {
                                             setSelectedCameraId(e.target.value);
                                             startCamera(e.target.value);
                                         }}
-                                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-xs font-sans text-slate-800 dark:text-white"
+                                        className="w-full sm:w-auto max-w-full px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-base sm:text-xs font-sans text-slate-800 dark:text-white"
                                     >
                                         {availableCameras.map((dev, idx) => (
                                             <option key={dev.deviceId || idx} value={dev.deviceId}>
@@ -838,7 +846,7 @@ export default function Profile({ admin }) {
                         </div>
 
                         {/* Modal Footer Controls */}
-                        <div className="p-4 px-6 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
+                        <div className="p-4 sm:px-6 shrink-0 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] flex flex-wrap items-center justify-between gap-3">
                             <button
                                 type="button"
                                 onClick={() => setActiveModal(null)}
@@ -848,7 +856,7 @@ export default function Profile({ admin }) {
                             </button>
 
                             {capturedPhotoUrl ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={handleRetakePhoto}
@@ -898,9 +906,9 @@ export default function Profile({ admin }) {
             {/* ======================================================== */}
             {activeModal === 'upload' && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-                    <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col">
+                    <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain flex flex-col shrink-0">
                         {/* Modal Header */}
-                        <div className="p-4 px-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+                        <div className="p-4 sm:px-6 shrink-0 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                                     <Upload className="w-4 h-4" />
@@ -923,7 +931,7 @@ export default function Profile({ admin }) {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 space-y-4">
+                        <div className="p-4 sm:p-6 space-y-4 shrink-0">
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -975,14 +983,14 @@ export default function Profile({ admin }) {
                                         Klik untuk memilih foto atau seret berkas ke sini
                                     </p>
                                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
-                                        Format: PNG, JPG, WebP (Maks 5MB)
+                                        Format: PNG, JPG, WebP (Maks 2 MiB)
                                     </p>
                                 </div>
                             )}
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 px-6 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
+                        <div className="p-4 sm:px-6 shrink-0 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] flex flex-wrap items-center justify-between gap-3">
                             <button
                                 type="button"
                                 onClick={() => setActiveModal(null)}

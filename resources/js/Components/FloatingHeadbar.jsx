@@ -9,7 +9,7 @@ import InteractiveBentoCard from '@/Components/InteractiveBentoCard';
 
 export default function FloatingHeadbar({ 
     activeService = null, 
-    theme = 'light', 
+    theme = 'dark', 
     setTheme,
     toggleTheme 
 }) {
@@ -19,6 +19,20 @@ export default function FloatingHeadbar({
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [hoveredNav, setHoveredNav] = useState(null);
     const megaMenuRef = useRef(null);
+
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setMobileMenuOpen(false);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [mobileMenuOpen]);
 
     // Track scroll position for morphing header
     useEffect(() => {
@@ -115,6 +129,7 @@ export default function FloatingHeadbar({
         { name: 'Layanan', id: 'layanan', isDropdown: true },
         { name: 'Portofolio', href: '/portofolio', id: 'portofolio' },
         { name: 'Internship', href: '/layanan/internship', id: 'internship' },
+        { name: 'Our Team', href: '/our-team', id: 'our-team' },
         { name: 'Kontak', href: '/kontak', id: 'kontak' },
     ];
 
@@ -157,7 +172,7 @@ export default function FloatingHeadbar({
                     {/* 2. DESKTOP NAVIGATION WITH SLIDING NAV INDICATOR */}
                     <nav 
                         onMouseLeave={() => setHoveredNav(null)}
-                        className={`hidden md:flex items-center rounded-full bg-slate-100/70 dark:bg-white/[0.04] border border-[#005792]/15 dark:border-[#005792]/25 relative shrink-0 transition-all duration-300 ${
+                        className={`hidden lg:flex items-center rounded-full bg-slate-100/70 dark:bg-white/[0.04] border border-[#005792]/15 dark:border-[#005792]/25 relative shrink-0 transition-all duration-300 ${
                             scrolled ? 'gap-0.5 p-0.5' : 'gap-0.5 lg:gap-1 p-1'
                         }`}
                     >
@@ -227,21 +242,18 @@ export default function FloatingHeadbar({
                     {/* 3. RIGHT CONTROLS: THEME SWITCHER, CMS LINK & CTA (SD/HD moved in-place to Photo & Video sections) */}
                     <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
                         {/* Segmented Dual-Theme Switcher (Icon-Only, No Text - Responsive Mobile & Desktop) */}
+                        {setTheme && (
+                            <button
+                                type="button"
+                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                aria-label={theme === 'dark' ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
+                                className="sm:hidden w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-amber-400 border border-[#005792]/20"
+                            >
+                                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                            </button>
+                        )}
                         {setTheme ? (
-                            <div className="flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 gap-0.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setTheme('light')}
-                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
-                                        theme === 'light'
-                                            ? 'bg-white text-amber-500 shadow-sm scale-[1.05]'
-                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
-                                    }`}
-                                    title="Mode Terang"
-                                    aria-label="Mode Terang"
-                                >
-                                    <Sun className="w-3.5 h-3.5 shrink-0" />
-                                </button>
+                            <div className="hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 gap-0.5">
                                 <button
                                     type="button"
                                     onClick={() => setTheme('dark')}
@@ -250,10 +262,23 @@ export default function FloatingHeadbar({
                                             ? 'bg-slate-900 text-indigo-300 shadow-sm scale-[1.05]'
                                             : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                                     }`}
-                                    title="Mode Gelap"
+                                    title="Mode Gelap (Tema Utama)"
                                     aria-label="Mode Gelap"
                                 >
                                     <Moon className="w-3.5 h-3.5 shrink-0" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTheme('light')}
+                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
+                                        theme === 'light'
+                                            ? 'bg-white text-amber-500 shadow-sm scale-[1.05]'
+                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                                    }`}
+                                    title="Mode Terang (Tema Kedua)"
+                                    aria-label="Mode Terang"
+                                >
+                                    <Sun className="w-3.5 h-3.5 shrink-0" />
                                 </button>
                             </div>
                         ) : toggleTheme ? (
@@ -287,8 +312,10 @@ export default function FloatingHeadbar({
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white border border-[#005792]/25 dark:border-[#005792]/35"
-                            aria-label="Toggle Menu"
+                            className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white border border-[#005792]/25 dark:border-[#005792]/35"
+                            aria-label="Buka atau tutup menu"
+                            aria-expanded={mobileMenuOpen}
+                            aria-controls="mobile-navigation"
                         >
                             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
@@ -305,7 +332,7 @@ export default function FloatingHeadbar({
                         exit={{ opacity: 0, y: -12, scale: 0.97 }}
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                         onMouseLeave={() => setServicesMenuOpen(false)}
-                        className="pointer-events-auto absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 z-40 hidden md:block"
+                        className="pointer-events-auto absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 z-40 hidden lg:block"
                     >
                         <div className="p-6 rounded-3xl bg-white/95 dark:bg-[#07090E]/95 backdrop-blur-3xl border border-[#005792]/30 dark:border-[#005792]/40 shadow-2xl shadow-[#005792]/15 dark:shadow-black/80 ring-1 ring-[#005792]/20">
                             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-white/10">
@@ -396,7 +423,8 @@ export default function FloatingHeadbar({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                        className="pointer-events-auto fixed inset-x-4 top-20 z-50 md:hidden max-h-[85vh] overflow-y-auto p-5 rounded-3xl bg-white dark:bg-[#07090E] border border-[#005792]/30 dark:border-[#005792]/40 shadow-2xl shadow-[#005792]/15 ring-1 ring-[#005792]/20"
+                        id="mobile-navigation"
+                        className="pointer-events-auto fixed inset-x-4 top-20 z-50 lg:hidden max-h-[calc(100dvh-6rem)] overscroll-contain overflow-y-auto p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#07090E] border border-[#005792]/30 dark:border-[#005792]/40 shadow-2xl shadow-[#005792]/15 ring-1 ring-[#005792]/20"
                     >
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <span className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 uppercase">
@@ -432,8 +460,16 @@ export default function FloatingHeadbar({
                             >
                                 Internship Program
                             </Link>
-                            <Link 
-                                href="/kontak" 
+                            <Link
+                                href="/our-team"
+                                onClick={() => setMobileMenuOpen(false)}
+                                aria-current={url.split('?')[0] === '/our-team' ? 'page' : undefined}
+                                className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
+                            >
+                                Our Team
+                            </Link>
+                            <Link
+                                href="/kontak"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
                             >
@@ -475,10 +511,10 @@ export default function FloatingHeadbar({
                                             <srv.icon className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                            <h5 className="text-xs font-bold text-slate-900 dark:text-white break-words">
                                                 {srv.name}
                                             </h5>
-                                            <span className="text-[10px] text-slate-500 block truncate">
+                                            <span className="text-[10px] text-slate-500 block break-words">
                                                 {srv.tagline}
                                             </span>
                                         </div>
