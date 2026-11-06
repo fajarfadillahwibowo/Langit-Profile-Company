@@ -19,7 +19,7 @@ export default function HomeIndex({
     const [activeLightboxItem, setActiveLightboxItem] = useState(null);
     const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
     const [carouselPreset, setCarouselPreset] = useState('cylinder');
-    const [isDrifting, setIsDrifting] = useState(false); // Default OFF for lightweight 60fps performance
+    const [isDrifting, setIsDrifting] = useState(true); // Default ON: langsung berputar otomatis saat pengunjung membuka halaman
     const [isDark, setIsDark] = useState(false);
     const pageRef = useRef(null);
 
@@ -74,12 +74,12 @@ export default function HomeIndex({
                         <div>
                             <div className="flex items-center gap-2 text-[#005792] dark:text-[#38BDF8] font-mono text-[11px] uppercase tracking-widest mb-2 font-bold">
                                 <Camera className="w-3.5 h-3.5" />
-                                <span>Langit Photo & Video Gallery</span>
+                                <span>Dokumentasi Aktivitas & Kegiatan</span>
                             </div>
                             <h2 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-slate-900 dark:text-white tracking-tight">
-                                Mahakarya Visual
+                                Dokumentasi Aktivitas
                                 <span className="block text-[#005792] dark:text-[#38BDF8]">
-                                    & <span className="font-editorial italic font-normal tracking-normal text-[#005792] dark:text-[#38BDF8]">Sinematografi</span>
+                                    & <span className="font-editorial italic font-normal tracking-normal text-[#005792] dark:text-[#38BDF8]">Kegiatan</span>
                                 </span>
                             </h2>
                         </div>
@@ -93,7 +93,7 @@ export default function HomeIndex({
 
                     {/* Interactive 3D Mode Bar & Controls */}
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-6 px-1">
-                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/70 dark:bg-white/[0.06] border border-slate-300/60 dark:border-white/10 backdrop-blur-md">
+                        <div className="max-w-full flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-200/70 dark:bg-white/[0.06] border border-slate-300/60 dark:border-white/10 backdrop-blur-md">
                             <span className="text-[11px] font-mono font-semibold px-2.5 text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 <Sparkles className="w-3 h-3 text-[#005792] dark:text-[#38BDF8]" />
                                 3D Mode:
@@ -117,7 +117,7 @@ export default function HomeIndex({
                             ))}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             {/* In-Place SD/HD Switcher (Ditempat Foto/Media) */}
                             <div className="flex items-center p-0.5 rounded-full bg-slate-200/90 dark:bg-white/10 border border-slate-300 dark:border-white/10 shadow-inner">
                                 <button
@@ -148,13 +148,18 @@ export default function HomeIndex({
                                 </button>
                             </div>
 
+                            {/* Auto-Rotate Toggle Button */}
                             <button
                                 type="button"
                                 onClick={() => setIsDrifting(prev => !prev)}
-                                className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium border border-slate-300/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition-all flex items-center gap-1.5 shadow-sm"
-                                title="Toggle Autoplay Rotation"
+                                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                                    isDrifting
+                                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                        : 'border-slate-300/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-200'
+                                }`}
+                                title="Klik untuk mematikan atau menyalakan putaran otomatis 3D"
                             >
-                                <Activity className="w-3.5 h-3.5 text-[#005792] dark:text-[#38BDF8]" />
+                                <Activity className={`w-3.5 h-3.5 ${isDrifting ? 'text-emerald-500 animate-pulse' : 'text-[#005792] dark:text-[#38BDF8]'}`} />
                                 <span>{isDrifting ? 'Auto-Rotate: ON' : 'Auto-Rotate: OFF'}</span>
                             </button>
 
@@ -173,7 +178,7 @@ export default function HomeIndex({
 
                     {/* CIRCULAR CAROUSEL 3D VIEWPORT */}
                     <div className="carousel-wrapper relative rounded-3xl border border-slate-200 dark:border-white/10 bg-slate-100/40 dark:bg-white/[0.02] backdrop-blur-sm p-2 sm:p-4 shadow-xl overflow-hidden">
-                        <div style={{ width: '100%', height: '560px', position: 'relative' }}>
+                        <div className="relative w-full h-[420px] sm:h-[560px]">
                             <CircularCarousel
                                 items={carouselItems}
                                 preset={carouselPreset}
@@ -206,7 +211,12 @@ export default function HomeIndex({
             </div>
 
             {activeLightboxItem && (
-                <LightboxModal item={activeLightboxItem} onClose={() => setActiveLightboxItem(null)} />
+                <LightboxModal 
+                    item={activeLightboxItem} 
+                    relatedGalleries={featuredGalleries}
+                    onSelectRelated={(newItem) => setActiveLightboxItem(newItem)}
+                    onClose={() => setActiveLightboxItem(null)} 
+                />
             )}
         </PublicLayout>
     );
