@@ -119,17 +119,17 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
             <div className="bg-[#EDF9FC] dark:bg-[#060B14] min-h-screen text-slate-800 dark:text-slate-100 bg-grid-pattern pt-2 sm:pt-6 transition-colors duration-300">
                 {/* Hero Header: Cyber Blueprint & Modern Kinetic Atmosphere */}
                 <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-20 text-center overflow-hidden">
-                    {/* Ambient Aurora Glow Layers */}
+                    {/* Ambient Soft Glow Layers (Zero GPU blur overhead) */}
                     <div 
-                        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[480px] rounded-full blur-3xl pointer-events-none -z-10 animate-aurora-1"
+                        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[480px] rounded-full pointer-events-none -z-10"
                         style={{
-                            background: 'radial-gradient(circle, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.12) 45%, transparent 70%)'
+                            background: 'radial-gradient(circle, rgba(14,165,233,0.15) 0%, rgba(99,102,241,0.08) 45%, transparent 70%)'
                         }}
                     />
                     <div 
-                        className="absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full blur-3xl pointer-events-none -z-10 animate-aurora-2"
+                        className="absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full pointer-events-none -z-10"
                         style={{
-                            background: 'radial-gradient(circle, rgba(168,85,247,0.14) 0%, rgba(14,165,233,0.08) 50%, transparent 70%)'
+                            background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, rgba(14,165,233,0.06) 50%, transparent 70%)'
                         }}
                     />
 
@@ -266,7 +266,7 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
-                                    className={`relative px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                                    className={`relative min-h-11 max-w-full px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                                         selectedCategory === cat.id
                                             ? 'text-cyan-700 dark:text-cyan-300 shadow-sm border border-cyan-500/40 bg-cyan-500/10 dark:bg-cyan-500/20'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.02]'
@@ -286,26 +286,13 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                     </div>
 
                     {/* 3D Interactive Cards Grid */}
-                    <motion.div 
-                        layout 
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-                    >
-                        <AnimatePresence mode="popLayout">
-                            {filteredSolutions.map((sol, idx) => (
-                                <motion.div
-                                    key={sol.num}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.92, y: 15 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.92, y: 15 }}
-                                    transition={{ duration: 0.35, delay: idx * 0.05 }}
-                                    className="h-full"
-                                >
-                                    <WebSolutionCard3D sol={sol} idx={idx} />
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </motion.div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {filteredSolutions.map((sol, idx) => (
+                            <div key={sol.num} className="h-full">
+                                <WebSolutionCard3D sol={sol} idx={idx} />
+                            </div>
+                        ))}
+                    </div>
                 </section>
 
                 {/* 3D Stacked Card Scrolling Experience: 7 Pilar Rekayasa Web & Sistem Digital */}

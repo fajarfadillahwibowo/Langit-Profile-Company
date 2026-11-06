@@ -101,38 +101,28 @@ export const LangitApp = createEngine({
 
     return (
         <div className="relative w-full max-w-5xl mx-auto mt-8">
-            {/* Ambient Background Glowing Orb behind Cockpit */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-sky-500/10 to-violet-500/20 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition duration-1000 -z-10" />
+            {/* Ambient Background Glow behind Cockpit (Zero GPU blur overhead) */}
+            <div className="absolute -inset-2 rounded-3xl opacity-70 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at center, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.08) 50%, transparent 70%)' }} />
 
             {/* Floating Live Metric Pills */}
             <div className="hidden lg:flex items-center justify-between absolute -top-5 left-6 right-6 pointer-events-none z-20">
-                <motion.div 
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: [0, -6, 0], opacity: 1 }}
-                    transition={{ y: { duration: 4, repeat: Infinity, ease: "easeInOut" }, opacity: { duration: 0.5 } }}
-                    className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-cyan-500/30 shadow-lg shadow-cyan-500/10 backdrop-blur-xl flex items-center gap-2 text-xs font-mono"
-                >
+                <div className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-cyan-500/30 shadow-md backdrop-blur-xl flex items-center gap-2 text-xs font-mono transition-transform hover:-translate-y-0.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-slate-700 dark:text-slate-300 font-semibold">Lighthouse 99+ Ready</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">100% PERF</span>
-                </motion.div>
+                </div>
 
-                <motion.div 
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: [0, 6, 0], opacity: 1 }}
-                    transition={{ y: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }, opacity: { duration: 0.5 } }}
-                    className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-violet-500/30 shadow-lg shadow-violet-500/10 backdrop-blur-xl flex items-center gap-2 text-xs font-mono"
-                >
+                <div className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-violet-500/30 shadow-md backdrop-blur-xl flex items-center gap-2 text-xs font-mono transition-transform hover:-translate-y-0.5">
                     <Zap className="w-3.5 h-3.5 text-violet-500" />
                     <span className="text-slate-700 dark:text-slate-300 font-semibold">Inertia SPA Reaktif</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold">0ms RELOAD</span>
-                </motion.div>
+                </div>
             </div>
 
             {/* Main Cyber IDE Window Frame */}
             <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/85 dark:bg-[#070D18]/90 backdrop-blur-2xl shadow-2xl overflow-hidden transition-all duration-300">
                 {/* Window Topbar */}
-                <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200/80 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.02]">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-3 sm:px-6 py-3 border-b border-slate-200/80 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.02]">
                     {/* Window Controls */}
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5">
@@ -147,7 +137,7 @@ export const LangitApp = createEngine({
                     </div>
 
                     {/* Mode Navigation Tabs */}
-                    <div className="flex items-center gap-1 p-1 bg-slate-200/70 dark:bg-black/40 rounded-xl border border-slate-300/60 dark:border-white/10 text-xs font-mono overflow-x-auto no-scrollbar max-w-full">
+                    <div className="flex min-w-0 w-full sm:w-auto items-center gap-1 p-1 bg-slate-200/70 dark:bg-black/40 rounded-xl border border-slate-300/60 dark:border-white/10 text-xs font-mono overflow-x-auto max-w-full [&>button]:shrink-0 [&>button]:min-h-10">
                         <button
                             onClick={() => setActiveTab('pipeline')}
                             className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
@@ -349,7 +339,7 @@ export const LangitApp = createEngine({
                                 transition={{ duration: 0.25 }}
                                 className="space-y-4"
                             >
-                                <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-white/5">
+                                <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200/60 dark:border-white/5">
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                                             Typescript Enterprise Spec Definition
@@ -365,7 +355,7 @@ export const LangitApp = createEngine({
                                     </button>
                                 </div>
 
-                                <div className="p-4 rounded-xl bg-slate-900 dark:bg-black/70 border border-slate-800 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed shadow-inner">
+                                <div className="min-w-0 max-w-full p-4 rounded-xl bg-slate-900 dark:bg-black/70 border border-slate-800 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed shadow-inner">
                                     <pre className="text-slate-300 font-mono">{codeSnippet}</pre>
                                 </div>
                             </motion.div>

@@ -229,8 +229,21 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
     const [isHovered, setIsHovered] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isInView, setIsInView] = useState(false);
+    const containerRef = useRef(null);
     const touchStartXRef = useRef(null);
     const touchMoveXRef = useRef(null);
+
+    // Viewport intersection observer to avoid running timers offscreen
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            setIsInView(entry.isIntersecting);
+        }, { threshold: 0.1 });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     // Responsive screen width detection
     useEffect(() => {
@@ -275,12 +288,12 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
         onSelectTech?.(ARCH_STACK[idx].id);
     };
 
-    // Auto-play timer
+    // Auto-play timer (only when visible in viewport and not hovered/paused)
     useEffect(() => {
-        if (isPaused || isHovered) return;
-        const interval = setInterval(goToNext, 3800);
+        if (isPaused || isHovered || !isInView) return;
+        const interval = setInterval(goToNext, 4500);
         return () => clearInterval(interval);
-    }, [isPaused, isHovered, goToNext]);
+    }, [isPaused, isHovered, isInView, goToNext]);
 
     // Touch swipe gestures with high touch-fidelity
     const handleTouchStart = (e) => {
@@ -305,6 +318,7 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
 
     return (
         <div 
+            ref={containerRef}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onTouchStart={handleTouchStart}
@@ -371,10 +385,10 @@ export default function ArchingArchitectureCards({ activeTechId, onSelectTech })
 
             {/* 3D ARCHING / CYLINDER CAROUSEL STAGE */}
             <div className="relative w-full h-[240px] sm:h-[275px] md:h-[305px] flex items-center justify-center overflow-hidden py-2 perspective-[1000px]">
-                {/* Ambient Center Aura */}
+                {/* Ambient Center Aura (Soft radial gradient - zero GPU blur cost) */}
                 <div 
-                    style={{ backgroundColor: `${activeTech.color}25` }}
-                    className="absolute w-48 sm:w-64 h-48 sm:h-64 rounded-full blur-2xl pointer-events-none transition-colors duration-500"
+                    style={{ background: `radial-gradient(circle, ${activeTech.color}25 0%, transparent 70%)` }}
+                    className="absolute w-48 sm:w-64 h-48 sm:h-64 rounded-full pointer-events-none transition-all duration-500"
                 />
 
                 {/* Arching Cards Container */}
