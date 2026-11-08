@@ -55,9 +55,10 @@ export default function PortfolioIndex({ galleries = [] }) {
         'company_profile': 'Company Profile',
     };
 
-    // Filter valid non-before_after photos with default newest first
+    // Filter valid non-before_after photos with default newest first (scoping to Visual & Cinematography showcase)
     const photoGalleries = useMemo(() => {
-        const list = (galleries || []).filter(g => g.media_type !== 'before_after');
+        const validCategories = ['wedding', 'wisuda', 'event', 'traveling', 'drone', 'company_profile', 'showreel'];
+        const list = (galleries || []).filter(g => g.media_type !== 'before_after' && (validCategories.includes(g.category) || g.service_id === 1));
         return [...list].sort((a, b) => {
             const timeA = a.created_at ? new Date(a.created_at).getTime() : (a.id || 0);
             const timeB = b.created_at ? new Date(b.created_at).getTime() : (b.id || 0);
