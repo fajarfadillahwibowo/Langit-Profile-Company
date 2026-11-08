@@ -84,9 +84,16 @@ class AdminProfileController extends Controller
                 $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
                 $type = strtolower($type[1]); // jpg, png, webp
 
-                $decodedData = base64_decode($base64Data);
+                $decodedData = base64_decode($base64Data, true);
                 if ($decodedData === false) {
                     return back()->withErrors(['avatar' => 'Gagal memproses data gambar dari kamera.']);
+                }
+
+                if (strlen($decodedData) > 2048 * 1024) {
+                    return back()->withErrors(['avatar' => 'Ukuran foto kamera maksimal 2 MiB.']);
+                }
+                if (! in_array($type, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) || @getimagesizefromstring($decodedData) === false) {
+                    return back()->withErrors(['avatar' => 'Format gambar kamera tidak valid.']);
                 }
 
                 $filename = 'camera_'.$user->id.'_'.time().'_'.Str::random(6).'.'.$type;
@@ -99,11 +106,11 @@ class AdminProfileController extends Controller
         // Opsi 2: Unggah Berkas File (JPEG, PNG, WebP)
         elseif ($request->hasFile('avatar_file')) {
             $request->validate([
-                'avatar_file' => 'required|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
+                'avatar_file' => 'required|image|mimes:jpeg,png,jpg,webp,gif|max:2048',
             ], [
                 'avatar_file.image' => 'Berkas harus berupa gambar.',
                 'avatar_file.mimes' => 'Format foto profil harus JPG, PNG, atau WebP.',
-                'avatar_file.max' => 'Ukuran berkas foto maksimal 5MB.',
+                'avatar_file.max' => 'Ukuran berkas foto maksimal 2 MiB.',
             ]);
 
             $file = $request->file('avatar_file');

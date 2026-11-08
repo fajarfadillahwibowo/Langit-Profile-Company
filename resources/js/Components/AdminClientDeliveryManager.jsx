@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
+import { uploadFiles } from '@/Utils/deliveryUploader.mjs';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 import { 
     Camera, Upload, Clock, AlertTriangle, CheckCircle2, Trash2, 
     Plus, Eye, X, Calendar, RefreshCw, Download, FileImage, 
@@ -30,10 +33,13 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadStatusText, setUploadStatusText] = useState('');
 
     // Additional Photos Form state
     const [additionalFiles, setAdditionalFiles] = useState([]);
     const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
+    const [additionalProgress, setAdditionalProgress] = useState(0);
+    const [additionalStatusText, setAdditionalStatusText] = useState('');
 
     // Expiry Form state
     const [extendDays, setExtendDays] = useState(7);
@@ -71,7 +77,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
         });
     };
 
-    // Handle file selection with exact size inspection
+    // Keep original delivery photos without application size or resolution caps.
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files || []);
         setSelectedFiles(files);
@@ -97,81 +103,65 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    // Submit Create Delivery with Original Photo Files (No Size Limit)
-    const handleCreateDelivery = (e) => {
-        e.preventDefault();
-        if (selectedFiles.length === 0) {
-            alert('Silakan pilih minimal 1 foto untuk diunggah.');
-            return;
+    // Metadata is small; original binaries travel in independently acknowledged 8MiB chunks.
+    const uploadState = useRef({ create: null, additional: null });
+    const abortUpload = useRef(null);
+    const [uploadPending, setUploadPending] = useState({ create: false, additional: false });
+    const makeJobs = files => files.map(file => ({ file, name: file.name, id: crypto.randomUUID() }));
+    const runUpload = async (kind, files, deliveryId = null) => {
+        const creating = kind === 'create';
+        const busy = creating ? setIsSubmitting : setIsUploadingAdditional;
+        const progress = creating ? setUploadProgress : setAdditionalProgress;
+        const status = creating ? setUploadStatusText : setAdditionalStatusText;
+        if (abortUpload.current) return;
+        busy(true);
+        const controller = new AbortController();
+        abortUpload.current = controller;
+        try {
+            let task = uploadState.current[kind];
+            if (!task || task.deliveryId !== deliveryId) {
+                task = { deliveryId, creationId: crypto.randomUUID(), jobs: makeJobs(files) };
+                uploadState.current[kind] = task;
+            }
+            if (!task.deliveryId) {
+                status('Membuat sesi pelanggan...');
+                const response = await axios.post('/admin/client-deliveries', { ...createForm, creation_uuid: task.creationId }, { signal: controller.signal, headers: { Accept: 'application/json' } });
+                task.deliveryId = response.data.delivery_id;
+            }
+            const result = await uploadFiles({
+                deliveryId: task.deliveryId, jobs: task.jobs, signal: controller.signal,
+                send: async (url, body, signal) => (await axios.post(url, body, { signal, timeout: 120000, headers: { Accept: 'application/json' } })).data,
+                onProgress: p => {
+                    progress(p.percent);
+                    const failedInfo = p.failed > 0 ? ` (${p.failed} gagal)` : '';
+                    status(`${p.accepted}/${p.total} foto dikonfirmasi server${failedInfo} • ${formatBytes(p.bytes)}/${formatBytes(p.totalBytes)}`);
+                },
+            });
+            setUploadPending(prev => ({ ...prev, [kind]: !result.complete }));
+            if (result.complete) {
+                status(`${result.accepted}/${task.jobs.length} foto berhasil dikonfirmasi server.`);
+                uploadState.current[kind] = null;
+                if (creating) { setSelectedFiles([]); setCreateModalOpen(false); }
+                else { setAdditionalFiles([]); setAddPhotosDelivery(null); }
+                router.reload({ only: ['clientDeliveries'] });
+            } else {
+                const error = task.jobs.find(job => !job.done && job.error)?.error;
+                status(`${result.accepted}/${task.jobs.length} foto tersimpan. ${result.cancelled ? 'Dihentikan.' : 'Sebagian gagal.'} Klik Coba lagi untuk melanjutkan. ${error ? `(${error})` : ''}`);
+            }
+        } catch (error) {
+            setUploadPending(prev => ({ ...prev, [kind]: true }));
+            const statusErr = error.response?.status;
+            const message = statusErr === 403
+                ? 'Akses ditolak (403 Forbidden). Akun Anda saat ini tidak memiliki izin Administrator/Superadmin. Silakan logout dan login kembali dengan akun Admin.'
+                : (error.response?.data?.message || error.message);
+            status(`Belum selesai: ${message}. Klik Coba lagi.`);
+        } finally {
+            busy(false);
+            abortUpload.current = null;
         }
-
-        setIsSubmitting(true);
-        const formData = new FormData();
-        formData.append('client_name', createForm.client_name);
-        formData.append('client_username', createForm.client_username);
-        formData.append('client_password', createForm.client_password);
-        formData.append('client_email', createForm.client_email);
-        formData.append('client_phone', createForm.client_phone);
-        formData.append('title', createForm.title);
-        formData.append('notes', createForm.notes);
-        formData.append('expiry_days', createForm.expiry_days);
-
-        selectedFiles.forEach((file) => {
-            formData.append('photos[]', file);
-        });
-
-        router.post('/admin/client-deliveries', formData, {
-            forceFormData: true,
-            onProgress: (p) => {
-                if (p.percentage) setUploadProgress(p.percentage);
-            },
-            onSuccess: () => {
-                setIsSubmitting(false);
-                setCreateModalOpen(false);
-                setSelectedFiles([]);
-                setUploadProgress(0);
-                setCreateForm({
-                    client_name: '',
-                    client_username: '',
-                    client_password: 'langit' + Math.floor(100 + Math.random() * 900),
-                    client_email: '',
-                    client_phone: '',
-                    title: '',
-                    notes: '',
-                    expiry_days: 7,
-                });
-            },
-            onError: (err) => {
-                setIsSubmitting(false);
-                alert('Gagal mengunggah foto: ' + Object.values(err).join(', '));
-            }
-        });
     };
-
-    // Submit Additional Photos
-    const handleUploadAdditional = (e) => {
-        e.preventDefault();
-        if (!addPhotosDelivery || additionalFiles.length === 0) return;
-
-        setIsUploadingAdditional(true);
-        const formData = new FormData();
-        additionalFiles.forEach((file) => {
-            formData.append('photos[]', file);
-        });
-
-        router.post(`/admin/client-deliveries/${addPhotosDelivery.id}/upload-photos`, formData, {
-            forceFormData: true,
-            onSuccess: () => {
-                setIsUploadingAdditional(false);
-                setAddPhotosDelivery(null);
-                setAdditionalFiles([]);
-            },
-            onError: (err) => {
-                setIsUploadingAdditional(false);
-                alert('Gagal menambah foto: ' + Object.values(err).join(', '));
-            }
-        });
-    };
+    const handleCreateDelivery = e => { e.preventDefault(); if (selectedFiles.length) runUpload('create', selectedFiles); };
+    const handleUploadAdditional = e => { e.preventDefault(); if (additionalFiles.length && addPhotosDelivery) runUpload('additional', additionalFiles, addPhotosDelivery.id); };
 
     // Submit Update Expiry Days Countdown
     const handleUpdateExpiry = (e) => {
@@ -229,9 +219,9 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Header & Primary Action */}
-            <div className="p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
@@ -242,7 +232,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                         </h2>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-                        Buat username & password untuk pelanggan (tidak ada pendaftaran mandiri). Unggah foto asli tanpa batasan ukuran file, dan atur hitungan hari mundur sebelum foto otomatis di-hide.
+                        Buat username & password untuk pelanggan (tidak ada pendaftaran mandiri). Unggah foto asli tanpa batas nominal (bebas ratusan hingga ribuan foto dengan batch otomatis), dan atur hitungan hari mundur sebelum foto otomatis di-hide.
                     </p>
                 </div>
 
@@ -299,8 +289,8 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                 </div>
             ) : (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel layanan foto pelanggan, geser untuk melihat semua kolom">
+                        <table className="w-full min-w-[64rem] text-left border-collapse [&_td]:max-w-xs">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-[11px] font-mono uppercase text-slate-500">
                                     <th className="px-5 py-3.5">Pelanggan</th>
@@ -470,7 +460,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                                     {/* Upload Foto Tambahan */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => setAddPhotosDelivery(delivery)}
+                                                        onClick={() => { if (!uploadState.current.additional || uploadState.current.additional.deliveryId === delivery.id) setAddPhotosDelivery(delivery); else alert('Selesaikan upload album sebelumnya dahulu.'); }}
                                                         className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
                                                         title="Upload Foto Tambahan"
                                                     >
@@ -511,19 +501,19 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
             {/* ── MODAL 1: TAMBAH PELANGGAN & UPLOAD FOTO ── */}
             {createModalOpen && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-2xl shadow-2xl my-8">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-8 w-full max-w-2xl shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10 mb-5">
                             <div>
                                 <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">
                                     Tambah Pelanggan & Upload Foto Hasil Sesi
                                 </h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Buat username & password untuk pelanggan. Ukuran file foto 5MB+ tidak dibatasi.
+                                    Buat username & password untuk pelanggan. Foto resolusi asli.
                                 </p>
                             </div>
                             <button 
                                 type="button" 
-                                onClick={() => setCreateModalOpen(false)}
+                                onClick={() => { abortUpload.current?.abort(); setCreateModalOpen(false); }}
                                 className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white"
                             >
                                 <X className="w-5 h-5" />
@@ -680,6 +670,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                         multiple
                                         accept="image/*"
                                         onChange={handleFileChange}
+                                            disabled={isSubmitting || uploadPending.create}
                                         className="hidden"
                                         id="client_photos_input"
                                     />
@@ -689,7 +680,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                             Klik untuk Memilih Foto
                                         </span>
                                         <span className="text-[11px] text-slate-500 block mt-1">
-                                            Bisa memilih banyak foto sekaligus (JPG, PNG, WebP). Ukuran file 5 MB atau lebih tidak dibatasi.
+                                            Foto resolusi asli • tanpa batas ukuran per foto di aplikasi (mengikuti kapasitas server)
                                         </span>
                                     </label>
                                 </div>
@@ -713,14 +704,15 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                             </div>
 
                             {/* Upload Progress */}
-                            {isSubmitting && (
+                            {(isSubmitting || uploadPending.create) && (
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-xs font-mono text-cyan-600 dark:text-cyan-400">
-                                        <span>Mengunggah foto resolusi penuh ke server...</span>
+                                    <div className="flex flex-wrap justify-between gap-2 text-xs font-mono text-cyan-600 dark:text-cyan-400">
+                                        <span>{uploadStatusText || 'Mengunggah foto resolusi penuh ke server...'}</span>
                                         <span>{uploadProgress}%</span>
+                                        {isSubmitting && <button type="button" onClick={() => abortUpload.current?.abort()}>Hentikan (bisa dilanjutkan)</button>}
                                     </div>
                                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-gradient-to-r from-cyan-500 to-sky-600 transition-all duration-300"
                                             style={{ width: `${uploadProgress}%` }}
                                         />
@@ -728,10 +720,10 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 </div>
                             )}
 
-                            <div className="pt-3 flex justify-end gap-2">
+                            <div className="pt-3 flex flex-wrap justify-end gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => setCreateModalOpen(false)}
+                                    onClick={() => { abortUpload.current?.abort(); setCreateModalOpen(false); }}
                                     className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                                 >
                                     Batal
@@ -741,7 +733,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                     disabled={isSubmitting || selectedFiles.length === 0}
                                     className="px-6 py-2.5 rounded-xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-xs shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
                                 >
-                                    {isSubmitting ? 'Sedang Mengunggah...' : `Unggah ${selectedFiles.length} Foto Sekarang`}
+                                    {isSubmitting ? 'Sedang Mengunggah...' : uploadPending.create ? 'Coba lagi (foto tersisa)' : `Unggah ${selectedFiles.length} Foto Sekarang`}
                                 </button>
                             </div>
                         </form>
@@ -752,7 +744,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
             {/* ── MODAL 2: ATUR MENU EXPIRED HITUNGAN HARI MUNDUR ── */}
             {expiryModalDelivery && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-md shadow-2xl">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-md shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white">
@@ -786,7 +778,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     Perpanjang Masa Aktif Hari Mundur:
                                 </label>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {[3, 7, 14, 30].map(days => (
                                         <button
                                             key={days}
@@ -816,7 +808,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 />
                             </div>
 
-                            <div className="pt-2 flex justify-end gap-2">
+                            <div className="pt-2 flex flex-wrap justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setExpiryModalDelivery(null)}
@@ -840,7 +832,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
             {/* ── MODAL 2.5: UBAH USERNAME & PASSWORD PELANGGAN ── */}
             {credentialsModalDelivery && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-md shadow-2xl">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-md shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white">
@@ -886,7 +878,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 />
                             </div>
 
-                            <div className="pt-2 flex justify-end gap-2">
+                            <div className="pt-2 flex flex-wrap justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setCredentialsModalDelivery(null)}
@@ -910,7 +902,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
             {/* ── MODAL 3: LIHAT FOTO & HAPUS PER FOTO ── */}
             {viewPhotosDelivery && (
                 <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-4xl shadow-2xl my-8">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-4xl shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-5">
                             <div>
                                 <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">
@@ -932,7 +924,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                         {viewPhotosDelivery.photos?.length === 0 ? (
                             <p className="text-xs text-slate-500 text-center py-8">Belum ada foto di album ini.</p>
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 p-1">
                                 {viewPhotosDelivery.photos?.map((photo, idx) => (
                                     <div key={photo.id} className="group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 flex flex-col">
                                         <div className="aspect-[4/3] w-full bg-slate-950 overflow-hidden relative">
@@ -945,14 +937,14 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                             <button
                                                 type="button"
                                                 onClick={() => handleDeletePhoto(photo.id)}
-                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-700"
+                                                className="absolute top-2 right-2 p-2.5 rounded-lg bg-rose-600/90 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-rose-700"
                                                 title="Hapus foto ini"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                         <div className="p-2 bg-white dark:bg-[#090D16] text-[11px] border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
-                                            <span className="truncate max-w-[110px]" title={photo.original_name}>
+                                            <span className="min-w-0 break-words" title={photo.original_name}>
                                                 {photo.original_name}
                                             </span>
                                             <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -980,7 +972,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
             {/* ── MODAL 4: TAMBAH FOTO TAMBAHAN KE SESI YANG ADA ── */}
             {addPhotosDelivery && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-7 w-full max-w-lg shadow-2xl">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-lg shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
                                 <h3 className="font-heading font-black text-base text-slate-900 dark:text-white">
@@ -992,7 +984,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                             </div>
                             <button 
                                 type="button" 
-                                onClick={() => setAddPhotosDelivery(null)}
+                                onClick={() => { abortUpload.current?.abort(); uploadState.current.additional = null; setAddPhotosDelivery(null); setAdditionalFiles([]); }}
                                 className="p-1 rounded-full text-slate-400 hover:text-white"
                             >
                                 <X className="w-5 h-5" />
@@ -1006,6 +998,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                     multiple
                                     accept="image/*"
                                     onChange={handleAdditionalFileChange}
+                                        disabled={isUploadingAdditional || uploadPending.additional}
                                     className="hidden"
                                     id="additional_photos_input"
                                 />
@@ -1015,7 +1008,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                         Pilih Foto Tambahan
                                     </span>
                                     <span className="text-[10.5px] text-slate-500 block mt-1">
-                                        Bisa memilih banyak foto (ukuran asli tidak dibatasi).
+                                        Foto resolusi asli • tanpa batas ukuran per foto di aplikasi (mengikuti kapasitas server)
                                     </span>
                                 </label>
                             </div>
@@ -1028,10 +1021,27 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                 </div>
                             )}
 
-                            <div className="pt-2 flex justify-end gap-2">
+                            {/* Additional Photos Upload Progress */}
+                            {(isUploadingAdditional || uploadPending.additional) && (
+                                <div className="space-y-1">
+                                    <div className="flex flex-wrap justify-between gap-2 text-xs font-mono text-cyan-600 dark:text-cyan-400">
+                                        <span>{additionalStatusText || 'Mengunggah foto resolusi penuh ke server...'}</span>
+                                        <span>{additionalProgress}%</span>
+                                        {isUploadingAdditional && <button type="button" onClick={() => abortUpload.current?.abort()}>Hentikan (bisa dilanjutkan)</button>}
+                                    </div>
+                                    <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-cyan-500 to-sky-600 transition-all duration-300"
+                                            style={{ width: `${additionalProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-2 flex flex-wrap justify-end gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => setAddPhotosDelivery(null)}
+                                    onClick={() => { abortUpload.current?.abort(); uploadState.current.additional = null; setAddPhotosDelivery(null); setAdditionalFiles([]); }}
                                     className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-400"
                                 >
                                     Batal
@@ -1041,7 +1051,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                                     disabled={isUploadingAdditional || additionalFiles.length === 0}
                                     className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md disabled:opacity-50 cursor-pointer"
                                 >
-                                    {isUploadingAdditional ? 'Mengunggah...' : `Unggah ${additionalFiles.length} Foto Tambahan`}
+                                    {isUploadingAdditional ? 'Mengunggah...' : uploadPending.additional ? 'Coba lagi (foto tersisa)' : `Unggah ${additionalFiles.length} Foto Tambahan`}
                                 </button>
                             </div>
                         </form>

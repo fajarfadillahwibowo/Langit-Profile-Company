@@ -34,3 +34,4 @@ scratch_parse_pin.*
 extract_media.ps1
 update_comp.ps1
 /security-audit-skill-main/
+/public/uploads/*
