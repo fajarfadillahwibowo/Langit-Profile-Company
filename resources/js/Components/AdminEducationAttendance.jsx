@@ -852,7 +852,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 title="Tampilkan / Siapkan Siklus Berikutnya (Tak Terbatas)"
                                             >
                                                 <Plus className="w-3 h-3" />
-                                                <span>+ Siklus {(cycleGroups[cycleGroups.length - 1]?.cycleNumber || 1) + 1}</span>
+                                                <span>Siklus {(cycleGroups[cycleGroups.length - 1]?.cycleNumber || 1) + 1}</span>
                                             </button>
                                         </div>
                                     </div>
