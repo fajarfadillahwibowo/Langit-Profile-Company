@@ -842,5 +842,181 @@ class DatabaseSeeder extends Seeder
                 'status' => 'in_discussion',
             ]
         );
+
+        // 12. Langit Education: Anak Les, Absensi 8 Sesi & Kas Pemasukan
+        $studentsData = [
+            [
+                'name' => 'Alvaro Narendra',
+                'category' => 'Coding & Robotik (AI & Python)',
+                'parent_name' => 'Hendra Narendra',
+                'whatsapp' => '6282155667788',
+                'fee_per_cycle' => 750000,
+                'status' => 'active',
+                'joined_at' => now()->subDays(25)->toDateString(),
+                'notes' => 'Sangat antusias belajar robotika Arduino & logika pemrograman game Scratch/Python.',
+                'sessions_count' => 7,
+                'paid_cycles' => [1],
+                'topics' => [
+                    'Pengenalan Algoritma & Logika Komputasi',
+                    'Sintaks Python: Variabel & Tipe Data',
+                    'Kondisi Logika If-Else & Flowchart',
+                    'Perulangan For & While Loop',
+                    'Struktur Data: List & Dictionary',
+                    'Fungsi (Def) & Modular Code',
+                    'Mini Project: Game Tebak Angka Interaktif',
+                ],
+            ],
+            [
+                'name' => 'Kezia Aurelia',
+                'category' => 'Microsoft Office & Administrasi',
+                'parent_name' => 'Budi Santoso',
+                'whatsapp' => '6281299887766',
+                'fee_per_cycle' => 600000,
+                'status' => 'active',
+                'joined_at' => now()->subDays(30)->toDateString(),
+                'notes' => 'Fokus percepatan kemampuan Excel (rumus IF/VLOOKUP) dan format laporan resmi.',
+                'sessions_count' => 8,
+                'paid_cycles' => [1],
+                'topics' => [
+                    'Word: Format Surat Resmi & Margin Presisi',
+                    'Word: Pengaturan Heading & Daftar Isi Otomatis',
+                    'Word: Fitur Mail Merge Sertifikat',
+                    'Excel: Navigasi Cell & Rumus Aritmatika Dasar',
+                    'Excel: Rumus Statistik (SUM, AVERAGE, COUNTIF)',
+                    'Excel: Logika Bertingkat (IF, AND, OR)',
+                    'Excel: Pencarian Data VLOOKUP & XLOOKUP',
+                    'Excel: Visualisasi Data & Pivot Table Lanjutan',
+                ],
+            ],
+            [
+                'name' => 'Farel Bintang',
+                'category' => 'Hardware & Perakitan PC Lab',
+                'parent_name' => 'Suryadi Bintang',
+                'whatsapp' => '6285211223344',
+                'fee_per_cycle' => 650000,
+                'status' => 'active',
+                'joined_at' => now()->subDays(45)->toDateString(),
+                'notes' => 'Sudah menyelesaikan 8 sesi Siklus 1, kini lanjut Siklus 2 (pertemuan ke-10). Pembayaran siklus 2 opsional/tidak terkunci.',
+                'sessions_count' => 10,
+                'paid_cycles' => [1], // Siklus 2 belum dibayar (opsional, tetap bisa absen!)
+                'topics' => [
+                    'Anatomi Komponen PC: CPU, Socket & Motherboard',
+                    'Memori & Storage: RAM DDR4/DDR5 dan NVMe SSD',
+                    'Power Supply Unit (PSU) & Efisiensi Daya 80+',
+                    'Instalasi Processor, Thermal Paste & CPU Cooler',
+                    'Pemasangan Motherboard ke Casing & Front Panel',
+                    'Cable Management Rapi & Airflow Positif/Negatif',
+                    'Pemasangan GPU & Power Cable Dedicated',
+                    'First Booting, Akses BIOS & Konfigurasi XMP',
+                    'Instalasi Clean OS Windows 11 & Driver Motherboard',
+                    'Stress Test CPU Cinebench & Monitoring Suhu Hardware',
+                ],
+            ],
+            [
+                'name' => 'Nayla Syakira',
+                'category' => 'Desain Grafis & Multimedia',
+                'parent_name' => 'Rini Wulandari',
+                'whatsapp' => '6281344556677',
+                'fee_per_cycle' => 550000,
+                'status' => 'active',
+                'joined_at' => now()->subDays(15)->toDateString(),
+                'notes' => 'Belajar desain visual canva, komposisi tipografi, dan palet warna.',
+                'sessions_count' => 4,
+                'paid_cycles' => [1],
+                'topics' => [
+                    'Prinsip Desain Visual: Kontras & Hierarki',
+                    'Eksplorasi Palet Warna & Psikologi Warna',
+                    'Tipografi: Font Pairing & Legibility',
+                    'Pembuatan Desain Poster Promosi Instagram',
+                ],
+            ],
+            [
+                'name' => 'Dimas Rizky',
+                'category' => 'Web Development (HTML/CSS & React)',
+                'parent_name' => 'Agung Nugroho',
+                'whatsapp' => '6287711223344',
+                'fee_per_cycle' => 800000,
+                'status' => 'active',
+                'joined_at' => now()->subDays(60)->toDateString(),
+                'notes' => 'Lulusan Siklus 1 & 2 lengkap (16 sesi). Siswa berprestasi.',
+                'sessions_count' => 16,
+                'paid_cycles' => [1, 2],
+                'topics' => [
+                    'Dasar HTML5: Tag Semantik & Struktur Halaman',
+                    'Dasar CSS3: Selektor, Warna & Box Model',
+                    'CSS Flexbox Layout Responsif',
+                    'CSS Grid System & Media Queries',
+                    'Dasar JavaScript: Variabel & Event Listener',
+                    'Manipulasi DOM dengan Vanilla JavaScript',
+                    'Pengenalan Fetch API & Asynchronous JS',
+                    'Mini Project Web Landing Page Portofolio',
+                    'Pengenalan React: Component & JSX',
+                    'State & Props dalam React',
+                    'Handling Input Form & Event React',
+                    'Styling React dengan Tailwind CSS',
+                    'React Hooks: useEffect & Lifecycle',
+                    'Routing Halaman dengan React Router',
+                    'Deployment Proyek ke Cloud Hosting',
+                    'Showcase Proyek Akhir & Review Code',
+                ],
+            ],
+        ];
+
+        foreach ($studentsData as $st) {
+            $student = \App\Models\EducationStudent::updateOrCreate(
+                ['name' => $st['name']],
+                [
+                    'category' => $st['category'],
+                    'parent_name' => $st['parent_name'],
+                    'whatsapp' => $st['whatsapp'],
+                    'fee_per_cycle' => $st['fee_per_cycle'],
+                    'status' => $st['status'],
+                    'joined_at' => $st['joined_at'],
+                    'notes' => $st['notes'],
+                ]
+            );
+
+            // Seed attendances
+            for ($m = 1; $m <= $st['sessions_count']; $m++) {
+                $cNum = intdiv($m - 1, 8) + 1;
+                $sNum = (($m - 1) % 8) + 1;
+                $topic = $st['topics'][$m - 1] ?? "Pembahasan Pertemuan Ke-{$m}";
+
+                \App\Models\EducationAttendance::updateOrCreate(
+                    [
+                        'student_id' => $student->id,
+                        'meeting_number' => $m,
+                    ],
+                    [
+                        'cycle_number' => $cNum,
+                        'session_in_cycle' => $sNum,
+                        'date' => now()->subDays(($st['sessions_count'] - $m) * 3)->toDateString(),
+                        'status' => 'hadir',
+                        'topic' => $topic,
+                        'mentor_name' => 'Instruktur Langit Education',
+                        'notes' => 'Anak memahami materi dengan baik dan aktif mempraktikkan materi di lab.',
+                    ]
+                );
+            }
+
+            // Seed payments
+            foreach ($st['paid_cycles'] as $cycleNum) {
+                $receiptCode = 'INV-EDU-'.date('Ym').'-'.str_pad($student->id * 10 + $cycleNum, 4, '0', STR_PAD_LEFT);
+                \App\Models\EducationPayment::updateOrCreate(
+                    [
+                        'student_id' => $student->id,
+                        'cycle_number' => $cycleNum,
+                    ],
+                    [
+                        'amount' => $student->fee_per_cycle,
+                        'payment_date' => now()->subDays(30 * (count($st['paid_cycles']) - $cycleNum + 1))->toDateString(),
+                        'payment_method' => $cycleNum === 1 ? 'transfer' : 'cash',
+                        'receipt_number' => $receiptCode,
+                        'status' => 'paid',
+                        'notes' => "Lunas pembayaran paket 8 pertemuan (Siklus {$cycleNum})",
+                    ]
+                );
+            }
+        }
     }
 }

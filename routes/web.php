@@ -89,6 +89,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/team-members/{id}/update', [\App\Http\Controllers\Admin\TeamMemberController::class, 'update'])->name('team-members.update');
         Route::delete('/team-members/{id}', [\App\Http\Controllers\Admin\TeamMemberController::class, 'destroy'])->name('team-members.destroy');
 
+        // Langit Education Attendance & Payments
+        Route::post('/education-students', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storeStudent'])->name('education-students.store');
+        Route::put('/education-students/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'updateStudent'])->name('education-students.update');
+        Route::delete('/education-students/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyStudent'])->name('education-students.destroy');
+
+        Route::post('/education-attendance', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storeAttendance'])->name('education-attendance.store');
+        Route::put('/education-attendance/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'updateAttendance'])->name('education-attendance.update');
+        Route::delete('/education-attendance/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyAttendance'])->name('education-attendance.destroy');
+
+        Route::post('/education-payments', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storePayment'])->name('education-payments.store');
+        Route::delete('/education-payments/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyPayment'])->name('education-payments.destroy');
+
         // Computer Service Tickets
         Route::post('/tickets', [AdminDashboardController::class, 'createTicket'])->name('tickets.create');
         Route::put('/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('tickets.update-status');

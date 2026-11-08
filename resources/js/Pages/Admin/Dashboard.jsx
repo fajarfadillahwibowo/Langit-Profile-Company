@@ -7,10 +7,11 @@ import AdminServiceCardsManager from '@/Components/AdminServiceCardsManager';
 import AdminClientDeliveryManager from '@/Components/AdminClientDeliveryManager';
 import AdminTeamManager from '@/Components/AdminTeamManager';
 import AdminGalleryAlbum, { GalleryPhotoPreview } from '@/Components/AdminGalleryAlbum';
+import AdminEducationAttendance from '@/Components/AdminEducationAttendance';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
-    Phone, Calendar, FileText, Download, Eye, Filter,
+    Phone, Calendar, CalendarCheck, FileText, Download, Eye, Filter,
     ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
     Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu, Users
 } from 'lucide-react';
@@ -30,6 +31,8 @@ export default function AdminDashboard({
     recentConsultations = [],
     clientDeliveries = [],
     teamMembers = [],
+    educationStudents = [],
+    educationFinancials = {},
 }) {
     const { auth } = usePage().props;
     // Theme Management: Primary is 'dark', Secondary is 'light'
@@ -1043,28 +1046,56 @@ export default function AdminDashboard({
                                                 const count = getServiceGalleryCount(sItem.slug);
 
                                                 return (
-                                                    <button
-                                                        key={sItem.id}
-                                                        onClick={() => {
-                                                            setActiveTab('galleries');
-                                                            setSelectedGalleryService(sItem.slug);
-                                                            setGallerySubCategoryFilter('all');
-                                                            setMobileSidebarOpen(false);
-                                                        }}
-                                                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 cursor-pointer ${
-                                                            isSelected ? 'bg-white text-[#005792] font-bold shadow-xs' : 'text-white/85 hover:bg-white/10'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-2 min-w-0 pr-1">
-                                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sItem.color }} />
-                                                            <span className="truncate font-semibold text-[11px] leading-tight">
-                                                                {sItem.slug === 'photography-videography' ? 'Photo & Video' : sItem.name}
+                                                    <React.Fragment key={sItem.id}>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveTab('galleries');
+                                                                setSelectedGalleryService(sItem.slug);
+                                                                setGallerySubCategoryFilter('all');
+                                                                setMobileSidebarOpen(false);
+                                                            }}
+                                                            className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 cursor-pointer ${
+                                                                isSelected ? 'bg-white text-[#005792] font-bold shadow-xs' : 'text-white/85 hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center gap-2 min-w-0 pr-1">
+                                                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sItem.color }} />
+                                                                <span className="truncate font-semibold text-[11px] leading-tight">
+                                                                    {sItem.slug === 'photography-videography' ? 'Photo & Video' : sItem.name}
+                                                                </span>
+                                                            </div>
+                                                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-white/20 text-white">
+                                                                {count}
                                                             </span>
-                                                        </div>
-                                                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-white/20 text-white">
-                                                            {count}
-                                                        </span>
-                                                    </button>
+                                                        </button>
+
+                                                        {/* Sub-Sidebar: Absensi Langit Education */}
+                                                        {sItem.slug === 'langit-education' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setActiveTab('education_attendance');
+                                                                    setMobileSidebarOpen(false);
+                                                                }}
+                                                                className={`ml-3.5 w-[calc(100%-0.875rem)] text-left px-2.5 py-1.5 rounded-xl text-[11px] transition-all flex items-center justify-between gap-1.5 cursor-pointer border-l-2 ${
+                                                                    activeTab === 'education_attendance'
+                                                                        ? 'border-emerald-400 bg-white text-[#005792] font-black shadow-sm'
+                                                                        : 'border-emerald-400/50 text-emerald-200 hover:text-white hover:bg-white/10'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                                                                    <span className="truncate">↳ Absensi Langit Education</span>
+                                                                </div>
+                                                                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${
+                                                                    activeTab === 'education_attendance'
+                                                                        ? 'bg-emerald-600 text-white'
+                                                                        : 'bg-emerald-500/30 text-emerald-200'
+                                                                }`}>
+                                                                    8 Sesi
+                                                                </span>
+                                                            </button>
+                                                        )}
+                                                    </React.Fragment>
                                                 );
                                             })}
                                         </div>
@@ -1344,43 +1375,68 @@ export default function AdminDashboard({
                                         const count = getServiceGalleryCount(sItem.slug);
 
                                         return (
-                                            <button
-                                                key={sItem.id}
-                                                onClick={() => {
-                                                    setActiveTab('galleries');
-                                                    setSelectedGalleryService(sItem.slug);
-                                                    setGallerySubCategoryFilter('all');
-                                                }}
-                                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 group cursor-pointer ${
-                                                    isSelected
-                                                        ? 'bg-white text-[#005792] font-bold shadow-sm'
-                                                        : 'text-white/85 hover:text-white hover:bg-white/10'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2 min-w-0 pr-1">
-                                                    <span
-                                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform group-hover:scale-125 ring-1 ring-white/30"
-                                                        style={{ backgroundColor: sItem.color }}
-                                                    />
-                                                    <div className="min-w-0">
-                                                        <span className="block truncate font-semibold text-xs leading-tight">
-                                                            {sItem.slug === 'photography-videography' ? 'Photo & Video' : sItem.name}
-                                                        </span>
-                                                        <span className={`block text-[10px] truncate leading-tight mt-0.5 ${
-                                                            isSelected ? 'text-[#005792]/70 font-medium' : 'text-sky-200/75'
-                                                        }`}>
-                                                            {sItem.badge}
-                                                        </span>
+                                            <React.Fragment key={sItem.id}>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveTab('galleries');
+                                                        setSelectedGalleryService(sItem.slug);
+                                                        setGallerySubCategoryFilter('all');
+                                                    }}
+                                                    className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-wrap items-center justify-between gap-2 group cursor-pointer ${
+                                                        isSelected
+                                                            ? 'bg-white text-[#005792] font-bold shadow-sm'
+                                                            : 'text-white/85 hover:text-white hover:bg-white/10'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2 min-w-0 pr-1">
+                                                        <span
+                                                            className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform group-hover:scale-125 ring-1 ring-white/30"
+                                                            style={{ backgroundColor: sItem.color }}
+                                                        />
+                                                        <div className="min-w-0">
+                                                            <span className="block truncate font-semibold text-xs leading-tight">
+                                                                {sItem.slug === 'photography-videography' ? 'Photo & Video' : sItem.name}
+                                                            </span>
+                                                            <span className={`block text-[10px] truncate leading-tight mt-0.5 ${
+                                                                isSelected ? 'text-[#005792]/70 font-medium' : 'text-sky-200/75'
+                                                            }`}>
+                                                                {sItem.badge}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                                                    isSelected
-                                                        ? 'bg-[#005792] text-white shadow-xs'
-                                                        : 'bg-white/20 text-white'
-                                                }`}>
-                                                    {count}
-                                                </span>
-                                            </button>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                                                        isSelected
+                                                            ? 'bg-[#005792] text-white shadow-xs'
+                                                            : 'bg-white/20 text-white'
+                                                    }`}>
+                                                        {count}
+                                                    </span>
+                                                </button>
+
+                                                {/* Sub-Sidebar: Absensi Langit Education */}
+                                                {sItem.slug === 'langit-education' && (
+                                                    <button
+                                                        onClick={() => setActiveTab('education_attendance')}
+                                                        className={`ml-4 w-[calc(100%-1rem)] text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex items-center justify-between gap-2 group cursor-pointer border-l-2 ${
+                                                            activeTab === 'education_attendance'
+                                                                ? 'border-emerald-400 bg-white text-[#005792] font-black shadow-sm'
+                                                                : 'border-emerald-400/50 text-emerald-200 hover:text-white hover:bg-white/10'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <CalendarCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                                                            <span className="truncate font-semibold text-[11px]">↳ Absensi Langit Education</span>
+                                                        </div>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                                                            activeTab === 'education_attendance'
+                                                                ? 'bg-emerald-600 text-white shadow-xs'
+                                                                : 'bg-emerald-500/30 text-emerald-200'
+                                                        }`}>
+                                                            8 Sesi
+                                                        </span>
+                                                    </button>
+                                                )}
+                                            </React.Fragment>
                                         );
                                     })}
                                 </div>
@@ -1590,6 +1646,7 @@ export default function AdminDashboard({
                             <div className="order-last w-full md:order-none md:w-auto">
                                 <h1 className="font-heading font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white leading-tight">
                                     {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
+                                    {activeTab === 'education_attendance' && 'Absensi & Kas Langit Education'}
                                     {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan'}
                                     {activeTab === 'our_team' && 'Manajemen Our Team'}
                                     {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
@@ -2968,6 +3025,9 @@ export default function AdminDashboard({
 
                 {/* TAB: LAYANAN FOTO PELANGGAN (DELIVERY & AMBIL FOTO) */}
                 {activeTab === 'our_team' && <AdminTeamManager teamMembers={teamMembers} />}
+                {activeTab === 'education_attendance' && (
+                    <AdminEducationAttendance students={educationStudents} financials={educationFinancials} />
+                )}
                 {activeTab === 'client_deliveries' && (
                     <AdminClientDeliveryManager clientDeliveries={clientDeliveries} />
                 )}

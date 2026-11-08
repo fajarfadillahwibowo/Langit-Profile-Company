@@ -250,8 +250,46 @@ class AdminDashboardController extends Controller
             ],
         ];
 
+        $educationStudents = \App\Models\EducationStudent::with([
+            'attendances' => fn ($q) => $q->orderBy('meeting_number'),
+            'payments' => fn ($q) => $q->orderBy('cycle_number'),
+        ])->orderBy('name')->get();
+
+        $totalEducationIncome = (float) \App\Models\EducationPayment::where('status', 'paid')->sum('amount');
+        $thisMonthEducationIncome = (float) \App\Models\EducationPayment::where('status', 'paid')
+            ->whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount');
+        $totalEducationSessions = (int) \App\Models\EducationAttendance::where('status', 'hadir')->count();
+        $totalStudentsCount = $educationStudents->count();
+
+        $pendingCyclesCount = 0;
+        $pendingAmountEstimate = 0.0;
+        foreach ($educationStudents as $st) {
+            $totalM = $st->attendances->count();
+            $currCycle = $totalM === 0 ? 1 : intdiv($totalM - 1, 8) + 1;
+            $paidC = $st->payments->where('status', 'paid')->pluck('cycle_number')->map(fn ($n) => (int) $n)->toArray();
+            for ($c = 1; $c <= $currCycle; $c++) {
+                if (! in_array($c, $paidC, true)) {
+                    $pendingCyclesCount++;
+                    $pendingAmountEstimate += (float) ($st->fee_per_cycle ?: 600000);
+                }
+            }
+        }
+
+        $educationFinancials = [
+            'total_income' => $totalEducationIncome,
+            'this_month_income' => $thisMonthEducationIncome,
+            'total_sessions' => $totalEducationSessions,
+            'total_students' => $totalStudentsCount,
+            'pending_cycles_count' => $pendingCyclesCount,
+            'pending_amount_estimate' => $pendingAmountEstimate,
+        ];
+
         return Inertia::render('Admin/Dashboard', [
             'teamMembers' => \App\Models\TeamMember::orderBy('sort_order')->orderBy('id')->get(),
+            'educationStudents' => $educationStudents,
+            'educationFinancials' => $educationFinancials,
             'metrics' => $metrics,
             'analytics' => $analytics,
             'recentConsultations' => Consultation::latest()->take(5)->get(),
