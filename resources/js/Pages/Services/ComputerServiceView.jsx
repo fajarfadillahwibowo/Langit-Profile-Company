@@ -6,8 +6,10 @@ import {
     ArrowRight, PhoneCall, MessageSquare, Zap
 } from 'lucide-react';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function ComputerServiceView({ service, galleries = [] }) {
+    const { getOptimizedImage } = useQuality();
     const servicePresets = {
         software: {
             title: 'Installasi Software',
@@ -174,10 +176,11 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                                 {/* Top Image Area (matching user reference image) */}
                                 <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-900">
                                     <img
-                                        src={srv.image}
+                                        src={getOptimizedImage(srv.image, { sdWidth: 480, hdWidth: 900 })}
                                         alt={srv.title}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         loading="lazy"
+                                        decoding="async"
                                     />
                                     <div className="absolute top-3 left-3">
                                         <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-sm">
@@ -212,14 +215,14 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                                             {srv.items.slice(0, 3).map((item, iIdx) => (
                                                 <div key={iIdx} className="flex items-start gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
                                                     <CheckCircle2 className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
-                                                    <span className="line-clamp-1">{item}</span>
+                                                    <span className="break-words">{item}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
                                     {/* Card Estimation & Consultation Footer */}
-                                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between gap-2">
+                                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                                         <div className="flex items-center gap-1.5 text-xs font-mono text-slate-600 dark:text-slate-400">
                                             <Clock className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
                                             <span className="font-semibold">{srv.estTime}</span>
@@ -384,7 +387,7 @@ export default function ComputerServiceView({ service, galleries = [] }) {
                                     Jelaskan kendala Anda ke teknisi kami untuk mendapatkan diagnosa awal dan rekomendasi solusi terbaik.
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2.5 shrink-0">
+                            <div className="flex w-full sm:w-auto flex-wrap items-center justify-center gap-2.5 sm:shrink-0">
                                 <a
                                     href={getWhatsAppUrl('computer-service', { 
                                         category: 'Diagnosa Cepat Laptop & PC',

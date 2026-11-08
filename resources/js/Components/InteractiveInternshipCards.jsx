@@ -141,10 +141,10 @@ export default function InteractiveInternshipCards({
             </div>
 
             {/* Theatrical Light Purple & White Glassmorphic Stage Container */}
-            <div className="relative rounded-3xl bg-gradient-to-br from-purple-100/70 via-white/80 to-purple-50/70 dark:from-purple-950/40 dark:via-purple-900/20 dark:to-white/[0.05] backdrop-blur-2xl border border-purple-200/80 dark:border-purple-500/20 shadow-2xl shadow-purple-500/10 p-6 sm:p-10 lg:p-14 overflow-hidden">
-                {/* Background Ambient Glow Spots */}
-                <div className="absolute -top-10 left-1/4 w-80 h-80 bg-purple-300/35 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-10 right-1/4 w-96 h-96 bg-white/80 dark:bg-purple-400/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative rounded-3xl bg-gradient-to-br from-purple-100/70 via-white/80 to-purple-50/70 dark:from-purple-950/40 dark:via-purple-900/20 dark:to-white/[0.05] backdrop-blur-2xl border border-purple-200/80 dark:border-purple-500/20 shadow-2xl shadow-purple-500/10 p-4 sm:p-10 lg:p-14 overflow-hidden">
+                {/* Background Ambient Glow Spots (Zero GPU blur overhead) */}
+                <div className="absolute -top-10 left-1/4 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 70%)' }} />
+                <div className="absolute -bottom-10 right-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.14) 0%, transparent 70%)' }} />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-r from-transparent via-purple-100/40 dark:via-purple-500/5 to-transparent pointer-events-none" />
 
                 {/* Subtitle guidance inside stage */}
@@ -281,7 +281,7 @@ export default function InteractiveInternshipCards({
                 </div>
 
                 {/* Mobile / Small Screens: Horizontal Smooth Scrollable Snap Deck */}
-                <div className="md:hidden flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory no-scrollbar">
+                <div className="md:hidden flex gap-4 overflow-x-auto p-1 pb-4 pt-2 snap-x snap-mandatory">
                     {positions.map((pos, idx) => {
                         const palette = PALETTES[idx % PALETTES.length];
                         const isSelected = selectedPositionId === pos.id;
@@ -295,8 +295,8 @@ export default function InteractiveInternshipCards({
                                     backgroundColor: palette.bg,
                                     color: palette.textColor,
                                 }}
-                                className={`snap-center shrink-0 w-[270px] rounded-3xl p-6 flex flex-col justify-between shadow-xl transition-all ${
-                                    isSelected ? 'ring-4 ring-purple-600 dark:ring-white scale-[1.02] shadow-2xl shadow-purple-500/25' : 'opacity-95'
+                                className={`snap-center shrink-0 w-full max-w-[300px] min-w-0 rounded-3xl p-4 sm:p-6 flex flex-col justify-between shadow-xl transition-all ${
+                                    isSelected ? 'ring-4 ring-purple-600 dark:ring-white shadow-2xl shadow-purple-500/25' : 'opacity-95'
                                 }`}
                             >
                                 <div>
@@ -329,20 +329,20 @@ export default function InteractiveInternshipCards({
                                         {reqs.slice(0, 3).map((r, i) => (
                                             <div key={i} className="flex items-start gap-1.5 text-[11px] leading-snug opacity-90">
                                                 <span>•</span>
-                                                <span className="line-clamp-2">{r}</span>
+                                                <span className="min-w-0 break-words">{r}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="mt-5 pt-3 border-t border-black/15 flex items-center justify-between">
-                                    <span className="text-[11px] font-mono font-bold">
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); onSelectPosition(pos.id); }} aria-pressed={isSelected} className="min-h-11 text-left text-[11px] font-mono font-bold">
                                         {isSelected ? '✓ Terpilih' : 'Pilih Posisi'}
-                                    </span>
+                                    </button>
                                     <button
                                         type="button"
                                         onClick={(e) => handleApplyClick(e, pos.id)}
-                                        className="px-3 py-1.5 rounded-lg bg-slate-950 text-white font-bold text-xs"
+                                        className="min-h-11 px-3 py-1.5 rounded-lg bg-slate-950 text-white font-bold text-xs"
                                     >
                                         Lamar →
                                     </button>

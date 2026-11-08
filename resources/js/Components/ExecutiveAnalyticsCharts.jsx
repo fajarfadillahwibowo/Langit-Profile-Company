@@ -236,10 +236,10 @@ export default function ExecutiveAnalyticsCharts({
     return (
         <div className="space-y-6">
             {/* Header Telemetry Bar & Period Controls */}
-            <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors">
+            <div className="min-w-0 p-4 sm:p-5 md:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors [overflow-wrap:anywhere]">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
                             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                                 Live Telemetry & Kinerja Sistem
@@ -257,7 +257,7 @@ export default function ExecutiveAnalyticsCharts({
                     </div>
 
                     {/* Period Switcher Pills */}
-                    <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#EDF9FC] dark:bg-white/5 border border-[#005792]/15 dark:border-white/10 self-start lg:self-auto">
+                    <div className="flex max-w-full flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#EDF9FC] dark:bg-white/5 border border-[#005792]/15 dark:border-white/10 self-start lg:self-auto">
                         {[
                             { id: '7d', label: '7 Hari Terakhir' },
                             { id: '30d', label: '30 Hari Terakhir' },
@@ -286,8 +286,8 @@ export default function ExecutiveAnalyticsCharts({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* 1. AREA SPLINE WAVE CHART (7 COLS ON LARGE) */}
-                <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="min-w-0 lg:col-span-7 p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
+                    <div className="flex flex-col items-start justify-between gap-3 mb-4">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                                 Throughput Transaksi & Reservasi
@@ -299,7 +299,7 @@ export default function ExecutiveAnalyticsCharts({
                         </div>
 
                         {/* Legend Indicators */}
-                        <div className="flex items-center gap-3 text-xs font-sans">
+                        <div className="flex flex-wrap items-center gap-3 text-xs font-sans">
                             <div className="flex items-center gap-1.5">
                                 <span className="w-3 h-3 rounded-md bg-[#005792] dark:bg-cyan-400 shadow-sm"></span>
                                 <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">Servis & Order</span>
@@ -395,8 +395,9 @@ export default function ExecutiveAnalyticsCharts({
                                             width={40}
                                             height={svgChartBounds.height}
                                             fill="transparent"
-                                            onMouseEnter={() => setHoveredDataPoint({ idx, ...coord })}
-                                            onMouseLeave={() => setHoveredDataPoint(null)}
+                                            onPointerEnter={() => setHoveredDataPoint({ idx, ...coord })}
+                                            onPointerLeave={() => setHoveredDataPoint(null)}
+                                            onPointerDown={() => setHoveredDataPoint({ idx, ...coord })}
                                         />
 
                                         {/* Vertical dashed guide line on hover */}
@@ -449,7 +450,7 @@ export default function ExecutiveAnalyticsCharts({
                                     transition={{ duration: 0.15 }}
                                     style={{
                                         position: 'absolute',
-                                        left: `${(hoveredDataPoint.x / svgChartBounds.width) * 100}%`,
+                                        left: `clamp(5.5rem, ${(hoveredDataPoint.x / svgChartBounds.width) * 100}%, calc(100% - 5.5rem))`,
                                         top: '12%',
                                         transform: 'translateX(-50%)',
                                         pointerEvents: 'none'
@@ -482,7 +483,7 @@ export default function ExecutiveAnalyticsCharts({
                     </div>
 
                     {/* Bottom Axis Date Labels */}
-                    <div className="flex items-center justify-between px-2 pt-3 text-[11px] font-sans font-medium text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-2 pt-3 text-[10px] sm:text-[11px] font-sans font-medium text-slate-500 dark:text-slate-400">
                         {timeSeriesData.map((d, i) => (
                             <span 
                                 key={i}
@@ -496,7 +497,7 @@ export default function ExecutiveAnalyticsCharts({
                     </div>
 
                     {/* Footer KPI Summary Bar */}
-                    <div className="grid grid-cols-3 gap-3 pt-4 mt-3 border-t border-slate-100 dark:border-white/5 text-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 mt-3 border-t border-slate-100 dark:border-white/5 text-center">
                         <div className="p-2 rounded-xl bg-[#EDF9FC]/60 dark:bg-white/[0.02] border border-[#005792]/10 dark:border-white/5">
                             <span className="text-[10px] text-slate-500 uppercase font-semibold block">Volume Tertinggi</span>
                             <span className="text-sm font-extrabold text-slate-900 dark:text-white font-heading mt-0.5 block">
@@ -519,8 +520,8 @@ export default function ExecutiveAnalyticsCharts({
                 </div>
 
                 {/* 2. DONUT / RADIAL 7 DIVISIONS COMPOSITION (5 COLS ON LARGE) */}
-                <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
-                    <div className="flex items-center justify-between mb-3">
+                <div className="min-w-0 lg:col-span-5 p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                                 Portfolio Share & Workload
@@ -537,7 +538,7 @@ export default function ExecutiveAnalyticsCharts({
 
                     {/* Donut Graphic + Center Callout */}
                     <div className="relative flex items-center justify-center my-2">
-                        <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
+                        <svg width="200" height="200" viewBox="0 0 200 200" className="max-w-full transform -rotate-90">
                             {divisionsDistribution.map((div, i) => {
                                 const strokeDasharray = `${(div.percentage / 100) * donutCircumference} ${donutCircumference}`;
                                 const precedingOffset = divisionsDistribution
@@ -634,7 +635,7 @@ export default function ExecutiveAnalyticsCharts({
             </div>
 
             {/* 3. THREE VELOCITY & EFFICIENCY METERS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div className="p-5 rounded-3xl bg-white dark:bg-[#090D16] border border-cyan-500/20 shadow-sm dark:shadow-xl flex items-center gap-4 transition-colors">
                     <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
                         <Zap className="w-6 h-6" />
@@ -643,7 +644,7 @@ export default function ExecutiveAnalyticsCharts({
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                             Respon Lead & Konsultasi
                         </span>
-                        <div className="flex items-baseline gap-2 mt-0.5">
+                        <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
                             <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white">
                                 {kpi.lead_response_rate}%
                             </span>
@@ -665,7 +666,7 @@ export default function ExecutiveAnalyticsCharts({
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                             Penyelesaian Servis Komputer
                         </span>
-                        <div className="flex items-baseline gap-2 mt-0.5">
+                        <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
                             <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white">
                                 {kpi.service_completion_rate}%
                             </span>
@@ -689,7 +690,7 @@ export default function ExecutiveAnalyticsCharts({
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                             Kesiapan Gear & Kamera
                         </span>
-                        <div className="flex items-baseline gap-2 mt-0.5">
+                        <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
                             <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white">
                                 {kpi.gear_utility_rate}%
                             </span>

@@ -8,6 +8,7 @@ import {
     Award, Loader2, FileText, MessageSquare, Key, Camera, Check, Phone
 } from 'lucide-react';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
+import { useQuality } from '@/Context/QualityContext';
 
 const defaultPositions = [
     {
@@ -69,6 +70,7 @@ const defaultPositions = [
 ];
 
 export default function InternshipView({ service, positions = [], galleries = [] }) {
+    const { getOptimizedImage } = useQuality();
     const activePositions = positions && positions.length > 0 ? positions : defaultPositions;
     const [selectedPositionId, setSelectedPositionId] = useState(activePositions[0]?.id || 1);
     
@@ -198,10 +200,10 @@ export default function InternshipView({ service, positions = [], galleries = []
 
             {/* Atmosphere: Startup Talent & Career Portal with Dual Theme Support */}
             <div className="bg-[#EDF9FC] text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen pt-2 sm:pt-6 transition-colors duration-300 relative overflow-hidden">
-                {/* Artistic Volumetric Lighting Blobs */}
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[400px] bg-gradient-to-tr from-[#005792]/20 via-purple-600/15 to-pink-500/10 blur-3xl rounded-full pointer-events-none -z-0" />
-                <div className="absolute top-[480px] -left-20 w-[400px] h-[400px] bg-[#005792]/10 blur-3xl rounded-full pointer-events-none -z-0" />
-                <div className="absolute top-[520px] -right-20 w-[400px] h-[400px] bg-purple-600/10 blur-3xl rounded-full pointer-events-none -z-0" />
+                {/* Artistic Volumetric Lighting Blobs (Zero GPU blur overhead) */}
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[400px] rounded-full pointer-events-none -z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,87,146,0.14) 0%, rgba(147,51,234,0.08) 45%, transparent 70%)' }} />
+                <div className="absolute top-[480px] -left-20 w-[400px] h-[400px] rounded-full pointer-events-none -z-0" style={{ background: 'radial-gradient(circle, rgba(0,87,146,0.08) 0%, transparent 70%)' }} />
+                <div className="absolute top-[520px] -right-20 w-[400px] h-[400px] rounded-full pointer-events-none -z-0" style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.08) 0%, transparent 70%)' }} />
 
                 {/* Hero Header */}
                 <section className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-16 text-center space-y-6">
@@ -363,11 +365,11 @@ export default function InternshipView({ service, positions = [], galleries = []
 
                                         {/* Bottom Card Content: Deliverable & Verified Status */}
                                         <div className="relative z-10 mt-6 pt-3.5 border-t border-slate-200/60 dark:border-white/10 flex flex-col gap-2">
-                                            <div className="flex items-center justify-between text-[11px]">
+                                            <div className="flex items-start justify-between gap-3 text-[11px]">
                                                 <span className="text-slate-400 dark:text-slate-500 font-mono text-[10px] uppercase tracking-wider">
                                                     Target:
                                                 </span>
-                                                <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] truncate max-w-[125px]">
+                                                <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] text-right break-words min-w-0">
                                                     {j.deliverable}
                                                 </span>
                                             </div>
@@ -376,7 +378,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                                 style={{ color: j.color }}
                                             >
                                                 <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                                                <span className="truncate">{j.badge}</span>
+                                                <span className="min-w-0 break-words">{j.badge}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -408,7 +410,13 @@ export default function InternshipView({ service, positions = [], galleries = []
                             {galleries.map((item) => (
                                 <div key={item.id} className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-md">
                                     <div className="relative aspect-[4/3] overflow-hidden">
-                                        <img src={item.file_webp_path} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <img 
+                                            src={getOptimizedImage(item.file_webp_path, { sdWidth: 400, hdWidth: 800 })} 
+                                            alt={item.title} 
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                                     </div>
                                     <div className="p-3.5 bg-white dark:bg-[#0c1322]">
@@ -422,8 +430,8 @@ export default function InternshipView({ service, positions = [], galleries = []
                 )}
 
                 {/* 3. Direct Application Form with CV Upload */}
-                <section id="form-pendaftaran" className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
-                    <div className="rounded-3xl bg-white dark:bg-[#120B24]/90 border border-slate-200 dark:border-purple-500/30 p-6 md:p-8 backdrop-blur-2xl shadow-xl dark:shadow-2xl">
+                <section id="form-pendaftaran" className="scroll-mt-28 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-16 border-t border-slate-200 dark:border-white/10">
+                    <div className="rounded-3xl bg-white dark:bg-[#120B24]/90 border border-slate-200 dark:border-purple-500/30 p-4 sm:p-6 md:p-8 backdrop-blur-2xl shadow-xl dark:shadow-2xl">
                         <div className="mb-6">
                             <span className="text-xs font-mono text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-1 font-bold">
                                 1. Form Pendaftaran Magang / PKL
@@ -442,7 +450,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                 <select
                                     value={selectedPositionId || ''}
                                     onChange={(e) => setSelectedPositionId(parseInt(e.target.value, 10))}
-                                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-500/40 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
+                                    className="w-full sm:w-auto min-w-0 max-w-full px-3 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-500/40 text-base sm:text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                                 >
                                     {activePositions.map((pos) => (
                                         <option key={pos.id} value={pos.id}>
@@ -498,7 +506,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.full_name}
                                             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                                             placeholder="Nama lengkap Anda..."
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
 
@@ -510,7 +518,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.institution_name}
                                             onChange={(e) => setFormData({ ...formData, institution_name: e.target.value })}
                                             placeholder="Contoh: Universitas Gadjah Mada"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
 
@@ -522,7 +530,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.major}
                                             onChange={(e) => setFormData({ ...formData, major: e.target.value })}
                                             placeholder="Contoh: Teknik Informatika / DKV"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
 
@@ -534,7 +542,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.whatsapp}
                                             onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                                             placeholder="0812xxxxxxx"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
 
@@ -546,7 +554,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             placeholder="nama@email.com"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
 
@@ -557,7 +565,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             value={formData.portfolio_url}
                                             onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
                                             placeholder="https://..."
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                         />
                                     </div>
                                 </div>
@@ -571,13 +579,13 @@ export default function InternshipView({ service, positions = [], galleries = []
                                             id="cv_upload"
                                             accept=".pdf"
                                             onChange={(e) => setCvFile(e.target.files[0])}
-                                            className="hidden"
+                                            className="peer sr-only"
                                         />
-                                        <label htmlFor="cv_upload" className="cursor-pointer flex flex-col items-center">
+                                        <label htmlFor="cv_upload" className="cursor-pointer flex min-w-0 flex-col items-center rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-purple-500">
                                             <Upload className="w-6 h-6 text-purple-600 dark:text-purple-400 mb-2" />
                                             {cvFile ? (
-                                                <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-                                                    <FileText className="w-4 h-4" />
+                                                <span className="min-w-0 max-w-full break-all text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-start gap-1.5">
+                                                    <FileText className="w-4 h-4 shrink-0" />
                                                     {cvFile.name} ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
                                                 </span>
                                             ) : (
@@ -597,7 +605,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                                         value={formData.motivation_letter}
                                         onChange={(e) => setFormData({ ...formData, motivation_letter: e.target.value })}
                                         placeholder="Ceritakan ketertarikan Anda dan apa yang ingin Anda ciptakan bersama kami..."
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
+                                        className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-purple-500"
                                     />
                                 </div>
 

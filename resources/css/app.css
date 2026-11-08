@@ -41,6 +41,21 @@
 body {
     background-color: #EDF9FC;
 }
+
+/* Allow form controls to shrink in flex/grid tracks on narrow screens. */
+input, select, textarea {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 639px) {
+    /* iOS zooms the viewport when focusing inputs below 16px. */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
 .dark body {
     background-color: #07090E;
 }

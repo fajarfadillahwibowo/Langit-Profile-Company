@@ -5,8 +5,10 @@ import EducationTrack3DCards from '@/Components/EducationTrack3DCards';
 import InteractiveEducationHub from '@/Components/InteractiveEducationHub';
 import { GraduationCap, ArrowRight, Phone } from 'lucide-react';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function EducationView({ service, courses = [], galleries = [] }) {
+    const { getOptimizedImage } = useQuality();
     return (
         <PublicLayout activeService="langit-education">
             <Head>
@@ -86,8 +88,10 @@ export default function EducationView({ service, courses = [], galleries = [] })
                                 >
                                     <div className="relative aspect-[4/3] overflow-hidden">
                                         <img 
-                                            src={item.file_webp_path} 
+                                            src={getOptimizedImage(item.file_webp_path, { sdWidth: 400, hdWidth: 800 })} 
                                             alt={item.title} 
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
@@ -97,7 +101,7 @@ export default function EducationView({ service, courses = [], galleries = [] })
                                             <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold uppercase">
                                                 {item.category || 'Studio Lab'}
                                             </span>
-                                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white mt-1 leading-snug">
+                                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white mt-1 leading-snug break-words">
                                                 {item.title}
                                             </h4>
                                         </div>

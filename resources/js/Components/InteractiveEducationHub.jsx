@@ -31,7 +31,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
             icon: Cpu,
             color: '#10B981',
             badge: 'Teknologi & Software',
-            mentor: { name: 'Rian Hidayat', role: 'Principal Tech Lead @ Langit' },
+            mentor: { role: 'Instruktur & Praktisi Software Engineering Langit' },
             duration: '10 Minggu (30 Pertemuan Praktik)',
             workstation: 'Apple M-Series / High-End Core i7 Workstation + Kit Robotik ESP32 & Sensor IoT',
             capstone: 'Membangun Web Application Interaktif Berbasis REST API & Otomasi AI',
@@ -49,7 +49,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
             icon: FileSpreadsheet,
             color: '#0EA5E9',
             badge: 'Administrasi Profesional',
-            mentor: { name: 'Siti Nurhaliza', role: 'Office Administration & Data Specialist' },
+            mentor: { role: 'Instruktur & Praktisi Administrasi Perkantoran Modern' },
             duration: '6 Minggu (18 Pertemuan Praktik)',
             workstation: 'Dual-Monitor Business PC + Akses Lisensi Resmi Microsoft 365 & Google Workspace',
             capstone: 'Sistem Pembukuan Kas, Rekapitulasi Data Otomatis & Dashboard Eksekutif',
@@ -67,7 +67,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
             icon: Wrench,
             color: '#F97316',
             badge: 'Teknikal & Reparasi Hardware',
-            mentor: { name: 'Agus Prasetyo', role: 'Hardware Lab Specialist @ Langit' },
+            mentor: { role: 'Instruktur & Praktisi Perakitan & Diagnostic Hardware Lab' },
             duration: '4 Minggu (12 Pertemuan Praktik)',
             workstation: 'ESD Safe Workstation + Toolkit Presisi, Solder Station, Thermal Imager, dan Multi-meter',
             capstone: 'Perakitan PC Custom Estetik + Stress Test 3DMark & Diagnostic Kerusakan Komputer',
@@ -205,6 +205,10 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                     <div
                                         key={key}
                                         onClick={() => { setSelectedTrack(key); setOpenWeek(0); }}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-pressed={isSelected}
+                                        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedTrack(key); setOpenWeek(0); } }}
                                         className={`cursor-pointer p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between group ${
                                             isSelected
                                                 ? 'bg-slate-50 dark:bg-[#071914] border-emerald-500 shadow-xl ring-2 ring-emerald-500/20 scale-[1.02]'
@@ -212,7 +216,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                         }`}
                                     >
                                         <div>
-                                            <div className="flex items-center justify-between mb-3">
+                                            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                                                 <div 
                                                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
                                                     style={{ backgroundColor: `${data.color}20`, color: data.color }}
@@ -239,7 +243,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                             </p>
                                         </div>
 
-                                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] font-mono">
+                                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-3 items-center justify-between text-[11px] font-mono">
                                             <span className="text-slate-500">{data.duration}</span>
                                             <span className="font-bold flex items-center gap-1" style={{ color: data.color }}>
                                                 <span>Pilih Silabus</span>
@@ -252,11 +256,11 @@ export default function InteractiveEducationHub({ courses = [] }) {
                         </div>
 
                         {/* Active Curriculum Detailed Showcase */}
-                        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#071914]/90 border border-emerald-500/30 shadow-2xl space-y-6 relative overflow-hidden">
-                            {/* Ambient Track Glow */}
-                            <div 
-                                className="absolute -top-20 -right-20 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none"
-                                style={{ backgroundColor: currentTrack.color }}
+                        <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#071914]/90 border border-emerald-500/30 shadow-2xl space-y-6 relative overflow-hidden">
+                            {/* Ambient Track Glow (radial gradient, tanpa beban GPU blur) */}
+                            <div
+                                className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-20 pointer-events-none"
+                                style={{ background: `radial-gradient(circle, ${currentTrack.color} 0%, transparent 70%)` }}
                             />
 
                             {/* Header Info */}
@@ -320,9 +324,9 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                             >
                                                 <button
                                                     onClick={() => setOpenWeek(isOpen ? null : sIdx)}
-                                                    className="w-full p-4 text-left flex items-center justify-between gap-3 cursor-pointer"
+                                                    className="w-full p-3 sm:p-4 text-left flex items-start justify-between gap-3 cursor-pointer"
                                                 >
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex min-w-0 flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                                                         <span 
                                                             className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md"
                                                             style={{ backgroundColor: `${currentTrack.color}20`, color: currentTrack.color }}
@@ -373,14 +377,14 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                         </p>
                                     </div>
 
-                                    {/* Mentor Badge */}
+                                    {/* Instruktur & Pendamping Praktik */}
                                     <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-600 dark:text-emerald-300 text-sm shrink-0">
-                                            {currentTrack.mentor.name.charAt(0)}
+                                            <Award className="w-5 h-5 text-emerald-500" />
                                         </div>
                                         <div>
                                             <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                                                {currentTrack.mentor.name}
+                                                Instruktur & Mentor Ahli
                                             </span>
                                             <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 block">
                                                 {currentTrack.mentor.role}
@@ -483,7 +487,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                         transition={{ duration: 0.35 }}
                         className="max-w-3xl mx-auto"
                     >
-                        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#071914]/90 border border-emerald-500/30 shadow-2xl space-y-6">
+                        <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#071914]/90 border border-emerald-500/30 shadow-2xl space-y-6">
                             <div className="text-center space-y-1">
                                 <span className="text-xs font-mono font-bold text-emerald-500 uppercase">
                                     2-Minute Career Compass
@@ -601,20 +605,21 @@ export default function InteractiveEducationHub({ courses = [] }) {
 
             {/* Inquire Silabus Modal (No Public Price Tag!) */}
             {inquiryCourse && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
-                    <div className="relative max-w-lg w-full bg-white dark:bg-[#071914] border border-slate-200 dark:border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-2xl">
+                <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+                    <div role="dialog" aria-modal="true" aria-labelledby="education-inquiry-title" className="relative max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain max-w-lg w-full min-w-0 bg-white dark:bg-[#071914] border border-slate-200 dark:border-emerald-500/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
                         <button
                             onClick={() => setInquiryCourse(null)}
-                            className="absolute top-5 right-5 p-2 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                            aria-label="Tutup formulir pendidikan"
+                            className="absolute top-3 right-3 p-2 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase mb-1">
+                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase mb-1 pr-10">
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>Inquiry & Silabus Portal</span>
                         </div>
-                        <h3 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mb-1">
+                        <h3 id="education-inquiry-title" className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white mb-1 pr-10">
                             Konsultasi Program & Jadwal
                         </h3>
                         <p className="text-xs text-slate-600 dark:text-slate-400 mb-6">
@@ -647,11 +652,11 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                         value={formInquiry.name}
                                         onChange={(e) => setFormInquiry({ ...formInquiry, name: e.target.value })}
                                         placeholder="Contoh: Muhammad Raihan"
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500"
+                                        className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1">Email Aktif *</label>
                                         <input
@@ -660,7 +665,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                             value={formInquiry.email}
                                             onChange={(e) => setFormInquiry({ ...formInquiry, email: e.target.value })}
                                             placeholder="nama@domain.com"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-emerald-500"
                                         />
                                     </div>
                                     <div>
@@ -671,7 +676,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                             value={formInquiry.whatsapp}
                                             onChange={(e) => setFormInquiry({ ...formInquiry, whatsapp: e.target.value })}
                                             placeholder="0812xxxxxxx"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500"
+                                            className="min-w-0 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-emerald-500"
                                         />
                                     </div>
                                 </div>
@@ -683,7 +688,7 @@ export default function InteractiveEducationHub({ courses = [] }) {
                                         value={formInquiry.notes}
                                         onChange={(e) => setFormInquiry({ ...formInquiry, notes: e.target.value })}
                                         placeholder="Tuliskan jadwal yang Anda inginkan (weekday/weekend) atau target keahlian..."
-                                        className="w-full px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
 

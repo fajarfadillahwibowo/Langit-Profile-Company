@@ -83,9 +83,9 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
             <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto pt-6 pb-20">
                 {/* Stepper Progress Bar */}
                 <div className="mb-10 text-center space-y-3">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-mono tracking-wider">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>3-STEP INTERACTIVE CONSULTATION WIZARD</span>
+                    <div className="inline-flex max-w-full items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] sm:text-xs font-mono tracking-wider">
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span className="min-w-0">3-STEP INTERACTIVE CONSULTATION WIZARD</span>
                     </div>
 
                     <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">
@@ -93,10 +93,10 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                     </h1>
 
                     {step <= 3 && (
-                        <div className="flex items-center justify-center gap-3 pt-4">
+                        <div className="grid grid-cols-3 sm:flex items-start sm:items-center justify-center gap-2 sm:gap-3 pt-4">
                             {[1, 2, 3].map((s) => (
-                                <div key={s} className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all ${
+                                <div key={s} className="min-w-0 flex flex-col sm:flex-row items-center gap-2" aria-current={step === s ? 'step' : undefined}>
+                                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all ${
                                         step === s
                                             ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/30 ring-2 ring-cyan-400'
                                             : step > s
@@ -105,7 +105,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     }`}>
                                         {step > s ? <Check className="w-4 h-4 stroke-[3]" /> : `0${s}`}
                                     </div>
-                                    <span className={`text-xs font-mono hidden sm:inline ${
+                                    <span className={`text-[10px] sm:text-xs font-mono ${
                                         step === s ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-500'
                                     }`}>
                                         {s === 1 ? 'Pilih Topik' : s === 2 ? 'Metode & Jadwal' : 'Rincian & Tiket'}
@@ -119,7 +119,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
 
                 {/* STEP 1: PILIH TOPIK KEBUTUHAN (PRD 5.3) */}
                 {step === 1 && (
-                    <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
+                    <div className="min-w-0 p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
                         <div>
                             <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">Langkah 1 dari 3</span>
                             <h2 className="font-heading font-bold text-2xl text-slate-900 dark:text-white">
@@ -139,21 +139,21 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     <div
                                         key={top.id}
                                         onClick={() => setSelectedTopic(top.title)}
-                                        className={`cursor-pointer p-5 rounded-2xl border transition-all flex items-center justify-between group ${
+                                        className={`min-w-0 cursor-pointer p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between gap-3 group ${
                                             isSelected
                                                 ? 'bg-cyan-50 dark:bg-cyan-500/15 border-cyan-500 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-500'
                                                 : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-cyan-400/40 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-4">
+                                        <div className="min-w-0 flex items-start sm:items-center gap-3 sm:gap-4">
                                             <div 
-                                                className="w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 group-hover:scale-105 transition-transform"
+                                                className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 group-hover:scale-105 transition-transform"
                                                 style={{ backgroundColor: `${top.accent}20`, color: top.accent }}
                                             >
                                                 <Icon className="w-6 h-6" />
                                             </div>
-                                            <div>
-                                                <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                                            <div className="min-w-0 break-words">
+                                                <h3 className="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
                                                     {top.title}
                                                 </h3>
                                                 <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
@@ -175,10 +175,10 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                         <div className="pt-4 flex justify-end">
                             <button
                                 onClick={() => setStep(2)}
-                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/25 hover:scale-105 active:scale-95 transition-all"
+                                className="w-full sm:w-auto px-4 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 sm:hover:scale-105 active:scale-95 transition-all"
                             >
                                 <span>Lanjutkan ke Jadwal & Metode</span>
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-4 h-4 shrink-0" />
                             </button>
                         </div>
                     </div>
@@ -186,7 +186,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
 
                 {/* STEP 2: PILIH METODE & JADWAL (PRD 5.3) */}
                 {step === 2 && (
-                    <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
+                    <div className="min-w-0 p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
                         <div>
                             <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">Langkah 2 dari 3</span>
                             <h2 className="font-heading font-bold text-2xl text-slate-900 dark:text-white">
@@ -242,7 +242,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     type="date"
                                     value={preferredDate}
                                     onChange={(e) => setPreferredDate(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-sm focus:outline-none focus:border-cyan-500 shadow-sm"
+                                    className="w-full min-w-0 max-w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-base sm:text-sm focus:outline-none focus:border-cyan-500 shadow-sm"
                                 />
                             </div>
 
@@ -254,14 +254,14 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                             key={i}
                                             type="button"
                                             onClick={() => setPreferredTime(slot)}
-                                            className={`p-2.5 rounded-xl border text-xs font-mono transition-all text-left flex items-center justify-between ${
+                                            className={`min-w-0 min-h-11 p-2.5 rounded-xl border text-xs font-mono transition-all text-left flex flex-wrap items-center justify-between gap-2 ${
                                                 preferredTime === slot
                                                     ? 'bg-cyan-50 dark:bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-bold shadow-sm'
                                                     : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                                             }`}
                                         >
-                                            <span className="flex items-center gap-2">
-                                                <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                                            <span className="min-w-0 flex items-center gap-2">
+                                                <Clock className="w-3.5 h-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
                                                 {slot}
                                             </span>
                                             {preferredTime === slot && <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold">Terpilih</span>}
@@ -271,21 +271,21 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                             </div>
                         </div>
 
-                        <div className="pt-4 flex items-center justify-between border-t border-slate-100 dark:border-white/10">
+                        <div className="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-white/10">
                             <button
                                 onClick={() => setStep(1)}
                                 className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-2 transition-colors"
                             >
-                                <ArrowLeft className="w-4 h-4" />
+                                <ArrowLeft className="w-4 h-4 shrink-0" />
                                 <span>Kembali</span>
                             </button>
 
                             <button
                                 onClick={() => setStep(3)}
-                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/25 hover:scale-105 active:scale-95 transition-all"
+                                className="w-full sm:w-auto px-4 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 sm:hover:scale-105 active:scale-95 transition-all"
                             >
                                 <span>Lanjutkan ke Rincian Proyek</span>
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-4 h-4 shrink-0" />
                             </button>
                         </div>
                     </div>
@@ -293,7 +293,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
 
                 {/* STEP 3: RINCIAN SINGKAT & KONFIRMASI (PRD 5.3) */}
                 {step === 3 && (
-                    <form onSubmit={handleConfirmBooking} className="p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
+                    <form onSubmit={handleConfirmBooking} className="min-w-0 p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#090D16]/95 border border-slate-200 dark:border-white/10 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in duration-200">
                         <div>
                             <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">Langkah 3 dari 3</span>
                             <h2 className="font-heading font-bold text-2xl text-slate-900 dark:text-white">
@@ -319,7 +319,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     value={clientName}
                                     onChange={(e) => setClientName(e.target.value)}
                                     placeholder="Contoh: Hendro Setiawan"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                    className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                                 />
                             </div>
 
@@ -330,7 +330,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     value={companyOrInstitution}
                                     onChange={(e) => setCompanyOrInstitution(e.target.value)}
                                     placeholder="Contoh: PT Megah Surya Nusantara"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                    className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                                 />
                             </div>
 
@@ -342,7 +342,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     value={whatsapp}
                                     onChange={(e) => setWhatsapp(e.target.value)}
                                     placeholder="0812xxxxxxx"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                    className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                                 />
                             </div>
 
@@ -354,7 +354,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="nama@email.com"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                    className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                                 />
                             </div>
                         </div>
@@ -364,7 +364,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                             <select
                                 value={budgetEstimation}
                                 onChange={(e) => setBudgetEstimation(e.target.value)}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                             >
                                 <option value="< Rp 5.000.000">&lt; Rp 5.000.000</option>
                                 <option value="Rp 5.000.000 - Rp 15.000.000">Rp 5.000.000 - Rp 15.000.000</option>
@@ -381,31 +381,31 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                 value={projectBrief}
                                 onChange={(e) => setProjectBrief(e.target.value)}
                                 placeholder="Ceritakan tujuan proyek, ekspektasi, atau kendala yang ingin diatasi..."
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
+                                className="w-full min-w-0 max-w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-cyan-500"
                             />
                         </div>
 
-                        <div className="pt-4 flex items-center justify-between border-t border-slate-100 dark:border-white/10">
+                        <div className="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-white/10">
                             <button
                                 type="button"
                                 onClick={() => setStep(2)}
                                 className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-2 transition-colors"
                             >
-                                <ArrowLeft className="w-4 h-4" />
+                                <ArrowLeft className="w-4 h-4 shrink-0" />
                                 <span>Kembali</span>
                             </button>
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-xl shadow-cyan-500/30 transition-transform active:scale-95 disabled:opacity-50"
+                                className="w-full sm:w-auto min-w-0 px-4 sm:px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/30 transition-transform active:scale-95 disabled:opacity-50"
                             >
                                 {loading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                     <>
                                         <span>Konfirmasi & Terbitkan Tiket Konsultasi</span>
-                                        <ArrowRight className="w-4 h-4" />
+                                        <ArrowRight className="w-4 h-4 shrink-0" />
                                     </>
                                 )}
                             </button>
@@ -415,7 +415,7 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
 
                 {/* STEP 4: SUCCESS - DIGITAL CONSULTATION TICKET (PRD 5.3) */}
                 {step === 4 && generatedTicket && (
-                    <div className="p-8 rounded-3xl bg-white dark:bg-gradient-to-b dark:from-[#0F172A] dark:to-[#07090E] border border-slate-200 dark:border-cyan-500/40 backdrop-blur-2xl shadow-xl dark:shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-300">
+                    <div className="min-w-0 p-4 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-b dark:from-[#0F172A] dark:to-[#07090E] border border-slate-200 dark:border-cyan-500/40 backdrop-blur-2xl shadow-xl dark:shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-300">
                         <div className="w-16 h-16 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 flex items-center justify-center mx-auto border border-cyan-500/30 shadow-lg shadow-cyan-500/20">
                             <Ticket className="w-8 h-8 stroke-[2.5]" />
                         </div>
@@ -428,18 +428,18 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                         </div>
 
                         {/* Digital Ticket Card */}
-                        <div className="max-w-md mx-auto p-6 rounded-2xl bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-left space-y-4 font-mono text-xs shadow-md dark:shadow-2xl">
-                            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                        <div className="max-w-md mx-auto p-4 sm:p-6 rounded-2xl bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-left space-y-4 font-mono text-xs break-words shadow-md dark:shadow-2xl">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
                                 <div>
                                     <span className="text-slate-500 text-[10px] uppercase block">Kode Tiket</span>
-                                    <span className="text-cyan-600 dark:text-cyan-400 font-bold text-base">{generatedTicket.ticket_code}</span>
+                                    <span className="block break-all text-cyan-600 dark:text-cyan-400 font-bold text-base">{generatedTicket.ticket_code}</span>
                                 </div>
                                 <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] uppercase font-bold">
                                     SCHEDULED
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 [&>div]:min-w-0">
                                 <div>
                                     <span className="text-slate-500 text-[10px] uppercase block">Klien</span>
                                     <span className="text-slate-800 dark:text-slate-200 font-bold">{clientName}</span>
@@ -471,14 +471,14 @@ export default function ConsultationWizard({ availableTopics = [], availableTime
                                 href={generatedTicket.wa_link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/30 transition-transform hover:scale-105 active:scale-95"
+                                className="w-full sm:w-auto min-w-0 px-4 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-transform sm:hover:scale-105 active:scale-95"
                             >
-                                <MessageSquare className="w-4 h-4" />
+                                <MessageSquare className="w-4 h-4 shrink-0" />
                                 <span>Kirim Konfirmasi Tiket ke WhatsApp Admin</span>
                             </a>
                             <Link
                                 href="/"
-                                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors"
+                                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors"
                             >
                                 Kembali ke Beranda
                             </Link>

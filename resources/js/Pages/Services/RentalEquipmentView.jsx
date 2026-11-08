@@ -6,8 +6,10 @@ import {
     PackageCheck, ShoppingBag, Plus, Minus, Trash2,
     ArrowRight, X, Check, Loader2, Sparkles
 } from 'lucide-react';
+import { useQuality } from '@/Context/QualityContext';
 
 export default function RentalEquipmentView({ service, equipments = [] }) {
+    const { getOptimizedImage } = useQuality();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [filterOnlyAvailable, setFilterOnlyAvailable] = useState(false);
 
@@ -194,15 +196,15 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                 <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-20">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Equipment Catalog (8 Cols) */}
-                        <div className="lg:col-span-8 space-y-6">
+                        <div className="min-w-0 lg:col-span-8 space-y-6">
                             {/* Filter Bar */}
                             <div className="p-4 rounded-2xl bg-white dark:bg-[#091816]/90 border border-slate-200 dark:border-teal-500/20 shadow-sm dark:shadow-none backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+                                <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
                                     {categories.map((c) => (
                                         <button
                                             key={c.key}
                                             onClick={() => setSelectedCategory(c.key)}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                                            className={`shrink-0 min-h-10 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                                                 selectedCategory === c.key
                                                     ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30'
                                                     : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'
@@ -239,8 +241,10 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                                 {/* Image Thumbnail */}
                                                 <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-950 mb-3 border border-slate-100 dark:border-white/5">
                                                     <img
-                                                        src={item.thumbnail_webp}
+                                                        src={getOptimizedImage(item.thumbnail_webp, { sdWidth: 400, hdWidth: 800 })}
                                                         alt={item.name}
+                                                        loading="lazy"
+                                                        decoding="async"
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                     />
                                                     <span className={`absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
@@ -267,7 +271,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                                            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex flex-wrap items-center justify-between gap-3">
                                                 <div>
                                                     <span className="text-[10px] font-mono text-slate-500 uppercase block">Sewa / 24 Jam:</span>
                                                     <span className="text-sm font-mono font-bold text-teal-600 dark:text-teal-300">
@@ -294,9 +298,9 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                         </div>
 
                         {/* Sticky Rental Cart (4 Cols) (PRD 4.6) */}
-                        <div className="lg:col-span-4 sticky top-24">
-                            <div className="p-6 rounded-3xl bg-white dark:bg-[#081513]/95 border border-slate-200 dark:border-teal-500/30 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-5">
-                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+                        <div className="min-w-0 lg:col-span-4 lg:sticky lg:top-24">
+                            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#081513]/95 border border-slate-200 dark:border-teal-500/30 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-5">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-white/10 pb-3">
                                     <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-mono text-xs uppercase font-semibold">
                                         <ShoppingBag className="w-4 h-4" />
                                         <span>Keranjang Simulasi Sewa</span>
@@ -309,14 +313,14 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                 {/* Date Range Picker */}
                                 <div className="space-y-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
                                     <span className="text-[11px] font-mono text-slate-700 dark:text-slate-400 block font-semibold">Tentukan Tanggal Sewa:</span>
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="grid grid-cols-1 min-[390px]:grid-cols-2 gap-2 text-xs">
                                         <div>
                                             <label className="text-[10px] text-slate-500 block mb-1">Tgl Ambil:</label>
                                             <input
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-xs"
+                                                className="min-w-0 max-w-full w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-xs"
                                             />
                                         </div>
                                         <div>
@@ -325,7 +329,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-xs"
+                                                className="min-w-0 max-w-full w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-mono text-xs"
                                             />
                                         </div>
                                     </div>
@@ -346,7 +350,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                         cart.map(({ item, qty }) => (
                                             <div key={item.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-between text-xs">
                                                 <div className="min-w-0 flex-1 pr-2">
-                                                    <h5 className="font-semibold text-slate-900 dark:text-white truncate">{item.name}</h5>
+                                                    <h5 className="font-semibold text-slate-900 dark:text-white break-words">{item.name}</h5>
                                                     <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400">{formatRupiah(item.price_per_day)} / hr</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 shrink-0">
@@ -378,21 +382,21 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                 {/* Mathematical Calculations Summary */}
                                 {cart.length > 0 && (
                                     <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-white/10 text-xs font-mono">
-                                        <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                                        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-slate-600 dark:text-slate-400">
                                             <span>Subtotal / Hari:</span>
                                             <span className="text-slate-900 dark:text-white font-bold">{formatRupiah(dailySubtotal)}</span>
                                         </div>
-                                        <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                                        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-slate-600 dark:text-slate-400">
                                             <span>Durasi ({totalDays} Hari):</span>
                                             <span className="text-slate-900 dark:text-white font-bold">{formatRupiah(dailySubtotal * totalDays)}</span>
                                         </div>
                                         {discount > 0 && (
-                                            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                                            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-emerald-600 dark:text-emerald-400">
                                                 <span>Diskon Durasi:</span>
                                                 <span>-{formatRupiah(discount)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between text-sm font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-white/5">
+                                        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-sm font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-white/5">
                                             <span>Total Biaya:</span>
                                             <span className="text-teal-600 dark:text-teal-400 text-base">{formatRupiah(grandTotal)}</span>
                                         </div>
@@ -414,23 +418,24 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
 
             {/* One-Click Booking & Syarat Sewa Modal (PRD 4.6) */}
             {checkoutModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 dark:bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
-                    <div className="relative max-w-lg w-full bg-white dark:bg-[#081513] border border-slate-200 dark:border-teal-500/30 rounded-3xl p-6 md:p-8 shadow-2xl">
+                <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4 bg-black/70 dark:bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
+                    <div role="dialog" aria-modal="true" aria-labelledby="rental-checkout-title" className="relative max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain max-w-lg w-full min-w-0 bg-white dark:bg-[#081513] border border-slate-200 dark:border-teal-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
                         <button
                             onClick={() => {
                                 setCheckoutModalOpen(false);
                                 setCheckoutResult(null);
                             }}
-                            className="absolute top-5 right-5 p-2 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            aria-label="Tutup konfirmasi booking"
+                            className="absolute top-3 right-3 p-2 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-mono text-xs uppercase mb-1">
+                        <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-mono text-xs uppercase mb-1 pr-10">
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>Konfirmasi Booking Sewa Alat</span>
                         </div>
-                        <h3 className="font-heading font-bold text-2xl text-slate-900 dark:text-white mb-1">
+                        <h3 id="rental-checkout-title" className="font-heading font-bold text-xl sm:text-2xl text-slate-900 dark:text-white mb-1 pr-10">
                             Lengkapi Data Penyewa
                         </h3>
                         <p className="text-xs text-slate-600 dark:text-slate-400 mb-6">
@@ -470,11 +475,11 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                         value={customerName}
                                         onChange={(e) => setCustomerName(e.target.value)}
                                         placeholder="Sesuai kartu identitas..."
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                                        className="min-w-0 max-w-full w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-teal-500"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1">WhatsApp Aktif *</label>
                                         <input
@@ -483,7 +488,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                             value={whatsapp}
                                             onChange={(e) => setWhatsapp(e.target.value)}
                                             placeholder="0812xxxxxxx"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                                            className="min-w-0 max-w-full w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-teal-500"
                                         />
                                     </div>
 
@@ -492,7 +497,7 @@ export default function RentalEquipmentView({ service, equipments = [] }) {
                                         <select
                                             value={idType}
                                             onChange={(e) => setIdType(e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                                            className="min-w-0 max-w-full w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-teal-500"
                                         >
                                             <option value="KTP">KTP Asli</option>
                                             <option value="SIM">SIM A/C Asli</option>

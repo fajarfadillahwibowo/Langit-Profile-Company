@@ -73,11 +73,11 @@ export default function HeroLangit() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
                     {/* LEFT: COPY */}
-                    <div className="lg:col-span-7 space-y-8">
+                    <div className="min-w-0 lg:col-span-7 space-y-8">
 
                         {/* Badge */}
                         <div
-                            className="hlg-badge inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-[11px] font-mono tracking-[0.14em]"
+                            className="hlg-badge max-w-full inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-[11px] font-mono tracking-[0.14em]"
                             style={{
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 background: 'rgba(255,255,255,0.04)',
@@ -97,14 +97,14 @@ export default function HeroLangit() {
                             <h1 className="tracking-tight select-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                 <span
                                     className="hlg-line block font-extrabold text-white tracking-[-0.035em] leading-[1.02]"
-                                    style={{ fontSize: 'clamp(46px, 7.5vw, 90px)' }}
+                                    style={{ fontSize: 'clamp(36px, 7.5vw, 90px)' }}
                                 >
                                     Satu
                                 </span>
                                 <span
                                     className="hlg-line block font-extrabold tracking-[-0.035em] leading-[1.02]"
                                     style={{
-                                        fontSize: 'clamp(46px, 7.5vw, 90px)',
+                                        fontSize: 'clamp(36px, 7.5vw, 90px)',
                                         background: 'linear-gradient(135deg, #FFFFFF 15%, #BAE6FD 45%, #38BDF8 75%, #00A8CC 100%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
@@ -116,14 +116,14 @@ export default function HeroLangit() {
                                 </span>
                                 <span
                                     className="hlg-line block font-semibold text-slate-100/90 tracking-[-0.025em] leading-[1.08] mt-1 sm:mt-2"
-                                    style={{ fontSize: 'clamp(30px, 4.8vw, 58px)' }}
+                                    style={{ fontSize: 'clamp(26px, 4.8vw, 58px)' }}
                                 >
                                     Tujuh Layanan
                                 </span>
                                 <span
                                     className="hlg-line block font-extrabold tracking-[-0.025em] leading-[1.08]"
                                     style={{
-                                        fontSize: 'clamp(30px, 4.8vw, 58px)',
+                                        fontSize: 'clamp(26px, 4.8vw, 58px)',
                                         background: 'linear-gradient(135deg, #38BDF8 0%, #22D3EE 45%, #E0F2FE 100%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
@@ -149,7 +149,7 @@ export default function HeroLangit() {
                             {/* Tombol 1: Mulai Konsultasi (Primary CTA - Cerah, Tajam & Mudah Dibaca) */}
                             <Link
                                 href="/konsultasi"
-                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] shadow-xl shadow-cyan-500/25 border border-cyan-300/40"
+                                className="hlg-cta w-full sm:w-auto justify-center group px-5 sm:px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] shadow-xl shadow-cyan-500/25 border border-cyan-300/40"
                                 style={{
                                     background: 'linear-gradient(135deg, #06B6D4 0%, #2563EB 100%)',
                                 }}
@@ -161,7 +161,7 @@ export default function HeroLangit() {
                             {/* Tombol 2: Lihat Portofolio (Secondary CTA - Kontras Tinggi, Terang & Anti-Blur) */}
                             <Link
                                 href="/portofolio"
-                                className="hlg-cta group px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/30 hover:border-cyan-400/60 shadow-lg shadow-black/30"
+                                className="hlg-cta w-full sm:w-auto justify-center group px-5 sm:px-7 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/30 hover:border-cyan-400/60 shadow-lg shadow-black/30"
                                 style={{
                                     backgroundColor: 'rgba(255, 255, 255, 0.12)',
                                     backdropFilter: 'blur(8px)',

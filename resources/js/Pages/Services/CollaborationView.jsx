@@ -292,7 +292,7 @@ export default function CollaborationView({ service }) {
                         </div>
 
                         {/* Trust & Velocity Guarantee Bar */}
-                        <div className="pt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
+                        <div className="pt-6 grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
                             {[
                                 { icon: Clock, label: 'Telaah Cepat', desc: 'Respon awal < 24 Jam' },
                                 { icon: ShieldCheck, label: 'Kerahasiaan Berkas', desc: '100% Non-Disclosure (NDA)' },
@@ -309,8 +309,8 @@ export default function CollaborationView({ service }) {
                                             <Icon className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0">
-                                            <span className="font-bold text-xs text-slate-900 dark:text-white block truncate">{item.label}</span>
-                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block truncate">{item.desc}</span>
+                                            <span className="font-bold text-xs text-slate-900 dark:text-white block break-words">{item.label}</span>
+                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block break-words">{item.desc}</span>
                                         </div>
                                     </div>
                                 );
@@ -378,7 +378,7 @@ export default function CollaborationView({ service }) {
                                         </div>
 
                                         {/* Bottom Action Footer */}
-                                        <div className="mt-8 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs font-mono">
+                                        <div className="mt-8 pt-4 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-3 items-center justify-between text-xs font-mono">
                                             <span className="text-slate-500 dark:text-slate-400 font-medium">
                                                 {scheme.metrics}
                                             </span>
@@ -394,7 +394,7 @@ export default function CollaborationView({ service }) {
                     </section>
 
                     {/* SECTION 3: STEP-BY-STEP WORKFLOW PIPELINE */}
-                    <section className="p-8 sm:p-12 rounded-3xl bg-white/70 dark:bg-white/[0.02] border border-slate-200/90 dark:border-white/10 backdrop-blur-xl shadow-sm">
+                    <section className="p-4 sm:p-12 rounded-3xl bg-white/70 dark:bg-white/[0.02] border border-slate-200/90 dark:border-white/10 backdrop-blur-xl shadow-sm">
                         <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
                             <span className="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider block">
                                 Transparan, Cepat & Terstruktur
@@ -496,7 +496,7 @@ export default function CollaborationView({ service }) {
                                                     value={formData.organization_name}
                                                     onChange={(e) => setFormData({ ...formData, organization_name: e.target.value })}
                                                     placeholder="Contoh: BEM Fakultas Ilmu Komputer UGM"
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
                                                 />
                                             </div>
 
@@ -510,7 +510,7 @@ export default function CollaborationView({ service }) {
                                                     value={formData.pic_name}
                                                     onChange={(e) => setFormData({ ...formData, pic_name: e.target.value })}
                                                     placeholder="Nama lengkap dan gelar/jabatan PIC..."
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
                                                 />
                                             </div>
 
@@ -524,7 +524,7 @@ export default function CollaborationView({ service }) {
                                                     value={formData.email}
                                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                     placeholder="partnership@instansi.ac.id"
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
                                                 />
                                             </div>
 
@@ -538,7 +538,7 @@ export default function CollaborationView({ service }) {
                                                     value={formData.whatsapp}
                                                     onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                                                     placeholder="Contoh: 081234567890"
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400"
                                                 />
                                             </div>
 
@@ -549,7 +549,7 @@ export default function CollaborationView({ service }) {
                                                 <select
                                                     value={formData.collab_type}
                                                     onChange={(e) => setFormData({ ...formData, collab_type: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
                                                 >
                                                     <option value="campus_visit">Kemitraan Kampus, SMK & Perguruan Tinggi</option>
                                                     <option value="media_partner">Media Partner & Event Coverage 4K</option>
@@ -567,7 +567,7 @@ export default function CollaborationView({ service }) {
                                                     type="date"
                                                     value={formData.event_date}
                                                     onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
                                                 />
                                             </div>
                                         </div>
@@ -600,12 +600,12 @@ export default function CollaborationView({ service }) {
 
                                                 {proposalFile ? (
                                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm">
-                                                        <div className="flex items-center gap-3 text-left">
+                                                        <div className="flex w-full min-w-0 items-center gap-3 text-left">
                                                             <div className="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                                                                 <FileText className="w-5 h-5" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <span className="font-bold text-xs text-slate-900 dark:text-white block truncate max-w-xs">
+                                                                <span className="font-bold text-xs text-slate-900 dark:text-white block break-all">
                                                                     {proposalFile.name}
                                                                 </span>
                                                                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
@@ -654,7 +654,7 @@ export default function CollaborationView({ service }) {
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                                 placeholder="Deskripsikan secara ringkas latar belakang acara/program, tujuan kolaborasi, serta bentuk benefit timbal balik yang ditawarkan..."
-                                                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400 leading-relaxed"
+                                                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-slate-400 leading-relaxed"
                                             />
                                         </div>
 

@@ -40,10 +40,13 @@ export default function EducationTrack3DCards() {
                     onHoverStart={() => setHoveredCard(0)}
                     onHoverEnd={() => setHoveredCard(null)}
                     onClick={() => scrollToHub('coding')}
-                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#FF4D6D] via-[#F72585] to-[#D90429] text-white p-7 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(247,37,133,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); scrollToHub('coding'); } }}
+                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#FF4D6D] via-[#F72585] to-[#D90429] text-white p-5 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(247,37,133,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
                 >
-                    {/* Background Ambient Glow & Light Flare */}
-                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+                    {/* Background Ambient Glow & Light Flare (Zero GPU blur overhead) */}
+                    <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)' }} />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
                     {/* Top Content Area */}
@@ -140,18 +143,8 @@ export default function EducationTrack3DCards() {
                                 <polygon points="110,143 210,143 210,153 110,153" fill="#A4133C" />
                             </g>
 
-                            {/* --- ANIMATED FLOATING 3D GLASS SCREEN & ROBOTIC EYE (Exact reference vibe) --- */}
-                            <motion.g
-                                animate={{ 
-                                    y: [0, -10, 0],
-                                    rotateZ: [0, 1.5, 0, -1.5, 0]
-                                }}
-                                transition={{ 
-                                    duration: 4, 
-                                    repeat: Infinity, 
-                                    ease: "easeInOut" 
-                                }}
-                            >
+                            {/* --- 3D GLASS SCREEN & ROBOTIC EYE (Hardware accelerated hover lift) --- */}
+                            <g className="transition-transform duration-500 group-hover:-translate-y-2">
                                 {/* Floating Shadow on the pink slab */}
                                 <ellipse cx="148" cy="133" rx="42" ry="9" fill="#59001A" opacity="0.35" />
 
@@ -173,29 +166,23 @@ export default function EducationTrack3DCards() {
 
                                 {/* Code Glyphs */}
                                 <text x="128" y="103" fontFamily="monospace" fontSize="8" fill="#48CAE4" fontWeight="bold">const ai = 1</text>
-                            </motion.g>
+                            </g>
 
                             {/* Floating Satellite Particles */}
-                            <motion.g
-                                animate={{ y: [0, -12, 0], x: [0, 4, 0] }}
-                                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:-translate-y-3">
                                 <circle cx="85" cy="80" r="14" fill="#FFFFFF" filter="url(#clayShadowPink)" />
                                 <text x="80" y="84" fontFamily="monospace" fontSize="11" fill="#F72585" fontWeight="bold">&lt;/&gt;</text>
-                            </motion.g>
+                            </g>
 
-                            <motion.g
-                                animate={{ y: [0, -8, 0], x: [0, -4, 0] }}
-                                transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.7 }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:-translate-y-1">
                                 <rect x="205" y="85" width="26" height="26" rx="8" fill="#FFB703" filter="url(#clayShadowPink)" />
                                 <text x="211" y="102" fontFamily="sans-serif" fontSize="12" fill="#1E293B" fontWeight="bold">AI</text>
-                            </motion.g>
+                            </g>
                         </svg>
                     </div>
 
                     {/* Bottom Feature Pill Badge */}
-                    <div className="relative z-10 pt-3 border-t border-white/20 flex items-center justify-between text-[11px] font-mono text-white/90">
+                    <div className="relative z-10 pt-3 border-t border-white/20 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-white/90">
                         <span className="flex items-center gap-1.5 font-bold">
                             <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                             10 Minggu Praktik Ril
@@ -217,10 +204,13 @@ export default function EducationTrack3DCards() {
                     onHoverStart={() => setHoveredCard(1)}
                     onHoverEnd={() => setHoveredCard(null)}
                     onClick={() => scrollToHub('office')}
-                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#06D6A0] via-[#059669] to-[#046C4E] text-white p-7 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(6,214,160,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); scrollToHub('office'); } }}
+                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#06D6A0] via-[#059669] to-[#046C4E] text-white p-5 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(6,214,160,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
                 >
-                    {/* Background Ambient Glow & Light Flare */}
-                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+                    {/* Background Ambient Glow & Light Flare (Zero GPU blur overhead) */}
+                    <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)' }} />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
                     {/* Top Content Area */}
@@ -299,18 +289,8 @@ export default function EducationTrack3DCards() {
                                 <ellipse cx="160" cy="115" rx="55" ry="17" fill="url(#cylinderMintTop)" />
                             </g>
 
-                            {/* --- ANIMATED FLOATING 3D LIGHTBULB / SPREADSHEET CUBE (Exact reference visual) --- */}
-                            <motion.g
-                                animate={{ 
-                                    y: [0, -11, 0],
-                                    rotateZ: [0, -2, 0, 2, 0]
-                                }}
-                                transition={{ 
-                                    duration: 3.6, 
-                                    repeat: Infinity, 
-                                    ease: "easeInOut" 
-                                }}
-                            >
+                            {/* --- 3D LIGHTBULB / SPREADSHEET CUBE (Hardware accelerated hover lift) --- */}
+                            <g className="transition-transform duration-500 group-hover:-translate-y-2">
                                 {/* Shadow on mint cylinder */}
                                 <ellipse cx="160" cy="116" rx="28" ry="9" fill="#022E20" opacity="0.4" />
 
@@ -324,20 +304,15 @@ export default function EducationTrack3DCards() {
                                 <circle cx="160" cy="62" r="22" fill="#FEF9C3" opacity="0.8" />
                                 
                                 {/* Electric Lightning Filament */}
-                                <motion.path
-                                    animate={{ opacity: [0.7, 1, 0.7] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                <path
                                     d="M162,50 L154,64 L161,64 L157,76 L169,60 L162,60 Z"
                                     fill="#EAB308"
                                     filter="url(#glowMint)"
                                 />
-                            </motion.g>
+                            </g>
 
                             {/* 3D Isometric Bar Chart Towers Floating alongside */}
-                            <motion.g
-                                animate={{ y: [0, -7, 0] }}
-                                transition={{ duration: 3.1, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:-translate-y-1">
                                 {/* Bar 1 (Green) */}
                                 <polygon points="85,115 102,115 109,121 92,121" fill="#6EE7B7" />
                                 <polygon points="85,115 92,121 92,142 85,136" fill="#10B981" />
@@ -347,21 +322,18 @@ export default function EducationTrack3DCards() {
                                 <polygon points="215,95 232,95 239,101 222,101" fill="#FDE047" />
                                 <polygon points="215,95 222,101 222,135 215,129" fill="#EAB308" />
                                 <polygon points="222,101 239,101 239,135 222,135" fill="#CA8A04" />
-                            </motion.g>
+                            </g>
 
                             {/* Floating Analytics Spark */}
-                            <motion.g
-                                animate={{ rotate: [0, 15, -15, 0], scale: [0.95, 1.05, 0.95] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:scale-110">
                                 <circle cx="230" cy="55" r="14" fill="#FFFFFF" filter="url(#clayShadowMint)" />
                                 <text x="224" y="60" fontFamily="sans-serif" fontSize="13" fill="#059669" fontWeight="bold">📊</text>
-                            </motion.g>
+                            </g>
                         </svg>
                     </div>
 
                     {/* Bottom Feature Pill Badge */}
-                    <div className="relative z-10 pt-3 border-t border-white/20 flex items-center justify-between text-[11px] font-mono text-white/90">
+                    <div className="relative z-10 pt-3 border-t border-white/20 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-white/90">
                         <span className="flex items-center gap-1.5 font-bold">
                             <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
                             6 Minggu Langsung Mahir
@@ -383,10 +355,13 @@ export default function EducationTrack3DCards() {
                     onHoverStart={() => setHoveredCard(2)}
                     onHoverEnd={() => setHoveredCard(null)}
                     onClick={() => scrollToHub('hardware')}
-                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#7C3AED] via-[#6C5CE7] to-[#4338CA] text-white p-7 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(108,92,231,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); scrollToHub('hardware'); } }}
+                    className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#7C3AED] via-[#6C5CE7] to-[#4338CA] text-white p-5 sm:p-8 flex flex-col justify-between shadow-[0_20px_45px_-12px_rgba(108,92,231,0.45)] cursor-pointer group min-h-[460px] border border-white/20"
                 >
-                    {/* Background Ambient Glow & Light Flare */}
-                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+                    {/* Background Ambient Glow & Light Flare (Zero GPU blur overhead) */}
+                    <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)' }} />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
                     {/* Top Content Area */}
@@ -461,18 +436,8 @@ export default function EducationTrack3DCards() {
                                 <polygon points="115,140 220,140 220,152 115,152" fill="#3B0764" />
                             </g>
 
-                            {/* --- ANIMATED FLOATING 3D CPU PROCESSOR & COOLING FAN --- */}
-                            <motion.g
-                                animate={{ 
-                                    y: [0, -10, 0],
-                                    rotateZ: [0, 1.8, 0, -1.8, 0]
-                                }}
-                                transition={{ 
-                                    duration: 3.8, 
-                                    repeat: Infinity, 
-                                    ease: "easeInOut" 
-                                }}
-                            >
+                            {/* --- 3D CPU PROCESSOR & COOLING FAN (Hardware accelerated hover lift) --- */}
+                            <g className="transition-transform duration-500 group-hover:-translate-y-2">
                                 {/* Shadow on purple platform */}
                                 <ellipse cx="155" cy="132" rx="40" ry="10" fill="#240046" opacity="0.4" />
 
@@ -490,47 +455,38 @@ export default function EducationTrack3DCards() {
                                 <rect x="145" y="73" width="35" height="10" rx="2" fill="url(#cpuGold)" />
                                 <text x="150" y="81" fontFamily="sans-serif" fontSize="7" fill="#451A03" fontWeight="bold">LANGIT i9</text>
 
-                                {/* 3D High-Tech Animated Rotating Cooling Fan above CPU */}
+                                {/* 3D High-Tech Rotating Cooling Fan above CPU */}
                                 <g transform="translate(162, 52)">
                                     {/* Neon Outer Fan Shroud Ring */}
                                     <circle cx="0" cy="0" r="26" fill="#1E1B4B" stroke="#A78BFA" strokeWidth="2.5" filter="url(#clayShadowPurple)" />
                                     <circle cx="0" cy="0" r="22" fill="#0F172A" />
 
-                                    {/* Rotating 4-Blade Impeller */}
-                                    <motion.g
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-                                    >
+                                    {/* 4-Blade Impeller */}
+                                    <g className="transition-transform duration-700 group-hover:rotate-180">
                                         <path d="M0,0 L-6,-18 A7,7 0 0,1 6,-18 Z" fill="#C4B5FD" />
                                         <path d="M0,0 L18,-6 A7,7 0 0,1 18,6 Z" fill="#A78BFA" />
                                         <path d="M0,0 L6,18 A7,7 0 0,1 -6,18 Z" fill="#8B5CF6" />
                                         <path d="M0,0 L-18,6 A7,7 0 0,1 -18,-6 Z" fill="#7C3AED" />
                                         <circle cx="0" cy="0" r="5" fill="#FDE047" />
-                                    </motion.g>
+                                    </g>
                                 </g>
-                            </motion.g>
+                            </g>
 
                             {/* Floating Hardware Screwdriver & Chip Tool */}
-                            <motion.g
-                                animate={{ y: [0, -11, 0], rotate: [0, 8, -8, 0] }}
-                                transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:-translate-y-2">
                                 <circle cx="85" cy="82" r="14" fill="#FFFFFF" filter="url(#clayShadowPurple)" />
                                 <text x="79" y="87" fontFamily="sans-serif" fontSize="12" fill="#7C3AED" fontWeight="bold">⚡</text>
-                            </motion.g>
+                            </g>
 
-                            <motion.g
-                                animate={{ y: [0, -9, 0], x: [0, 3, 0] }}
-                                transition={{ duration: 4.1, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-                            >
+                            <g className="transition-transform duration-500 group-hover:-translate-y-1">
                                 <rect x="220" y="80" width="26" height="26" rx="8" fill="#FBBF24" filter="url(#clayShadowPurple)" />
                                 <text x="226" y="97" fontFamily="sans-serif" fontSize="13" fill="#1E1B4B" fontWeight="bold">🛠️</text>
-                            </motion.g>
+                            </g>
                         </svg>
                     </div>
 
                     {/* Bottom Feature Pill Badge */}
-                    <div className="relative z-10 pt-3 border-t border-white/20 flex items-center justify-between text-[11px] font-mono text-white/90">
+                    <div className="relative z-10 pt-3 border-t border-white/20 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-white/90">
                         <span className="flex items-center gap-1.5 font-bold">
                             <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                             4 Minggu Praktik Lab

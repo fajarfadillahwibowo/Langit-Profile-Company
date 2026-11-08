@@ -1,3 +1,4 @@
+import { guardPhotoSelection } from '@/Utils/photoUploadPolicy.mjs';
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { 
@@ -96,6 +97,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     };
 
     const handleFileChange = (e) => {
+        if (!guardPhotoSelection(e)) return;
         const file = e.target.files[0];
         if (file) {
             setFilePhoto(file);
@@ -176,7 +178,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Header info bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-md">
                 <div>
@@ -192,7 +194,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <span className="px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 text-xs font-mono font-semibold text-[#005792] dark:text-[#38BDF8]">
                         {services.length} Divisi Aktif
                     </span>
@@ -210,7 +212,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
 
             {/* Notification Toast */}
             {toastMessage && (
-                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-sm animate-fade-in">
+                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex flex-wrap items-center justify-between gap-3 shadow-sm animate-fade-in">
                     <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <span>{toastMessage}</span>
@@ -279,7 +281,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                             {/* Card Body: Title & Description */}
                             <div className="p-5 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                                    <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
                                         <h4 className="font-heading font-extrabold text-base text-slate-900 dark:text-white leading-snug">
                                             {service.name}
                                         </h4>
@@ -312,7 +314,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                 </div>
 
                                 {/* Card Footer: Edit Button */}
-                                <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-between">
+                                <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                                     <span className="text-[10px] font-mono text-slate-600 dark:text-slate-300 font-medium">
                                         slug: <span className="font-semibold text-slate-700 dark:text-slate-200">/{service.slug}</span>
                                     </span>
@@ -335,9 +337,9 @@ export default function AdminServiceCardsManager({ services = [] }) {
             {/* ── MODAL EDIT KARTU LAYANAN ──────────────────────────────── */}
             {editingService && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-                    <div className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl p-6 sm:p-8 my-8 max-h-[92vh] overflow-y-auto">
+                    <div className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl p-4 sm:p-8 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         {/* Header */}
-                        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-white/10">
+                        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200 dark:border-white/10">
                             <div>
                                 <div className="flex items-center gap-2 text-[#005792] dark:text-[#38BDF8] font-mono text-xs uppercase tracking-wider font-bold">
                                     <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -462,7 +464,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
 
                             {/* 3. FOTO BAGIAN ATAS CARD */}
                             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-3">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
                                     <label className="text-xs font-mono font-bold uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                         <ImageIcon className="w-4 h-4 text-[#005792] dark:text-[#38BDF8]" />
                                         <span>Foto Visual Card Bagian Atas</span>
@@ -516,7 +518,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                                 Klik untuk memilih berkas foto baru
                                             </span>
                                             <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">
-                                                Format didukung: JPG, PNG, WEBP (Maksimal 10 MB)
+                                                Format didukung: JPG, PNG, WEBP (Maksimal 2 MiB)
                                             </span>
                                             <input
                                                 type="file"
@@ -552,7 +554,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
 
                             {/* 4. DESKRIPSI BAGIAN BAWAH CARD */}
                             <div>
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex flex-wrap items-center justify-between gap-3 mb-1.5">
                                     <label className="block text-xs font-mono font-bold uppercase text-slate-700 dark:text-slate-300">
                                         Deskripsi Card (Bagian Bawah)
                                     </label>
@@ -603,9 +605,9 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                         editingService.tags.map((tag, i) => (
                                             <span
                                                 key={i}
-                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-500/30 text-sky-800 dark:text-sky-300 text-xs font-mono font-medium"
+                                                className="inline-flex max-w-full items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-500/30 text-sky-800 dark:text-sky-300 text-xs font-mono font-medium"
                                             >
-                                                <span>{tag}</span>
+                                                <span className="min-w-0 break-words">{tag}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveTag(tag)}
@@ -620,7 +622,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                             </div>
 
                             {/* Actions */}
-                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
+                            <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingService(null)}

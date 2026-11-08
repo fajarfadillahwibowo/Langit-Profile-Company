@@ -47,9 +47,9 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
             <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6 pb-20 space-y-16">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005792]/10 border border-[#005792]/30 text-[#005792] dark:text-sky-300 text-xs font-mono tracking-wider font-semibold">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>OFFICIAL COMMUNICATION & SOCIAL HUB</span>
+                    <div className="inline-flex max-w-full items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005792]/10 border border-[#005792]/30 text-[#005792] dark:text-sky-300 text-[10px] sm:text-xs font-mono tracking-wider font-semibold">
+                        <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                        <span className="min-w-0">OFFICIAL COMMUNICATION & SOCIAL HUB</span>
                     </div>
 
                     <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -69,7 +69,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-4">
                         <div>
                             <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-mono text-xs uppercase tracking-wider mb-1 font-bold">
-                                <Sparkles className="w-4 h-4" />
+                                <Sparkles className="w-4 h-4 shrink-0" />
                                 <span>OFFICIAL SOCIAL MEDIA & DIRECT CHANNELS</span>
                             </div>
                             <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white">
@@ -105,7 +105,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
 
                                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">WhatsApp Official</span>
-                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                <h3 className="break-words font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                     {contacts.general_phone || contacts.whatsapp || '+62 822-4614-2791'}
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -145,7 +145,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
 
                                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">TikTok Official</span>
-                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                                <h3 className="break-words font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                                     {contacts.tiktok_handle || '@langit.creative1'}
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -223,7 +223,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 </div>
 
                                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">Instagram Official</span>
-                                <h3 className="font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                                <h3 className="break-words font-heading font-bold text-lg xl:text-xl text-slate-900 dark:text-white mt-0.5 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                                     {contacts.instagram_handle || '@langit.creative'}
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -300,9 +300,9 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                 {/* 3. Interactive Studio Map & Operational Hours with Live Status (PRD 5.2) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     {/* Operating Hours & Status (5 Cols) */}
-                    <div className="lg:col-span-5 space-y-6 p-8 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-2xl">
+                    <div className="min-w-0 lg:col-span-5 space-y-6 p-5 sm:p-8 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-2xl">
                         {/* Real-Time Live Status Pill */}
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
+                        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-white/10">
                             <span className="text-xs font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Studio Saat Ini:</span>
                             {isStudioOpen ? (
                                 <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold animate-pulse">
@@ -322,15 +322,15 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 Jam Operasional Studio
                             </h3>
                             <div className="space-y-3 text-xs font-mono">
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex flex-col min-[400px]:flex-row min-[400px]:items-center justify-between gap-1.5 break-words">
                                     <span className="text-slate-600 dark:text-slate-400">Senin - Jumat</span>
                                     <span className="text-slate-900 dark:text-white font-bold">{contacts.opening_hours?.monday_friday || '09:00 - 18:00 WIB'}</span>
                                 </div>
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex flex-col min-[400px]:flex-row min-[400px]:items-center justify-between gap-1.5 break-words">
                                     <span className="text-slate-600 dark:text-slate-400">Sabtu</span>
                                     <span className="text-slate-900 dark:text-white font-bold">{contacts.opening_hours?.saturday || '10:00 - 16:00 WIB'}</span>
                                 </div>
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex flex-col min-[400px]:flex-row min-[400px]:items-center justify-between gap-1.5 break-words">
                                     <span className="text-slate-600 dark:text-slate-400">Minggu & Hari Libur</span>
                                     <span className="text-amber-600 dark:text-amber-400 font-semibold">{contacts.opening_hours?.sunday || 'Emergency Service Only'}</span>
                                 </div>
@@ -364,25 +364,25 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                     className="flex items-center gap-2.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
                                 >
                                     <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
-                                    <span className="group-hover:underline">{contacts.general_email || 'langitbelitang@gmail.com'}</span>
+                                    <span className="min-w-0 break-all group-hover:underline">{contacts.general_email || 'langitbelitang@gmail.com'}</span>
                                 </a>
                             </div>
                         </div>
                     </div>
 
                     {/* Interactive Studio Map Mockup (7 Cols) */}
-                    <div className="lg:col-span-7 rounded-3xl overflow-hidden border border-white/10 bg-slate-900 shadow-2xl aspect-[16/10] relative group">
+                    <div className="min-w-0 lg:col-span-7 rounded-3xl overflow-hidden border border-white/10 bg-slate-900 shadow-2xl min-h-96 sm:min-h-80 sm:aspect-[16/10] relative group">
                         {/* Map Graphic Overlay */}
                         <img
                             src={getOptimizedImage("https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80", { sdWidth: 550, hdWidth: 1200 })}
                             alt="Peta Lokasi Langit Office"
                             loading="lazy"
-                            className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
 
                         {/* Pin Center Marker */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                        <div className="absolute top-1/3 sm:top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
                             <div className="relative">
                                 <div className="w-12 h-12 rounded-full bg-cyan-500/30 animate-ping absolute inset-0"></div>
                                 <div className="relative w-12 h-12 rounded-full bg-cyan-500 border-2 border-white text-slate-950 flex items-center justify-center shadow-2xl">
@@ -395,8 +395,8 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                         </div>
 
                         {/* Bottom Overlay Directions Button */}
-                        <div className="absolute bottom-5 inset-x-5 flex justify-between items-center bg-white/90 dark:bg-[#090D16]/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
-                            <div>
+                        <div className="absolute bottom-4 inset-x-4 sm:bottom-5 sm:inset-x-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/90 dark:bg-[#090D16]/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
+                            <div className="min-w-0">
                                 <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase">Navigasi Langit Office</span>
                                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">Buka di Google Maps Langsung</h4>
                             </div>
@@ -404,7 +404,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                 href={contacts.google_maps_url || "https://maps.app.goo.gl/tiByDRcJAGqN7gjm8?g_st=iw"}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md"
+                                className="w-full sm:w-auto shrink-0 px-4 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md"
                             >
                                 <span>Petunjuk Arah</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
@@ -427,7 +427,8 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                             value={faqSearch}
                             onChange={(e) => setFaqSearch(e.target.value)}
                             placeholder="Cari pertanyaan seputar photo & video, website, magang, kursus..."
-                            className="w-full max-w-md mx-auto px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 shadow-sm"
+                            aria-label="Cari pertanyaan"
+                            className="w-full min-w-0 max-w-md mx-auto px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-base sm:text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 shadow-sm"
                         />
                     </div>
 
@@ -443,7 +444,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                         onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                                         className="w-full p-5 text-left flex items-center justify-between gap-4 select-none cursor-pointer"
                                     >
-                                        <div className="flex-1 pr-2">
+                                        <div className="min-w-0 flex-1 break-words pr-2">
                                             {faq.category && (
                                                 <span className="inline-block text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border border-cyan-500/25 mb-1.5">
                                                     {faq.category}
@@ -456,7 +457,7 @@ export default function ContactIndex({ contacts = {}, faqs = [] }) {
                                         <ChevronDown className={`w-5 h-5 text-cyan-600 dark:text-cyan-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     {isOpen && (
-                                        <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/5 animate-in fade-in duration-150">
+                                        <div className="break-words px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/5 animate-in fade-in duration-150">
                                             {faq.answer}
                                         </div>
                                     )}
