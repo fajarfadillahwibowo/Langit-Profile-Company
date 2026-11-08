@@ -110,8 +110,28 @@ function cleanWhatsAppNumber(phone) {
     return p;
 }
 
-// Generate cycle groups for a student (Siklus 1, 2, 3...)
-function getStudentCycleGroups(student) {
+function getCycleTitle(c, startMeeting, endMeeting) {
+    const ordinalNames = {
+        1: '8 Sesi Pertama',
+        2: '8 Sesi Kedua',
+        3: '8 Sesi Ketiga',
+        4: '8 Sesi Keempat',
+        5: '8 Sesi Kelima',
+        6: '8 Sesi Keenam',
+        7: '8 Sesi Ketujuh',
+        8: '8 Sesi Kedelapan',
+        9: '8 Sesi Kesembilan',
+        10: '8 Sesi Kesepuluh',
+        11: '8 Sesi Kesebelas',
+        12: '8 Sesi Keduabelas',
+    };
+    const prefix = ordinalNames[c] || `8 Sesi Ke-${c}`;
+    return `${prefix} (Pertemuan ${startMeeting} - ${endMeeting})`;
+}
+
+// Generate cycle groups for a student (Siklus 1, 2, 3... Tak Terbatas)
+function getStudentCycleGroups(student, requestedCycle = null) {
+    if (!student) return [];
     const totalMeetings = student.total_meetings || 0;
     const activeCycle = Math.floor(totalMeetings / 8) + 1;
     const attendances = student.attendances || [];
@@ -120,6 +140,9 @@ function getStudentCycleGroups(student) {
     let maxCycle = activeCycle;
     attendances.forEach(a => { if (a.cycle_number > maxCycle) maxCycle = a.cycle_number; });
     payments.forEach(p => { if (p.cycle_number > maxCycle) maxCycle = p.cycle_number; });
+    if (requestedCycle && requestedCycle > maxCycle) {
+        maxCycle = requestedCycle;
+    }
 
     const cycles = [];
     for (let c = 1; c <= maxCycle; c++) {
@@ -128,16 +151,9 @@ function getStudentCycleGroups(student) {
         const cycleAttendances = attendances.filter(a => a.cycle_number === c || (a.meeting_number >= startMeeting && a.meeting_number <= endMeeting));
         const cyclePayment = payments.find(p => p.cycle_number === c && p.status === 'paid');
 
-        let cycleTitle = '';
-        if (c === 1) cycleTitle = '8 Sesi Pertama (Pertemuan 1 - 8)';
-        else if (c === 2) cycleTitle = '8 Sesi Kedua (Pertemuan 9 - 16)';
-        else if (c === 3) cycleTitle = '8 Sesi Ketiga (Pertemuan 17 - 24)';
-        else if (c === 4) cycleTitle = '8 Sesi Keempat (Pertemuan 25 - 32)';
-        else cycleTitle = `8 Sesi Ke-${c} (Pertemuan ${startMeeting} - ${endMeeting})`;
-
         cycles.push({
             cycleNumber: c,
-            title: cycleTitle,
+            title: getCycleTitle(c, startMeeting, endMeeting),
             shortLabel: `Siklus ${c}`,
             startMeeting,
             endMeeting,
@@ -150,6 +166,50 @@ function getStudentCycleGroups(student) {
         });
     }
     return cycles;
+}
+
+// Opsi siklus dinamis untuk pembayaran: baseline 1-8, otomatis tambah 9, 10, dst jika selesai/aktif
+function getPaymentCycleOptions(student, currentSelectedCycle = 1) {
+    const totalMeetings = student?.total_meetings || 0;
+    const activeCycle = Math.floor(totalMeetings / 8) + 1;
+    const attendances = student?.attendances || [];
+    const payments = student?.payments || [];
+
+    // Tampilan awal baseline minimal 8 siklus (Pertemuan 1 - 64)
+    let maxCycle = Math.max(8, activeCycle);
+    attendances.forEach(a => { if (a.cycle_number > maxCycle) maxCycle = a.cycle_number; });
+    payments.forEach(p => { if (p.cycle_number > maxCycle) maxCycle = p.cycle_number; });
+    if (currentSelectedCycle && currentSelectedCycle > maxCycle) {
+        maxCycle = currentSelectedCycle;
+    }
+
+    // Jika siklus tertinggi sudah terisi 8 sesi atau berstatus lunas, otomatis siapkan siklus berikutnya
+    const highestAttendancesCount = attendances.filter(a => a.cycle_number === maxCycle || (a.meeting_number >= (maxCycle - 1) * 8 + 1 && a.meeting_number <= maxCycle * 8)).length;
+    const highestIsPaid = payments.some(p => p.cycle_number === maxCycle && p.status === 'paid');
+    if (highestAttendancesCount >= 8 || highestIsPaid || activeCycle >= maxCycle) {
+        maxCycle = Math.max(maxCycle, activeCycle) + 1;
+    }
+
+    const paidCyclesMap = {};
+    payments.forEach(p => {
+        if (p.status === 'paid') paidCyclesMap[p.cycle_number] = p.receipt_number;
+    });
+
+    const options = [];
+    for (let c = 1; c <= maxCycle; c++) {
+        const start = (c - 1) * 8 + 1;
+        const end = c * 8;
+        const isPaid = Boolean(paidCyclesMap[c]);
+        options.push({
+            cycle: c,
+            start,
+            end,
+            isPaid,
+            receipt: paidCyclesMap[c],
+            label: `Siklus ${c} (Pertemuan ${start} - ${end})${isPaid ? ` — [✓ SUDAH LUNAS: ${paidCyclesMap[c]}]` : ''}`,
+        });
+    }
+    return options;
 }
 
 export default function AdminEducationAttendance({ students = [], financials = {} }) {
@@ -195,6 +255,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
         category: 'Coding & Robotik (AI & Python)',
         parent_name: '',
         whatsapp: '',
+        registration_fee: 50000,
         fee_per_cycle: 600000,
         status: 'active',
         joined_at: new Date().toISOString().split('T')[0],
@@ -295,9 +356,21 @@ export default function AdminEducationAttendance({ students = [], financials = {
         });
     };
 
-    // Open Payment Modal
+    // Open Payment Modal (Cerdas memilih siklus yang belum bayar)
     const handleOpenPayment = (student, cycleNumber = null) => {
-        const targetCycle = cycleNumber || (student.active_cycle || student.current_cycle || 1);
+        const paidCycles = (student.payments || []).filter(p => p.status === 'paid').map(p => Number(p.cycle_number));
+        let targetCycle = cycleNumber;
+        if (!targetCycle) {
+            const current = student.active_cycle || student.current_cycle || 1;
+            for (let c = 1; c <= current + 1; c++) {
+                if (!paidCycles.includes(c)) {
+                    targetCycle = c;
+                    break;
+                }
+            }
+            if (!targetCycle) targetCycle = current;
+        }
+
         setPaymentModal({
             open: true,
             student,
@@ -343,6 +416,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 category: student.category || 'Coding & Robotik (AI & Python)',
                 parent_name: student.parent_name || '',
                 whatsapp: student.whatsapp || '',
+                registration_fee: student.registration_fee !== undefined && student.registration_fee !== null ? Number(student.registration_fee) : 50000,
                 fee_per_cycle: student.fee_per_cycle || 600000,
                 status: student.status || 'active',
                 joined_at: student.joined_at ? String(student.joined_at).split('T')[0] : new Date().toISOString().split('T')[0],
@@ -355,6 +429,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 category: 'Coding & Robotik (AI & Python)',
                 parent_name: '',
                 whatsapp: '',
+                registration_fee: 50000,
                 fee_per_cycle: 600000,
                 status: 'active',
                 joined_at: new Date().toISOString().split('T')[0],
@@ -706,18 +781,23 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 </p>
                                             </div>
 
-                                            {/* Status Badge */}
+                                            {/* Status Badge: Logo LUNAS / BELUM BAYAR per Siklus */}
                                             <div className="text-right">
                                                 {isCurrentCyclePaid ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        <span>Lunas Siklus {currentViewedCycle}</span>
-                                                    </span>
+                                                    <div className="space-y-0.5">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                            <span>LUNAS SIKLUS {currentViewedCycle}</span>
+                                                        </span>
+                                                        <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
+                                                            {currentCycleObj?.payment?.receipt_number || 'Tercatat'}
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <div className="space-y-1">
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                                                            <AlertCircle className="w-3.5 h-3.5" />
-                                                            <span>Tagihan Siklus {currentViewedCycle}</span>
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                                                            <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                                                            <span>BELUM BAYAR SIKLUS {currentViewedCycle}</span>
                                                         </span>
                                                         <div className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
                                                             (Bebas Absen Lanjut)
@@ -727,7 +807,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             </div>
                                         </div>
 
-                                        {/* Cycle Switcher Navigation Pills (Siklus 1, 2, 3...) */}
+                                        {/* Cycle Switcher Navigation Pills (Siklus 1, 2, 3... Tak Terbatas) */}
                                         <div className="pt-2 pb-1 flex flex-wrap items-center gap-1.5 border-t border-slate-100 dark:border-white/5">
                                             <span className="text-[10px] font-mono font-bold text-slate-400 mr-1 uppercase">Pilih Siklus:</span>
                                             {cycleGroups.map((cg) => {
@@ -748,19 +828,54 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                         }`}>
                                                             {cg.attendancesCount}/8
                                                         </span>
-                                                        {cg.isCompleted && <span className="text-emerald-400 text-xs">✓</span>}
+                                                        {cg.isPaid ? (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500 text-white shadow-xs">
+                                                                <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" /> Lunas
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                                                <AlertCircle className="w-2.5 h-2.5 text-amber-500" /> Belum Bayar
+                                                            </span>
+                                                        )}
                                                     </button>
                                                 );
                                             })}
+
+                                            {/* Tombol Buka / Buat Siklus Berikutnya (Tak Terbatas / Infinite) */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const nextC = (cycleGroups[cycleGroups.length - 1]?.cycleNumber || 1) + 1;
+                                                    setStudentCycleView({ ...studentCycleView, [student.id]: nextC });
+                                                }}
+                                                className="px-2 py-1 rounded-xl text-[11px] font-bold border border-dashed border-cyan-500 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition-all flex items-center gap-1 cursor-pointer"
+                                                title="Tampilkan / Siapkan Siklus Berikutnya (Tak Terbatas)"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                                <span>+ Siklus {(cycleGroups[cycleGroups.length - 1]?.cycleNumber || 1) + 1}</span>
+                                            </button>
                                         </div>
                                     </div>
 
                                     {/* ── 8-SESSION INTERACTIVE PUNCH CARD ── */}
                                     <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 space-y-3">
                                         <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
-                                            <span className="text-slate-800 dark:text-slate-200">
-                                                {currentCycleObj?.title || `Siklus ${currentViewedCycle}`}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-800 dark:text-slate-200 font-bold">
+                                                    {currentCycleObj?.title || `Siklus ${currentViewedCycle}`}
+                                                </span>
+                                                {isCurrentCyclePaid ? (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
+                                                        <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                                                        <span>LUNAS</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                                                        <AlertCircle className="w-3 h-3 text-rose-500" />
+                                                        <span>BELUM BAYAR</span>
+                                                    </span>
+                                                )}
+                                            </div>
                                             <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold">
                                                 {formatRupiah(student.fee_per_cycle)} / 8 sesi
                                             </span>
@@ -854,13 +969,19 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 </span>
                                             </div>
 
-                                            {!isCurrentCyclePaid && (
+                                            {!isCurrentCyclePaid ? (
                                                 <button
                                                     onClick={() => handleOpenPayment(student, currentViewedCycle)}
-                                                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 cursor-pointer shadow-xs flex items-center gap-1"
                                                 >
-                                                    Catat Bayar Siklus {currentViewedCycle}
+                                                    <CreditCard className="w-3 h-3" />
+                                                    <span>+ Catat Bayar Siklus {currentViewedCycle}</span>
                                                 </button>
+                                            ) : (
+                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                    <span>Siklus {currentViewedCycle} Sudah Lunas ({currentCycleObj?.payment?.receipt_number || 'Tercatat'})</span>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -1026,16 +1147,23 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 </div>
 
                                                 {cg.isPaid ? (
-                                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                                        ✓ Lunas ({cg.payment?.receipt_number || 'Kuitansi'})
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-xs">
+                                                        <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                        <span>LUNAS ({cg.payment?.receipt_number || 'Kuitansi'})</span>
                                                     </span>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => handleOpenPayment(student, cg.cycleNumber)}
-                                                        className="px-2 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] cursor-pointer"
-                                                    >
-                                                        + Bayar {formatRupiah(student.fee_per_cycle)}
-                                                    </button>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                                                            <AlertCircle className="w-3 h-3 text-rose-500" />
+                                                            <span>BELUM BAYAR</span>
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleOpenPayment(student, cg.cycleNumber)}
+                                                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] cursor-pointer shadow-xs"
+                                                        >
+                                                            + Bayar {formatRupiah(student.fee_per_cycle)}
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
 
@@ -1155,8 +1283,13 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">{st.total_meetings} Sesi</span>
                                             <div className="text-[10px] text-slate-500">Siklus {st.active_cycle || st.current_cycle}</div>
                                         </td>
-                                        <td className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                                            {formatRupiah(st.fee_per_cycle)}
+                                        <td className="py-3 px-4 font-mono whitespace-nowrap">
+                                            <div className="font-semibold text-slate-800 dark:text-slate-200">
+                                                {formatRupiah(st.fee_per_cycle)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-mono">
+                                                Daftar: {formatRupiah(st.registration_fee || 50000)}
+                                            </div>
                                         </td>
                                         <td className="py-3 px-4 whitespace-nowrap">
                                             {st.needs_payment_reminder ? (
@@ -1485,9 +1618,9 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             <div className="flex items-center gap-2">
                                                 {cg.isPaid ? (
                                                     <div className="text-right">
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                                            <span>Lunas {formatRupiah(cg.payment?.amount || detailCycleStudent.fee_per_cycle)}</span>
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                            <span>LUNAS {formatRupiah(cg.payment?.amount || detailCycleStudent.fee_per_cycle)}</span>
                                                         </span>
                                                         <span className="block text-[10px] font-mono text-slate-400 mt-0.5">
                                                             {cg.payment?.receipt_number} • {formatDate(cg.payment?.payment_date)}
@@ -1495,8 +1628,9 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                                                            Tagihan Siklus Pending
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                                                            <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                                                            <span>BELUM BAYAR</span>
                                                         </span>
                                                         <button
                                                             onClick={() => {
@@ -1504,9 +1638,9 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                                 setDetailCycleStudent(null);
                                                                 handleOpenPayment(st, cg.cycleNumber);
                                                             }}
-                                                            className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs"
+                                                            className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs cursor-pointer shadow-xs"
                                                         >
-                                                            Catat Bayar
+                                                            + Catat Bayar
                                                         </button>
                                                     </div>
                                                 )}
@@ -1868,21 +2002,60 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmitPayment} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Pembayaran Untuk Paket Siklus Ke:
-                                </label>
-                                <select
-                                    value={paymentModal.cycleNumber}
-                                    onChange={(e) => setPaymentModal({ ...paymentModal, cycleNumber: Number(e.target.value) })}
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold text-slate-900 dark:text-white cursor-pointer"
-                                >
-                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(c => (
-                                        <option key={c} value={c}>Siklus {c} (Pertemuan {(c - 1) * 8 + 1} - {c * 8})</option>
-                                    ))}
-                                </select>
-                            </div>
+                        {(() => {
+                            const cycleOptions = getPaymentCycleOptions(paymentModal.student, paymentModal.cycleNumber);
+                            const selectedOption = cycleOptions.find(o => o.cycle === paymentModal.cycleNumber);
+                            const isSelectedCyclePaid = Boolean(selectedOption?.isPaid);
+
+                            return (
+                                <form onSubmit={handleSubmitPayment} className="space-y-4">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                                                Pembayaran Untuk Paket Siklus Ke:
+                                            </label>
+                                            <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono font-semibold">
+                                                (Siklus Tak Terbatas)
+                                            </span>
+                                        </div>
+                                        <select
+                                            value={paymentModal.cycleNumber}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setPaymentModal({ ...paymentModal, cycleNumber: val });
+                                                setPayForm({ ...payForm, notes: `Pembayaran Paket 8 Sesi Pertemuan (Siklus ${val})` });
+                                            }}
+                                            className={`w-full px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer ${
+                                                isSelectedCyclePaid
+                                                    ? 'border-rose-400 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-500/40'
+                                                    : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white'
+                                            }`}
+                                        >
+                                            {cycleOptions.map(opt => (
+                                                <option
+                                                    key={opt.cycle}
+                                                    value={opt.cycle}
+                                                    disabled={opt.isPaid}
+                                                    className={opt.isPaid ? 'text-slate-400 bg-slate-100 dark:bg-slate-800' : ''}
+                                                >
+                                                    {opt.label}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {/* Peringatan jika siklus yang dipilih sudah Lunas */}
+                                        {isSelectedCyclePaid && (
+                                            <div className="mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-800 dark:text-rose-300 space-y-1">
+                                                <div className="flex items-center gap-1.5 font-bold">
+                                                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                                                    <span>Siklus {paymentModal.cycleNumber} Sudah LUNAS!</span>
+                                                </div>
+                                                <p className="text-[11px] leading-relaxed text-rose-700 dark:text-rose-300/80">
+                                                    Pembayaran untuk siklus ini sudah pernah dicatat dengan nomor kuitansi <span className="font-mono font-bold">{selectedOption?.receipt}</span>. Sesuai aturan, tidak dapat membayar berkali-kali pada siklus yang sama. Silakan pilih siklus lain yang belum dibayar.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
 
                             <div>
                                 <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1954,14 +2127,22 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting}
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                                    disabled={isSubmitting || isSelectedCyclePaid}
+                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                                 >
                                     <Check className="w-4 h-4" />
-                                    <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Pembayaran'}</span>
+                                    <span>
+                                        {isSubmitting
+                                            ? 'Menyimpan...'
+                                            : isSelectedCyclePaid
+                                            ? `Siklus ${paymentModal.cycleNumber} Sudah Lunas (Terkunci)`
+                                            : 'Simpan Pemasukan Kas'}
+                                    </span>
                                 </button>
                             </div>
                         </form>
+                            );
+                        })()}
                     </div>
                 </div>
             )}
@@ -2060,6 +2241,23 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                        Biaya Pendaftaran Les (Rp):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        required
+                                        value={stuForm.registration_fee}
+                                        onChange={(e) => setStuForm({ ...stuForm, registration_fee: Number(e.target.value) })}
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                                    />
+                                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                                        Terbilang: {formatRupiah(stuForm.registration_fee)} (Standar: Rp 50.000)
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
                                         Biaya per 8 Pertemuan (Rp):
                                     </label>
                                     <input
@@ -2070,8 +2268,13 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         onChange={(e) => setStuForm({ ...stuForm, fee_per_cycle: Number(e.target.value) })}
                                         className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-mono font-bold"
                                     />
+                                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                                        Terbilang: {formatRupiah(stuForm.fee_per_cycle)}
+                                    </span>
                                 </div>
+                            </div>
 
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
                                         Status Siswa:
@@ -2085,6 +2288,18 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         <option value="inactive">Nonaktif / Cuti</option>
                                         <option value="graduated">Lulus</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                        Tanggal Mulai / Bergabung:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={stuForm.joined_at}
+                                        onChange={(e) => setStuForm({ ...stuForm, joined_at: e.target.value })}
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-mono"
+                                    />
                                 </div>
                             </div>
 

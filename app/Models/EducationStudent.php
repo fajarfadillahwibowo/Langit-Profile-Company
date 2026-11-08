@@ -14,6 +14,7 @@ class EducationStudent extends Model
 
     protected $casts = [
         'fee_per_cycle' => 'float',
+        'registration_fee' => 'float',
         'cycle_sessions_count' => 'integer',
         'joined_at' => 'date',
     ];

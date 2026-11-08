@@ -34,11 +34,15 @@ class EducationAttendanceController extends Controller implements HasMiddleware
             'parent_name' => ['nullable', 'string', 'max:120'],
             'whatsapp' => ['required', 'string', 'max:40'],
             'fee_per_cycle' => ['required', 'numeric', 'min:0'],
+            'registration_fee' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'in:active,inactive,graduated'],
             'joined_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $validated['registration_fee'] = isset($validated['registration_fee']) && $validated['registration_fee'] !== ''
+            ? (float) $validated['registration_fee']
+            : 50000.0;
         $validated['status'] = $validated['status'] ?? 'active';
         $validated['joined_at'] = $validated['joined_at'] ?? now()->toDateString();
 
@@ -60,10 +64,17 @@ class EducationAttendanceController extends Controller implements HasMiddleware
             'parent_name' => ['nullable', 'string', 'max:120'],
             'whatsapp' => ['required', 'string', 'max:40'],
             'fee_per_cycle' => ['required', 'numeric', 'min:0'],
+            'registration_fee' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,graduated'],
             'joined_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (array_key_exists('registration_fee', $validated)) {
+            $validated['registration_fee'] = $validated['registration_fee'] !== null && $validated['registration_fee'] !== ''
+                ? (float) $validated['registration_fee']
+                : 50000.0;
+        }
 
         $student->update($validated);
 
@@ -179,6 +190,18 @@ class EducationAttendanceController extends Controller implements HasMiddleware
         ]);
 
         $student = EducationStudent::findOrFail($validated['student_id']);
+
+        // Cegah pembayaran ganda: 1 siklus hanya dapat dibayar 1 kali jika sudah lunas
+        $alreadyPaid = EducationPayment::where('student_id', $student->id)
+            ->where('cycle_number', (int) $validated['cycle_number'])
+            ->where('status', 'paid')
+            ->first();
+
+        if ($alreadyPaid) {
+            return back()->withErrors([
+                'cycle_number' => "Siklus ke-{$validated['cycle_number']} untuk {$student->name} sudah berstatus LUNAS (No. Kuitansi: {$alreadyPaid->receipt_number}). Tidak dapat melakukan pembayaran ganda pada siklus yang sama.",
+            ]);
+        }
 
         // Generate receipt number e.g. INV-EDU-202611-0001
         $prefix = 'INV-EDU-'.date('Ym').'-';

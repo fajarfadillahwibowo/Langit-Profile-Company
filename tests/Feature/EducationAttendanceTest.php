@@ -177,6 +177,17 @@ class EducationAttendanceTest extends TestCase
         $this->assertStringStartsWith('INV-EDU-', $payment->receipt_number);
         $this->assertSame(1, $payment->cycle_number);
         $this->assertContains(1, $student->fresh()->paid_cycles);
+
+        // Uji coba bayar kedua kali pada siklus 1 (harus ditolak karena sudah lunas)
+        $duplicateResponse = $this->actingAs($admin)->post('/admin/education-payments', [
+            'student_id' => $student->id,
+            'cycle_number' => 1,
+            'amount' => 800000,
+            'payment_date' => '2026-11-06',
+            'payment_method' => 'cash',
+        ]);
+        $duplicateResponse->assertSessionHasErrors(['cycle_number']);
+        $this->assertSame(1, EducationPayment::where('student_id', $student->id)->where('cycle_number', 1)->count());
     }
 
     public function test_dashboard_renders_education_students_and_financial_metrics(): void
@@ -308,5 +319,74 @@ class EducationAttendanceTest extends TestCase
         $this->assertSame(9, $student->fresh()->total_meetings);
         $this->assertSame(2, $student->fresh()->active_cycle);
         $this->assertSame(10, $student->fresh()->next_meeting_number);
+    }
+
+    public function test_cycles_advance_infinitely_past_cycle_8_into_cycle_9_and_10(): void
+    {
+        $admin = $this->createAdmin();
+
+        $student = EducationStudent::create([
+            'name' => 'Dimas Senior',
+            'category' => 'Web Development Fullstack',
+            'whatsapp' => '087700112233',
+            'fee_per_cycle' => 850000,
+            'registration_fee' => 50000,
+        ]);
+
+        $this->assertSame(50000.0, (float) $student->fresh()->registration_fee);
+
+        // Rekam 64 sesi (8 siklus penuh x 8 sesi = 64 sesi)
+        for ($i = 1; $i <= 64; $i++) {
+            $cycle = intdiv($i - 1, 8) + 1;
+            $session = (($i - 1) % 8) + 1;
+            EducationAttendance::create([
+                'student_id' => $student->id,
+                'meeting_number' => $i,
+                'cycle_number' => $cycle,
+                'session_in_cycle' => $session,
+                'date' => '2026-11-01',
+                'status' => 'hadir',
+                'topic' => "Pertemuan {$i}",
+            ]);
+        }
+
+        $fresh = $student->fresh();
+        $this->assertSame(64, $fresh->total_meetings);
+        // Setelah siklus 8 penuh (64 sesi), siklus 9 harus otomatis aktif!
+        $this->assertSame(9, $fresh->active_cycle);
+        $this->assertSame(65, $fresh->next_meeting_number);
+
+        // Catat pertemuan ke-65 (Sesi 1 pada Siklus 9)
+        $this->actingAs($admin)->post('/admin/education-attendance', [
+            'student_id' => $student->id,
+            'meeting_number' => 65,
+            'date' => '2026-11-02',
+            'status' => 'hadir',
+            'topic' => 'Sesi Pertama Siklus 9',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $att65 = EducationAttendance::where('student_id', $student->id)->where('meeting_number', 65)->first();
+        $this->assertNotNull($att65);
+        $this->assertSame(9, $att65->cycle_number);
+        $this->assertSame(1, $att65->session_in_cycle);
+
+        // Rekam sisa sesi hingga pertemuan 72 (Siklus 9 penuh)
+        for ($i = 66; $i <= 72; $i++) {
+            EducationAttendance::create([
+                'student_id' => $student->id,
+                'meeting_number' => $i,
+                'cycle_number' => 9,
+                'session_in_cycle' => (($i - 1) % 8) + 1,
+                'date' => '2026-11-03',
+                'status' => 'hadir',
+                'topic' => "Pertemuan {$i}",
+            ]);
+        }
+
+        $afterCycle9 = $student->fresh();
+        $this->assertSame(72, $afterCycle9->total_meetings);
+        // Setelah siklus 9 penuh (72 sesi), siklus 10 harus otomatis aktif!
+        $this->assertSame(10, $afterCycle9->active_cycle);
+        $this->assertSame(73, $afterCycle9->next_meeting_number);
     }
 }
