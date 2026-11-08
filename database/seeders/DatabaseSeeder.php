@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Superadmin User
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'admin@langit.id'],
             [
                 'name' => 'Langit Administrator',
@@ -166,7 +166,7 @@ class DatabaseSeeder extends Seeder
 
         $serviceMap = [];
         foreach ($services as $srv) {
-            $created = Service::updateOrCreate(['slug' => $srv['slug']], $srv);
+            $created = Service::firstOrCreate(['slug' => $srv['slug']], $srv);
             $serviceMap[$srv['slug']] = $created->id;
         }
 
@@ -436,7 +436,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($galleries as $gal) {
-            Gallery::updateOrCreate(['slug' => $gal['slug']], $gal);
+            Gallery::firstOrCreate(['slug' => $gal['slug']], $gal);
         }
 
         // 4. Web Portfolios (Matching user's Web Dev categories)
@@ -492,7 +492,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($portfolios as $p) {
-            WebPortfolio::updateOrCreate(['slug' => $p['slug']], $p);
+            WebPortfolio::firstOrCreate(['slug' => $p['slug']], $p);
         }
 
         // 5. Web Estimator Components (User requirements: Operasi Internal, Profile, Pendidikan, Toko Online, Booking, dll)
@@ -509,7 +509,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($estimatorComponents as $ec) {
-            WebEstimatorComponent::updateOrCreate(['component_name' => $ec['component_name']], $ec);
+            WebEstimatorComponent::firstOrCreate(['component_name' => $ec['component_name']], $ec);
         }
 
         // 6. Education Courses (User: 1. Kursus Coding > Robotik/Web Dev/AI, 2. Kursus Office, 3. Kursus Rakit Komputer)
@@ -568,7 +568,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($courses as $c) {
-            EducationCourse::updateOrCreate(['slug' => $c['slug']], $c);
+            EducationCourse::firstOrCreate(['slug' => $c['slug']], $c);
         }
 
         // 7. Computer Service Tickets (User: 1. Installasi Software, 2. Upgrade SSD, 3. Rakit PC, 4. Penggantian Part)
@@ -624,7 +624,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($tickets as $t) {
-            ComputerServiceTicket::updateOrCreate(['receipt_number' => $t['receipt_number']], $t);
+            ComputerServiceTicket::firstOrCreate(['receipt_number' => $t['receipt_number']], $t);
         }
 
         // 8. Rental Equipments (User: 1. Proyektor, 2. TV, 3. Drone)
@@ -719,7 +719,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($rentals as $r) {
-            RentalEquipment::updateOrCreate(['slug' => $r['slug']], $r);
+            RentalEquipment::firstOrCreate(['slug' => $r['slug']], $r);
         }
 
         // 9. Internship Positions (4 Posisi Pilihan: Videographer, Talent/Model, Editor, Web Dev)
@@ -808,11 +808,11 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($positions as $p) {
-            InternshipPosition::updateOrCreate(['slug' => $p['slug']], $p);
+            InternshipPosition::firstOrCreate(['slug' => $p['slug']], $p);
         }
 
         // 10. Sample Consultation
-        Consultation::updateOrCreate(
+        Consultation::firstOrCreate(
             ['ticket_code' => 'CNS-2026-001'],
             [
                 'client_name' => 'Hendro Setiawan',
@@ -830,7 +830,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 11. Sample Collaboration
-        Collaboration::updateOrCreate(
+        Collaboration::firstOrCreate(
             ['email' => 'bem@kampusmerdeka.ac.id'],
             [
                 'organization_name' => 'BEM Fakultas Ilmu Komputer',
@@ -963,7 +963,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($studentsData as $st) {
-            $student = \App\Models\EducationStudent::updateOrCreate(
+            $student = \App\Models\EducationStudent::firstOrCreate(
                 ['name' => $st['name']],
                 [
                     'category' => $st['category'],
@@ -982,7 +982,7 @@ class DatabaseSeeder extends Seeder
                 $sNum = (($m - 1) % 8) + 1;
                 $topic = $st['topics'][$m - 1] ?? "Pembahasan Pertemuan Ke-{$m}";
 
-                \App\Models\EducationAttendance::updateOrCreate(
+                \App\Models\EducationAttendance::firstOrCreate(
                     [
                         'student_id' => $student->id,
                         'meeting_number' => $m,
@@ -1002,7 +1002,7 @@ class DatabaseSeeder extends Seeder
             // Seed payments
             foreach ($st['paid_cycles'] as $cycleNum) {
                 $receiptCode = 'INV-EDU-'.date('Ym').'-'.str_pad($student->id * 10 + $cycleNum, 4, '0', STR_PAD_LEFT);
-                \App\Models\EducationPayment::updateOrCreate(
+                \App\Models\EducationPayment::firstOrCreate(
                     [
                         'student_id' => $student->id,
                         'cycle_number' => $cycleNum,
