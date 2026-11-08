@@ -33,7 +33,9 @@ import {
     History,
     Calendar,
     ChevronDown,
-    ListFilter
+    ListFilter,
+    LayoutGrid,
+    Table as TableIcon
 } from 'lucide-react';
 
 const CATEGORY_PRESETS = [
@@ -45,6 +47,15 @@ const CATEGORY_PRESETS = [
 ];
 
 const TOPIC_SUGGESTIONS = {
+    'Coding': [
+        'Algoritma & Logika Komputasi',
+        'Sintaks Python & Variabel',
+        'Percabangan Logika If-Else',
+        'Perulangan For & While Loop',
+        'Fungsi (Def) & Modul Kode',
+        'Robotik Sensor & Arduino/ESP32',
+        'Mini Project Game Interaktif'
+    ],
     'Coding & Robotik (AI & Python)': [
         'Algoritma & Logika Komputasi',
         'Sintaks Python & Variabel',
@@ -87,6 +98,11 @@ function formatRupiah(num) {
     return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 }
 
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    return String(dateStr).slice(0, 10);
+}
+
 function cleanWhatsAppNumber(phone) {
     if (!phone) return '';
     let p = String(phone).replace(/\D/g, '');
@@ -97,7 +113,6 @@ function cleanWhatsAppNumber(phone) {
 // Generate cycle groups for a student (Siklus 1, 2, 3...)
 function getStudentCycleGroups(student) {
     const totalMeetings = student.total_meetings || 0;
-    const nextMeeting = totalMeetings + 1;
     const activeCycle = Math.floor(totalMeetings / 8) + 1;
     const attendances = student.attendances || [];
     const payments = student.payments || [];
@@ -148,6 +163,8 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
     // Detailed cycle modal state
     const [detailCycleStudent, setDetailCycleStudent] = useState(null);
+    const [modalCycleFilter, setModalCycleFilter] = useState('all'); // 'all' or cycleNumber
+    const [modalViewMode, setModalViewMode] = useState('cards'); // 'cards' or 'table'
 
     // Modal States
     const [attendanceModal, setAttendanceModal] = useState({ open: false, student: null, meetingNumber: 1 });
@@ -426,7 +443,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
     };
 
     return (
-        <div className="space-y-8 animate-fadeIn">
+        <div className="space-y-8 animate-fadeIn [overflow-wrap:normal] break-normal">
             {/* ── 1. COCKPIT HEADER & KAS PEMASUKAN CARDS ── */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-[#002b49] p-6 sm:p-8 text-white border border-cyan-500/20 shadow-2xl">
                 <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
@@ -533,7 +550,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-white/5 text-xs font-bold">
                     <button
                         onClick={() => setSubTab('punch_cards')}
-                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'punch_cards'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -543,10 +560,10 @@ export default function AdminEducationAttendance({ students = [], financials = {
                         <span>Kartu Presensi 8 Sesi</span>
                     </button>
 
-                    {/* NEW TAB: Riwayat Lengkap Semua Siklus */}
+                    {/* TAB: Riwayat Lengkap Semua Siklus */}
                     <button
                         onClick={() => setSubTab('all_cycles')}
-                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'all_cycles'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -558,7 +575,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                     <button
                         onClick={() => setSubTab('students_table')}
-                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'students_table'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -570,7 +587,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                     <button
                         onClick={() => setSubTab('attendances_log')}
-                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'attendances_log'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -582,7 +599,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                     <button
                         onClick={() => setSubTab('payments_log')}
-                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'payments_log'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -650,7 +667,6 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     ) : (
                         filteredStudents.map((student) => {
                             const totalMeetings = student.total_meetings || 0;
-                            // Automatic active cycle computation: advances to new cycle seamlessly
                             const activeCycle = Math.floor(totalMeetings / 8) + 1;
                             const nextMeetingNumber = totalMeetings + 1;
 
@@ -789,6 +805,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                                 handleOpenAttendance(student, meetingTargetNumber);
                                                             } else {
                                                                 setDetailCycleStudent(student);
+                                                                setModalCycleFilter(currentViewedCycle);
                                                             }
                                                         }}
                                                         title={attRecord ? `Pertemuan #${attRecord.meeting_number} (${attRecord.status}): ${attRecord.topic || 'Belum ada catatan materi'}` : `Klik untuk absen pertemuan #${meetingTargetNumber}`}
@@ -804,7 +821,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                         </div>
                                                         {attRecord?.date && (
                                                             <span className="text-[9px] font-mono mt-1 opacity-90 truncate max-w-full">
-                                                                {String(attRecord.date).slice(5)}
+                                                                {formatDate(attRecord.date).slice(5)}
                                                             </span>
                                                         )}
                                                     </div>
@@ -873,15 +890,18 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         </div>
 
                                         <div className="flex items-center gap-1">
-                                            {/* Button: Lihat Lengkap Semua Sesi */}
+                                            {/* Button: Lihat Lengkap Semua Sesi (Clean & Prominent) */}
                                             <button
                                                 type="button"
-                                                onClick={() => setDetailCycleStudent(student)}
-                                                title="Lihat Lengkap Semua Sesi (Siklus 1, 2, 3...)"
-                                                className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                                                onClick={() => {
+                                                    setDetailCycleStudent(student);
+                                                    setModalCycleFilter('all');
+                                                }}
+                                                title={`Lihat lengkap riwayat seluruh sesi untuk ${student.name}`}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all cursor-pointer shadow-xs"
                                             >
-                                                <Layers className="w-3.5 h-3.5" />
-                                                <span className="hidden sm:inline">Semua Sesi</span>
+                                                <History className="w-3.5 h-3.5" />
+                                                <span>Semua Sesi ({totalMeetings})</span>
                                             </button>
 
                                             {/* WhatsApp Ortu */}
@@ -924,7 +944,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 4. VIEW 2: RIWAYAT LENGKAP SEMUA SIKLUS (MATRIX 1, 2, 3...) ── */}
             {subTab === 'all_cycles' && (
-                <div className="space-y-6">
+                <div className="space-y-6 [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -976,7 +996,10 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             + Absen Sesi #{totalMeetings + 1}
                                         </button>
                                         <button
-                                            onClick={() => setDetailCycleStudent(student)}
+                                            onClick={() => {
+                                                setDetailCycleStudent(student);
+                                                setModalCycleFilter('all');
+                                            }}
                                             className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer"
                                         >
                                             Buka Modal Penuh ↗
@@ -1028,23 +1051,30 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                                                     {cg.attendances.map((att) => (
                                                         <div
                                                             key={att.id}
-                                                            className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/5 flex items-center justify-between gap-2 text-xs"
+                                                            className="p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/70 dark:border-white/5 shadow-xs flex items-start justify-between gap-3 text-xs"
                                                         >
-                                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                                <span className="w-6 h-6 rounded-md bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono font-bold flex items-center justify-center text-[11px] shrink-0">
+                                                            <div className="flex items-start gap-2.5 min-w-0">
+                                                                <span className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono font-bold flex items-center justify-center text-xs shrink-0 mt-0.5">
                                                                     #{att.meeting_number}
                                                                 </span>
-                                                                <div className="min-w-0">
-                                                                    <div className="font-semibold text-slate-900 dark:text-white truncate">
+                                                                <div className="min-w-0 space-y-0.5">
+                                                                    <div className="font-bold text-slate-900 dark:text-white leading-tight">
                                                                         {att.topic || 'Sesi Pembahasan Materi'}
                                                                     </div>
-                                                                    <div className="text-[10px] text-slate-500 font-mono">
-                                                                        {String(att.date || '').slice(0, 10)} • {att.mentor_name || 'Instruktur'}
+                                                                    <div className="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+                                                                        <span>{formatDate(att.date)}</span>
+                                                                        <span>•</span>
+                                                                        <span>{att.mentor_name || 'Instruktur'}</span>
                                                                     </div>
+                                                                    {att.notes && (
+                                                                        <div className="text-[11px] text-slate-600 dark:text-slate-400 italic">
+                                                                            "{att.notes}"
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
@@ -1061,7 +1091,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                                     className="p-1 rounded text-slate-400 hover:text-rose-500 cursor-pointer"
                                                                     title="Hapus Sesi"
                                                                 >
-                                                                    <Trash2 className="w-3 h-3" />
+                                                                    <Trash2 className="w-3.5 h-3.5" />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1079,7 +1109,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 5. VIEW 3: TABEL DAFTAR SISWA (DATA MANAGEMENT) ── */}
             {subTab === 'students_table' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
+                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Daftar Seluruh Anak Les</h3>
@@ -1094,41 +1124,41 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     <div className="min-w-0 max-w-full overflow-x-auto">
-                        <table className="w-full min-w-[56rem] text-left text-xs font-sans">
+                        <table className="w-full min-w-[700px] text-left text-xs font-sans">
                             <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider bg-slate-50/50 dark:bg-white/[0.02]">
                                 <tr>
-                                    <th className="py-3 px-4 w-12 text-center">No</th>
-                                    <th className="py-3 px-4">Nama Siswa</th>
-                                    <th className="py-3 px-4">Kategori Les</th>
-                                    <th className="py-3 px-4">Orang Tua & WA</th>
-                                    <th className="py-3 px-4 text-center">Sesi / Siklus</th>
-                                    <th className="py-3 px-4">Biaya / 8 Sesi</th>
-                                    <th className="py-3 px-4">Status Tagihan</th>
-                                    <th className="py-3 px-4 text-right">Aksi</th>
+                                    <th className="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Nama Siswa</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Kategori Les</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Orang Tua & WA</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">Sesi / Siklus</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Biaya / 8 Sesi</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Status Tagihan</th>
+                                    <th className="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200/60 dark:divide-white/5">
                                 {filteredStudents.map((st, idx) => (
                                     <tr key={st.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
                                         <td className="py-3 px-4 text-center font-mono text-slate-400">{idx + 1}</td>
-                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{st.name}</td>
-                                        <td className="py-3 px-4">
+                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">{st.name}</td>
+                                        <td className="py-3 px-4 whitespace-nowrap">
                                             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-700 dark:text-cyan-400">
                                                 {st.category}
                                             </span>
                                         </td>
-                                        <td className="py-3 px-4">
+                                        <td className="py-3 px-4 whitespace-nowrap">
                                             <div className="text-slate-800 dark:text-slate-200">{st.parent_name || '-'}</div>
                                             <div className="text-[11px] font-mono text-slate-500">{st.whatsapp}</div>
                                         </td>
-                                        <td className="py-3 px-4 text-center">
+                                        <td className="py-3 px-4 text-center whitespace-nowrap">
                                             <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">{st.total_meetings} Sesi</span>
                                             <div className="text-[10px] text-slate-500">Siklus {st.active_cycle || st.current_cycle}</div>
                                         </td>
-                                        <td className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200">
+                                        <td className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                                             {formatRupiah(st.fee_per_cycle)}
                                         </td>
-                                        <td className="py-3 px-4">
+                                        <td className="py-3 px-4 whitespace-nowrap">
                                             {st.needs_payment_reminder ? (
                                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
                                                     Belum Bayar (Bebas Absen)
@@ -1139,10 +1169,13 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="py-3 px-4 text-right">
+                                        <td className="py-3 px-4 text-right whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => setDetailCycleStudent(st)}
+                                                    onClick={() => {
+                                                        setDetailCycleStudent(st);
+                                                        setModalCycleFilter('all');
+                                                    }}
                                                     className="px-2 py-1 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[11px] font-bold hover:bg-cyan-500/20 cursor-pointer"
                                                     title="Lihat Semua Sesi Lengkap"
                                                 >
@@ -1184,7 +1217,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 6. VIEW 4: LOG RIWAYAT SELURUH PRESENSI ── */}
             {subTab === 'attendances_log' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
+                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Log Riwayat Presensi Masuk</h3>
@@ -1196,35 +1229,35 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     <div className="min-w-0 max-w-full overflow-x-auto">
-                        <table className="w-full min-w-[56rem] text-left text-xs font-sans">
+                        <table className="w-full min-w-[700px] text-left text-xs font-sans">
                             <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider bg-slate-50/50 dark:bg-white/[0.02]">
                                 <tr>
-                                    <th className="py-3 px-4 w-12 text-center">No</th>
-                                    <th className="py-3 px-4">Tanggal</th>
-                                    <th className="py-3 px-4">Nama Siswa</th>
-                                    <th className="py-3 px-4">Kategori Les</th>
-                                    <th className="py-3 px-4 text-center">Pertemuan Ke</th>
-                                    <th className="py-3 px-4">Status</th>
-                                    <th className="py-3 px-4">Materi / Topik</th>
-                                    <th className="py-3 px-4">Instruktur</th>
-                                    <th className="py-3 px-4 text-right">Aksi</th>
+                                    <th className="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Nama Siswa</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Kategori Les</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">Pertemuan Ke</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">Status</th>
+                                    <th className="py-3 px-4 min-w-[200px]">Materi / Topik</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Instruktur</th>
+                                    <th className="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200/60 dark:divide-white/5">
                                 {allAttendances.map((att, idx) => (
                                     <tr key={att.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
                                         <td className="py-3 px-4 text-center font-mono text-slate-400">{idx + 1}</td>
-                                        <td className="py-3 px-4 font-mono text-slate-700 dark:text-slate-300">
-                                            {String(att.date || '').slice(0, 10)}
+                                        <td className="py-3 px-4 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                            {formatDate(att.date)}
                                         </td>
-                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{att.student_name}</td>
-                                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-medium">{att.category}</td>
-                                        <td className="py-3 px-4 text-center">
+                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">{att.student_name}</td>
+                                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-medium whitespace-nowrap">{att.category}</td>
+                                        <td className="py-3 px-4 text-center whitespace-nowrap">
                                             <span className="font-mono font-bold text-slate-900 dark:text-white">#{att.meeting_number}</span>
                                             <span className="text-[10px] text-slate-400 block font-mono">Siklus {att.cycle_number} ({att.session_in_cycle}/8)</span>
                                         </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                                 att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
                                                 att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
                                                 att.status === 'sakit' ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' :
@@ -1233,11 +1266,11 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 {att.status}
                                             </span>
                                         </td>
-                                        <td className="py-3 px-4 max-w-xs truncate text-slate-700 dark:text-slate-300">
+                                        <td className="py-3 px-4 max-w-xs text-slate-700 dark:text-slate-300">
                                             {att.topic || '-'}
                                         </td>
-                                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400">{att.mentor_name || '-'}</td>
-                                        <td className="py-3 px-4 text-right">
+                                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{att.mentor_name || '-'}</td>
+                                        <td className="py-3 px-4 text-right whitespace-nowrap">
                                             <button
                                                 onClick={() => handleDeleteAttendance(att)}
                                                 className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
@@ -1256,7 +1289,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 7. VIEW 5: BUKU KAS & PEMBAYARAN LANGIT EDUCATION ── */}
             {subTab === 'payments_log' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
+                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Buku Kas & Riwayat Pembayaran</h3>
@@ -1269,42 +1302,42 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     <div className="min-w-0 max-w-full overflow-x-auto">
-                        <table className="w-full min-w-[56rem] text-left text-xs font-sans">
+                        <table className="w-full min-w-[700px] text-left text-xs font-sans">
                             <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider bg-slate-50/50 dark:bg-white/[0.02]">
                                 <tr>
-                                    <th className="py-3 px-4 w-12 text-center">No</th>
-                                    <th className="py-3 px-4">No. Kuitansi</th>
-                                    <th className="py-3 px-4">Tanggal Bayar</th>
-                                    <th className="py-3 px-4">Nama Siswa</th>
-                                    <th className="py-3 px-4">Kategori Les</th>
-                                    <th className="py-3 px-4 text-center">Siklus</th>
-                                    <th className="py-3 px-4">Nominal</th>
-                                    <th className="py-3 px-4">Metode</th>
-                                    <th className="py-3 px-4">Catatan</th>
-                                    <th className="py-3 px-4 text-right">Aksi</th>
+                                    <th className="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">No. Kuitansi</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Tanggal Bayar</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Nama Siswa</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Kategori Les</th>
+                                    <th className="py-3 px-4 text-center whitespace-nowrap">Siklus</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Nominal</th>
+                                    <th className="py-3 px-4 whitespace-nowrap">Metode</th>
+                                    <th className="py-3 px-4 min-w-[160px]">Catatan</th>
+                                    <th className="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200/60 dark:divide-white/5">
                                 {allPayments.map((pay, idx) => (
                                     <tr key={pay.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
                                         <td className="py-3 px-4 text-center font-mono text-slate-400">{idx + 1}</td>
-                                        <td className="py-3 px-4 font-mono font-bold text-cyan-600 dark:text-cyan-400">{pay.receipt_number}</td>
-                                        <td className="py-3 px-4 font-mono text-slate-700 dark:text-slate-300">{String(pay.payment_date || '').slice(0, 10)}</td>
-                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{pay.student_name}</td>
-                                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{pay.category}</td>
-                                        <td className="py-3 px-4 text-center">
+                                        <td className="py-3 px-4 font-mono font-bold text-cyan-600 dark:text-cyan-400 whitespace-nowrap">{pay.receipt_number}</td>
+                                        <td className="py-3 px-4 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">{formatDate(pay.payment_date)}</td>
+                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">{pay.student_name}</td>
+                                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">{pay.category}</td>
+                                        <td className="py-3 px-4 text-center whitespace-nowrap">
                                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">
                                                 Siklus {pay.cycle_number}
                                             </span>
                                         </td>
-                                        <td className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                        <td className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                                             {formatRupiah(pay.amount)}
                                         </td>
-                                        <td className="py-3 px-4 uppercase font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                        <td className="py-3 px-4 uppercase font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                             {pay.payment_method}
                                         </td>
-                                        <td className="py-3 px-4 max-w-xs truncate text-slate-500">{pay.notes || '-'}</td>
-                                        <td className="py-3 px-4 text-right">
+                                        <td className="py-3 px-4 text-slate-500">{pay.notes || '-'}</td>
+                                        <td className="py-3 px-4 text-right whitespace-nowrap">
                                             <button
                                                 onClick={() => handleDeletePayment(pay)}
                                                 className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
@@ -1321,138 +1354,302 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 8. MODAL DETAIL SEMUA SIKLUS (MODAL DETAIL LENGKAP PER SISWA) ── */}
+            {/* ── 8. MODAL DETAIL SEMUA SIKLUS (MODAL DETAIL LENGKAP BENTO / TABEL RAPI) ── */}
             {detailCycleStudent && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-3xl shadow-2xl my-8 space-y-6 max-h-[92vh] overflow-y-auto animate-scaleUp">
+                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto [overflow-wrap:normal] break-normal">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-5 sm:p-7 w-full max-w-4xl shadow-2xl my-6 space-y-6 max-h-[92vh] overflow-y-auto animate-scaleUp">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-                                        {detailCycleStudent.category}
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-mono">
-                                        Total {detailCycleStudent.total_meetings || 0} Sesi Pertemuan
-                                    </span>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#005792] to-cyan-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+                                    {detailCycleStudent.name?.slice(0, 2).toUpperCase() || 'ES'}
                                 </div>
-                                <h3 className="font-heading font-black text-2xl text-slate-900 dark:text-white">
-                                    {detailCycleStudent.name}
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                    Orang Tua: <strong className="text-slate-700 dark:text-slate-300">{detailCycleStudent.parent_name || '-'}</strong> • WA: <span className="font-mono">{detailCycleStudent.whatsapp}</span> • Paket: {formatRupiah(detailCycleStudent.fee_per_cycle)} / 8 sesi
-                                </p>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                                            {detailCycleStudent.category}
+                                        </span>
+                                        <span className="text-xs text-slate-400 font-mono">
+                                            Total {detailCycleStudent.total_meetings || 0} Sesi Pertemuan
+                                        </span>
+                                    </div>
+                                    <h3 className="font-heading font-black text-xl sm:text-2xl text-slate-900 dark:text-white leading-tight">
+                                        {detailCycleStudent.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Orang Tua: <strong className="text-slate-700 dark:text-slate-300">{detailCycleStudent.parent_name || '-'}</strong> • WA: <span className="font-mono">{detailCycleStudent.whatsapp}</span> • Paket: {formatRupiah(detailCycleStudent.fee_per_cycle)} / 8 sesi
+                                    </p>
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setDetailCycleStudent(null)}
-                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                                {/* View Mode Toggle (Grid Bento Cards vs Structured Table) */}
+                                <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold">
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalViewMode('cards')}
+                                        className={`px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all cursor-pointer ${
+                                            modalViewMode === 'cards'
+                                                ? 'bg-white dark:bg-slate-800 text-[#005792] dark:text-cyan-400 shadow-xs'
+                                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Mode Kartu Bento Sesi"
+                                    >
+                                        <LayoutGrid className="w-3.5 h-3.5" />
+                                        <span className="hidden sm:inline">Kartu</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalViewMode('table')}
+                                        className={`px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all cursor-pointer ${
+                                            modalViewMode === 'table'
+                                                ? 'bg-white dark:bg-slate-800 text-[#005792] dark:text-cyan-400 shadow-xs'
+                                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Mode Tabel Rinci"
+                                    >
+                                        <TableIcon className="w-3.5 h-3.5" />
+                                        <span className="hidden sm:inline">Tabel</span>
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={() => setDetailCycleStudent(null)}
+                                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
-                        {/* List Seluruh Siklus (8 Sesi Pertama, Kedua, Ketiga...) */}
-                        <div className="space-y-5">
-                            {getStudentCycleGroups(detailCycleStudent).map((cg) => (
-                                <div
-                                    key={cg.cycleNumber}
-                                    className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-4"
-                                >
-                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-white/5">
-                                        <div>
-                                            <h4 className="font-heading font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-                                                <Layers className="w-4 h-4 text-cyan-500" />
-                                                <span>{cg.title}</span>
-                                            </h4>
-                                            <p className="text-[11px] font-mono text-slate-500">
-                                                Progres Sesi: <strong className="text-slate-900 dark:text-white">{cg.attendancesCount}/8 Sesi</strong> {cg.isCompleted ? '(Lengkap ✓)' : '(Sedang Berjalan ⬤)'}
-                                            </p>
-                                        </div>
+                        {/* Filter Tabs by Cycle in Modal */}
+                        {(() => {
+                            const allCycles = getStudentCycleGroups(detailCycleStudent);
+                            return (
+                                <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-white/5 text-xs font-bold">
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalCycleFilter('all')}
+                                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                            modalCycleFilter === 'all'
+                                                ? 'bg-white dark:bg-slate-800 text-[#005792] dark:text-cyan-400 shadow-xs'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        Semua Siklus ({allCycles.length})
+                                    </button>
 
-                                        <div className="flex items-center gap-2">
-                                            {cg.isPaid ? (
-                                                <div className="text-right">
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        <span>Lunas {formatRupiah(cg.payment?.amount || detailCycleStudent.fee_per_cycle)}</span>
-                                                    </span>
-                                                    <span className="block text-[10px] font-mono text-slate-400 mt-0.5">
-                                                        {cg.payment?.receipt_number} • {String(cg.payment?.payment_date || '').slice(0, 10)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                                                        Tagihan Pending
-                                                    </span>
-                                                    <button
-                                                        onClick={() => {
-                                                            const st = detailCycleStudent;
-                                                            setDetailCycleStudent(null);
-                                                            handleOpenPayment(st, cg.cycleNumber);
-                                                        }}
-                                                        className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer"
-                                                    >
-                                                        Catat Bayar
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Table of Meetings in this cycle */}
-                                    {cg.attendances.length === 0 ? (
-                                        <div className="p-4 text-center rounded-xl border border-dashed border-slate-300 dark:border-white/10 text-xs text-slate-400">
-                                            Belum ada sesi yang tercatat di {cg.shortLabel}. Absensi berikutnya dapat langsung dicatat.
-                                        </div>
-                                    ) : (
-                                        <div className="min-w-0 max-w-full overflow-x-auto">
-                                            <table className="w-full text-left text-xs font-sans">
-                                                <thead className="border-b border-slate-200 dark:border-white/10 text-slate-400 uppercase text-[10px] font-mono">
-                                                    <tr>
-                                                        <th className="py-2 px-2.5 w-14 text-center">Sesi</th>
-                                                        <th className="py-2 px-2.5">Tanggal</th>
-                                                        <th className="py-2 px-2.5">Materi / Topik Pembelajaran</th>
-                                                        <th className="py-2 px-2.5">Instruktur</th>
-                                                        <th className="py-2 px-2.5 text-center">Status</th>
-                                                        <th className="py-2 px-2.5">Catatan</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-sans">
-                                                    {cg.attendances.map((att) => (
-                                                        <tr key={att.id} className="hover:bg-white/50 dark:hover:bg-white/[0.02]">
-                                                            <td className="py-2 px-2.5 text-center font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                                                                #{att.meeting_number}
-                                                            </td>
-                                                            <td className="py-2 px-2.5 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                                                                {String(att.date || '').slice(0, 10)}
-                                                            </td>
-                                                            <td className="py-2 px-2.5 font-semibold text-slate-900 dark:text-white">
-                                                                {att.topic || '-'}
-                                                            </td>
-                                                            <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                                                                {att.mentor_name || '-'}
-                                                            </td>
-                                                            <td className="py-2 px-2.5 text-center">
-                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                                                    att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                                                                    att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
-                                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                                                                }`}>
-                                                                    {att.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className="py-2 px-2.5 text-slate-500 italic text-[11px] max-w-xs truncate">
-                                                                {att.notes || '-'}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
+                                    {allCycles.map((cg) => (
+                                        <button
+                                            type="button"
+                                            key={cg.cycleNumber}
+                                            onClick={() => setModalCycleFilter(cg.cycleNumber)}
+                                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                                                modalCycleFilter === cg.cycleNumber
+                                                    ? 'bg-[#005792] text-white shadow-xs'
+                                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                            }`}
+                                        >
+                                            <span>{cg.shortLabel}</span>
+                                            <span className="px-1.5 py-0.2 rounded-md bg-black/10 dark:bg-white/10 text-[10px]">
+                                                {cg.attendancesCount}/8
+                                            </span>
+                                            {cg.isCompleted && <span className="text-emerald-400">✓</span>}
+                                        </button>
+                                    ))}
                                 </div>
-                            ))}
+                            );
+                        })()}
+
+                        {/* List Siklus yang Difilter */}
+                        <div className="space-y-6">
+                            {getStudentCycleGroups(detailCycleStudent)
+                                .filter(cg => modalCycleFilter === 'all' || cg.cycleNumber === modalCycleFilter)
+                                .map((cg) => (
+                                    <div
+                                        key={cg.cycleNumber}
+                                        className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-4"
+                                    >
+                                        {/* Cycle Card Header */}
+                                        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-white/5">
+                                            <div>
+                                                <h4 className="font-heading font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                                    <Layers className="w-4 h-4 text-cyan-500" />
+                                                    <span>{cg.title}</span>
+                                                </h4>
+                                                <p className="text-[11px] font-mono text-slate-500 mt-0.5">
+                                                    Progres Pertemuan: <strong className="text-slate-900 dark:text-white">{cg.attendancesCount}/8 Sesi Hadir</strong> {cg.isCompleted ? '(Paket Lengkap ✓)' : '(Sedang Berjalan ⬤)'}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {cg.isPaid ? (
+                                                    <div className="text-right">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                            <span>Lunas {formatRupiah(cg.payment?.amount || detailCycleStudent.fee_per_cycle)}</span>
+                                                        </span>
+                                                        <span className="block text-[10px] font-mono text-slate-400 mt-0.5">
+                                                            {cg.payment?.receipt_number} • {formatDate(cg.payment?.payment_date)}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                                            Tagihan Siklus Pending
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                const st = detailCycleStudent;
+                                                                setDetailCycleStudent(null);
+                                                                handleOpenPayment(st, cg.cycleNumber);
+                                                            }}
+                                                            className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs"
+                                                        >
+                                                            Catat Bayar
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Sesi-Sesi di dalam Siklus */}
+                                        {cg.attendances.length === 0 ? (
+                                            <div className="p-6 text-center rounded-2xl border border-dashed border-slate-300 dark:border-white/10 text-xs text-slate-400">
+                                                <CalendarCheck className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-40" />
+                                                <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada catatan presensi di {cg.shortLabel}.</p>
+                                                <p className="text-[11px] text-slate-500 mt-0.5">Sesi baru siap dimulai kapan saja tanpa terkunci.</p>
+                                                <button
+                                                    onClick={() => {
+                                                        const st = detailCycleStudent;
+                                                        setDetailCycleStudent(null);
+                                                        handleOpenAttendance(st, cg.startMeeting);
+                                                    }}
+                                                    className="mt-3 px-3.5 py-1.5 rounded-xl bg-[#005792] hover:bg-[#00487a] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                                >
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                    <span>Mulai Absen Pertemuan #{cg.startMeeting}</span>
+                                                </button>
+                                            </div>
+                                        ) : modalViewMode === 'cards' ? (
+                                            /* ── MODE 1: VISUAL BENTO SESSION CARDS (GORGEOUS, NON-COLLAPSING) ── */
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                {cg.attendances.map((att) => (
+                                                    <div
+                                                        key={att.id}
+                                                        className="p-3.5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 shadow-xs space-y-2.5 hover:border-cyan-500/40 transition-all"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#005792]/10 dark:bg-cyan-500/10 text-[#005792] dark:text-cyan-400 font-mono font-bold text-xs">
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                <span>Pertemuan #{att.meeting_number}</span>
+                                                            </span>
+
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                                                att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                                                                att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+                                                                att.status === 'sakit' ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20' :
+                                                                'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                                                            }`}>
+                                                                {att.status}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Topic / Materi */}
+                                                        <div>
+                                                            <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
+                                                                {att.topic || 'Sesi Pembahasan Materi'}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono mt-1">
+                                                                <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                <span>{formatDate(att.date)}</span>
+                                                                <span>•</span>
+                                                                <span className="truncate">{att.mentor_name || 'Instruktur Langit Education'}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Catatan Guru */}
+                                                        {att.notes && (
+                                                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-[11px] text-slate-600 dark:text-slate-300 italic border-l-2 border-cyan-500/40">
+                                                                "{att.notes}"
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-white/5 text-[11px]">
+                                                            <span className="text-slate-400 font-mono text-[10px]">
+                                                                Siklus {cg.cycleNumber} ({att.session_in_cycle || ((att.meeting_number - 1) % 8) + 1}/8)
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleDeleteAttendance(att)}
+                                                                className="text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1 cursor-pointer"
+                                                                title="Hapus rekaman sesi ini"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                                <span>Hapus</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            /* ── MODE 2: PRISTINE STRUCTURED TABLE (WITH SAFE COLUMN BOUNDS) ── */
+                                            <div className="overflow-x-auto min-w-0 max-w-full rounded-2xl border border-slate-200/80 dark:border-white/10">
+                                                <table className="w-full min-w-[700px] text-left text-xs [overflow-wrap:normal] break-normal font-sans">
+                                                    <thead className="bg-slate-100/70 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 font-mono text-[10px] uppercase text-slate-500 dark:text-slate-400">
+                                                        <tr>
+                                                            <th className="py-2.5 px-3 w-16 text-center whitespace-nowrap">Sesi</th>
+                                                            <th className="py-2.5 px-3 w-28 whitespace-nowrap">Tanggal</th>
+                                                            <th className="py-2.5 px-3 w-24 text-center whitespace-nowrap">Status</th>
+                                                            <th className="py-2.5 px-3 min-w-[200px]">Materi / Topik Pembelajaran</th>
+                                                            <th className="py-2.5 px-3 w-36 whitespace-nowrap">Instruktur</th>
+                                                            <th className="py-2.5 px-3 min-w-[160px]">Catatan Evaluasi</th>
+                                                            <th className="py-2.5 px-3 w-16 text-right whitespace-nowrap">Aksi</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                                                        {cg.attendances.map((att) => (
+                                                            <tr key={att.id} className="hover:bg-white/60 dark:hover:bg-white/[0.02]">
+                                                                <td className="py-2.5 px-3 text-center font-mono font-bold text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
+                                                                    #{att.meeting_number}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                                                    {formatDate(att.date)}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                                        att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                                                                        att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                                                                        'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                                                    }`}>
+                                                                        {att.status}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
+                                                                    {att.topic || '-'}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                                                    {att.mentor_name || '-'}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-slate-500 italic text-[11px]">
+                                                                    {att.notes || '-'}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                                                                    <button
+                                                                        onClick={() => handleDeleteAttendance(att)}
+                                                                        className="p-1 rounded text-slate-400 hover:text-rose-500 cursor-pointer"
+                                                                        title="Hapus Sesi"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                         </div>
 
                         {/* Modal Footer */}
@@ -1460,7 +1657,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             <button
                                 type="button"
                                 onClick={() => handleSendWhatsApp(detailCycleStudent, 'summary')}
-                                className="px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                                className="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-2 cursor-pointer transition-colors"
                             >
                                 <MessageCircle className="w-4 h-4" />
                                 <span>Kirim Rekap Lengkap via WhatsApp Ortu</span>
@@ -1469,7 +1666,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             <button
                                 type="button"
                                 onClick={() => setDetailCycleStudent(null)}
-                                className="px-5 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                             >
                                 Tutup
                             </button>
@@ -1480,7 +1677,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 9. MODAL INPUT ABSENSI (ADMIN INPUT) ── */}
             {attendanceModal.open && attendanceModal.student && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>
@@ -1584,9 +1781,9 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 />
 
                                 {/* Topic Suggestions */}
-                                {TOPIC_SUGGESTIONS[attendanceModal.student.category] && (
+                                {(TOPIC_SUGGESTIONS[attendanceModal.student.category] || TOPIC_SUGGESTIONS['Coding']) && (
                                     <div className="flex flex-wrap gap-1.5 mt-2">
-                                        {TOPIC_SUGGESTIONS[attendanceModal.student.category].map((sugg) => (
+                                        {(TOPIC_SUGGESTIONS[attendanceModal.student.category] || TOPIC_SUGGESTIONS['Coding']).map((sugg) => (
                                             <button
                                                 type="button"
                                                 key={sugg}
@@ -1651,7 +1848,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 10. MODAL CATAT PEMBAYARAN KAS ── */}
             {paymentModal.open && paymentModal.student && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-md shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>
@@ -1771,7 +1968,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 11. MODAL TAMBAH / EDIT ANAK LES ── */}
             {studentModal.open && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>

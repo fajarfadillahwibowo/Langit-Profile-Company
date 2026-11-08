@@ -1076,6 +1076,7 @@ export default function AdminDashboard({
                                                                     setActiveTab('education_attendance');
                                                                     setMobileSidebarOpen(false);
                                                                 }}
+                                                                title="Absensi Langit Education (8 Sesi)"
                                                                 className={`ml-3.5 w-[calc(100%-0.875rem)] text-left px-2.5 py-1.5 rounded-xl text-[11px] transition-all flex items-center justify-between gap-1.5 cursor-pointer border-l-2 ${
                                                                     activeTab === 'education_attendance'
                                                                         ? 'border-emerald-400 bg-white text-[#005792] font-black shadow-sm'
@@ -1084,7 +1085,7 @@ export default function AdminDashboard({
                                                             >
                                                                 <div className="flex items-center gap-1.5 min-w-0">
                                                                     <CalendarCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                                                                    <span className="truncate">↳ Absensi Langit Education</span>
+                                                                    <span className="truncate">↳ Absensi Edu</span>
                                                                 </div>
                                                                 <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${
                                                                     activeTab === 'education_attendance'
@@ -1417,6 +1418,7 @@ export default function AdminDashboard({
                                                 {sItem.slug === 'langit-education' && (
                                                     <button
                                                         onClick={() => setActiveTab('education_attendance')}
+                                                        title="Absensi Langit Education (8 Sesi)"
                                                         className={`ml-4 w-[calc(100%-1rem)] text-left px-2.5 py-1.5 rounded-xl text-xs transition-all flex items-center justify-between gap-2 group cursor-pointer border-l-2 ${
                                                             activeTab === 'education_attendance'
                                                                 ? 'border-emerald-400 bg-white text-[#005792] font-black shadow-sm'
@@ -1425,7 +1427,7 @@ export default function AdminDashboard({
                                                     >
                                                         <div className="flex items-center gap-2 min-w-0">
                                                             <CalendarCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                                                            <span className="truncate font-semibold text-[11px]">↳ Absensi Langit Education</span>
+                                                            <span className="truncate font-semibold text-[11px]">↳ Absensi Edu</span>
                                                         </div>
                                                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                                                             activeTab === 'education_attendance'
