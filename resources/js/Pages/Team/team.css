@@ -46,7 +46,6 @@
 @keyframes team-arrive { from { opacity: .35; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes team-orbit-enter { from { opacity: 0; transform: rotate(-38deg) scale(.93); } to { opacity: .35; transform: rotate(-24deg) scale(1); } }
 @media (min-width: 768px) {
-    .team-tier--founder .team-card:nth-child(even) { margin-top: 20px; }
     .team-tier--founder .team-tier-cards { padding-bottom: 8px; gap: 32px; }
 }
 @media (max-width: 639px) {
