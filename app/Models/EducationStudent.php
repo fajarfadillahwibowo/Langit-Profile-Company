@@ -21,6 +21,8 @@ class EducationStudent extends Model
     protected $appends = [
         'total_meetings',
         'current_cycle',
+        'active_cycle',
+        'next_meeting_number',
         'session_in_cycle',
         'is_cycle_completed',
         'paid_cycles',
@@ -50,6 +52,18 @@ class EducationStudent extends Model
         }
 
         return intdiv($count - 1, 8) + 1;
+    }
+
+    public function getActiveCycleAttribute(): int
+    {
+        $nextMeeting = $this->attendances()->count() + 1;
+
+        return intdiv($nextMeeting - 1, 8) + 1;
+    }
+
+    public function getNextMeetingNumberAttribute(): int
+    {
+        return $this->attendances()->count() + 1;
     }
 
     public function getSessionInCycleAttribute(): int

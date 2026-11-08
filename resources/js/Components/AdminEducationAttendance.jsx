@@ -28,7 +28,12 @@ import {
     Terminal,
     Cpu,
     Palette,
-    Award
+    Award,
+    Layers,
+    History,
+    Calendar,
+    ChevronDown,
+    ListFilter
 } from 'lucide-react';
 
 const CATEGORY_PRESETS = [
@@ -89,12 +94,60 @@ function cleanWhatsAppNumber(phone) {
     return p;
 }
 
+// Generate cycle groups for a student (Siklus 1, 2, 3...)
+function getStudentCycleGroups(student) {
+    const totalMeetings = student.total_meetings || 0;
+    const nextMeeting = totalMeetings + 1;
+    const activeCycle = Math.floor(totalMeetings / 8) + 1;
+    const attendances = student.attendances || [];
+    const payments = student.payments || [];
+
+    let maxCycle = activeCycle;
+    attendances.forEach(a => { if (a.cycle_number > maxCycle) maxCycle = a.cycle_number; });
+    payments.forEach(p => { if (p.cycle_number > maxCycle) maxCycle = p.cycle_number; });
+
+    const cycles = [];
+    for (let c = 1; c <= maxCycle; c++) {
+        const startMeeting = (c - 1) * 8 + 1;
+        const endMeeting = c * 8;
+        const cycleAttendances = attendances.filter(a => a.cycle_number === c || (a.meeting_number >= startMeeting && a.meeting_number <= endMeeting));
+        const cyclePayment = payments.find(p => p.cycle_number === c && p.status === 'paid');
+
+        let cycleTitle = '';
+        if (c === 1) cycleTitle = '8 Sesi Pertama (Pertemuan 1 - 8)';
+        else if (c === 2) cycleTitle = '8 Sesi Kedua (Pertemuan 9 - 16)';
+        else if (c === 3) cycleTitle = '8 Sesi Ketiga (Pertemuan 17 - 24)';
+        else if (c === 4) cycleTitle = '8 Sesi Keempat (Pertemuan 25 - 32)';
+        else cycleTitle = `8 Sesi Ke-${c} (Pertemuan ${startMeeting} - ${endMeeting})`;
+
+        cycles.push({
+            cycleNumber: c,
+            title: cycleTitle,
+            shortLabel: `Siklus ${c}`,
+            startMeeting,
+            endMeeting,
+            attendances: cycleAttendances,
+            attendancesCount: cycleAttendances.length,
+            isCompleted: cycleAttendances.length >= 8,
+            isActive: c === activeCycle,
+            payment: cyclePayment,
+            isPaid: Boolean(cyclePayment),
+        });
+    }
+    return cycles;
+}
+
 export default function AdminEducationAttendance({ students = [], financials = {} }) {
-    const [subTab, setSubTab] = useState('punch_cards'); // 'punch_cards', 'students_table', 'attendances_log', 'payments_log'
+    const [subTab, setSubTab] = useState('punch_cards'); // 'punch_cards', 'all_cycles', 'students_table', 'attendances_log', 'payments_log'
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [paymentFilter, setPaymentFilter] = useState('all'); // 'all', 'needs_payment', 'paid'
-    const [selectedStudentDetail, setSelectedStudentDetail] = useState(null);
+
+    // Selected cycle per student on punch card view
+    const [studentCycleView, setStudentCycleView] = useState({});
+
+    // Detailed cycle modal state
+    const [detailCycleStudent, setDetailCycleStudent] = useState(null);
 
     // Modal States
     const [attendanceModal, setAttendanceModal] = useState({ open: false, student: null, meetingNumber: 1 });
@@ -227,7 +280,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
     // Open Payment Modal
     const handleOpenPayment = (student, cycleNumber = null) => {
-        const targetCycle = cycleNumber || (student.current_cycle || 1);
+        const targetCycle = cycleNumber || (student.active_cycle || student.current_cycle || 1);
         setPaymentModal({
             open: true,
             student,
@@ -339,7 +392,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
     };
 
     // Send WhatsApp Reminder or Billing
-    const handleSendWhatsApp = (student, type = 'billing') => {
+    const handleSendWhatsApp = (student, type = 'billing', cycleNumber = null) => {
         const cleanPhone = cleanWhatsAppNumber(student.whatsapp);
         if (!cleanPhone) {
             alert('Nomor WhatsApp belum valid.');
@@ -347,23 +400,25 @@ export default function AdminEducationAttendance({ students = [], financials = {
         }
 
         const totalMeetings = student.total_meetings || 0;
-        const currentCycle = student.current_cycle || 1;
+        const currentCycle = cycleNumber || (student.active_cycle || 1);
         const feeFormatted = formatRupiah(student.fee_per_cycle || 600000);
 
         let msg = '';
         if (type === 'billing') {
             msg = `Halo Bapak/Ibu ${student.parent_name || 'Orang Tua'} dari ananda *${student.name}*.\n\n` +
-                `Kami dari *Langit Education* ingin menginformasikan bahwa ananda telah mengikuti *${totalMeetings} kali pertemuan* les program *${student.category}*.\n\n` +
-                `Sesuai siklus belajar 8 kali pertemuan, saat ini telah memasuki periode baru (*Siklus ${currentCycle}*).\n` +
-                `• Biaya Paket 8 Pertemuan: *${feeFormatted}*\n` +
-                `• Keterangan: Pembayaran dapat dilakukan via Transfer Bank / QRIS Langit Creative.\n\n` +
-                `_Catatan: Sesuai kebijakan Langit Education, absensi pertemuan berikutnya tetap dapat berjalan lancar._\n\n` +
-                `Terima kasih atas kepercayaan Bapak/Ibu membimbing ananda bersama kami. 🙏`;
+                `Kami dari *Langit Education* ingin menginformasikan rekap presensi belajar:\n` +
+                `• Program: *${student.category}*\n` +
+                `• Total Kehadiran: *${totalMeetings} kali pertemuan*\n` +
+                `• Periode Belajar: *Siklus ${currentCycle}*\n` +
+                `• Biaya Paket 8 Sesi: *${feeFormatted}*\n\n` +
+                `_Catatan Penting: Sesuai kebijakan Langit Education, absensi pertemuan berikutnya tetap dapat berjalan lancar tanpa terkunci._\n\n` +
+                `Pembayaran dapat ditransfer via rekening bank / QRIS Langit Creative. Terima kasih atas kerja sama dan kepercayaan Bapak/Ibu! 🙏`;
         } else {
             msg = `Halo Bapak/Ibu ${student.parent_name || 'Orang Tua'} dari ananda *${student.name}*.\n\n` +
                 `Update presensi belajar *Langit Education* (${student.category}):\n` +
                 `• Total Pertemuan: *${totalMeetings} sesi*\n` +
-                `• Status: Aktif bersemangat\n\n` +
+                `• Sesi Aktif: Siklus ${currentCycle}\n` +
+                `• Evaluasi: Ananda aktif mengikuti materi dan praktik di lab.\n\n` +
                 `Terima kasih! Salam hangat dari Tim Instruktur Langit Education.`;
         }
 
@@ -388,7 +443,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             Absensi & Kas <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">Langit Education</span>
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                            Sistem presensi per 8 pertemuan dengan visual kartu progres. Pembayaran bersifat fleksibel—ketika 8 sesi lengkap, sesi berikutnya tetap bebas absen dan tidak terkunci.
+                            Sistem presensi per 8 pertemuan tanpa sesi terhenti—ketika 8 sesi lengkap, langsung otomatis membuka siklus sesi absen baru. Riwayat lengkap dapat dilihat per siklus ke-1, 2, 3, dan seterusnya.
                         </p>
                     </div>
 
@@ -478,7 +533,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-white/5 text-xs font-bold">
                     <button
                         onClick={() => setSubTab('punch_cards')}
-                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'punch_cards'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -488,9 +543,22 @@ export default function AdminEducationAttendance({ students = [], financials = {
                         <span>Kartu Presensi 8 Sesi</span>
                     </button>
 
+                    {/* NEW TAB: Riwayat Lengkap Semua Siklus */}
+                    <button
+                        onClick={() => setSubTab('all_cycles')}
+                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                            subTab === 'all_cycles'
+                                ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                    >
+                        <Layers className="w-3.5 h-3.5 text-cyan-500" />
+                        <span>Riwayat Semua Siklus (1, 2, 3...)</span>
+                    </button>
+
                     <button
                         onClick={() => setSubTab('students_table')}
-                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'students_table'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -502,33 +570,33 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                     <button
                         onClick={() => setSubTab('attendances_log')}
-                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'attendances_log'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                     >
                         <CalendarCheck className="w-3.5 h-3.5" />
-                        <span>Log Riwayat Presensi</span>
+                        <span>Log Presensi</span>
                     </button>
 
                     <button
                         onClick={() => setSubTab('payments_log')}
-                        className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`px-3 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                             subTab === 'payments_log'
                                 ? 'bg-white dark:bg-slate-900 text-[#005792] dark:text-cyan-400 shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                     >
                         <Receipt className="w-3.5 h-3.5" />
-                        <span>Buku Kas & Pembayaran</span>
+                        <span>Buku Kas</span>
                     </button>
                 </div>
 
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-2.5">
                     {/* Search */}
-                    <div className="relative min-w-[200px]">
+                    <div className="relative min-w-[180px]">
                         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -564,7 +632,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             </div>
 
-            {/* ── 3. VIEW 1: KARTU PRESENSI 8 SESI (VISUAL PUNCH CARDS) ── */}
+            {/* ── 3. VIEW 1: KARTU PRESENSI 8 SESI (AUTO-ADVANCE SESI BARU) ── */}
             {subTab === 'punch_cards' && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {filteredStudents.length === 0 ? (
@@ -574,7 +642,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau tambah anak les baru.</p>
                             <button
                                 onClick={() => handleOpenStudentModal()}
-                                className="mt-4 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold inline-flex items-center gap-1.5"
+                                className="mt-4 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                             >
                                 <Plus className="w-4 h-4" /> Tambah Siswa Sekarang
                             </button>
@@ -582,15 +650,20 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     ) : (
                         filteredStudents.map((student) => {
                             const totalMeetings = student.total_meetings || 0;
-                            const currentCycle = student.current_cycle || 1;
-                            const sessionInCycle = student.session_in_cycle || 0; // 1..8 (or 0)
-                            const isCycleCompleted = student.is_cycle_completed;
-                            const isPaidCurrentCycle = (student.paid_cycles || []).includes(currentCycle);
+                            // Automatic active cycle computation: advances to new cycle seamlessly
+                            const activeCycle = Math.floor(totalMeetings / 8) + 1;
+                            const nextMeetingNumber = totalMeetings + 1;
 
-                            // Find attendances in current cycle
-                            const currentCycleAttendances = (student.attendances || []).filter(
-                                a => a.cycle_number === currentCycle
-                            );
+                            // All cycle groups for this student
+                            const cycleGroups = getStudentCycleGroups(student);
+
+                            // The cycle currently selected in the UI card (defaults to activeCycle)
+                            const currentViewedCycle = studentCycleView[student.id] || activeCycle;
+                            const currentCycleObj = cycleGroups.find(c => c.cycleNumber === currentViewedCycle) || cycleGroups[cycleGroups.length - 1];
+
+                            const isCurrentCyclePaid = currentCycleObj?.isPaid;
+                            const cycleAttendances = currentCycleObj?.attendances || [];
+                            const sessionsInThisCycle = cycleAttendances.length;
 
                             return (
                                 <div
@@ -619,16 +692,16 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                                             {/* Status Badge */}
                                             <div className="text-right">
-                                                {isPaidCurrentCycle ? (
+                                                {isCurrentCyclePaid ? (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                                                         <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        <span>Lunas Siklus {currentCycle}</span>
+                                                        <span>Lunas Siklus {currentViewedCycle}</span>
                                                     </span>
                                                 ) : (
                                                     <div className="space-y-1">
                                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
                                                             <AlertCircle className="w-3.5 h-3.5" />
-                                                            <span>Tagihan Siklus {currentCycle}</span>
+                                                            <span>Tagihan Siklus {currentViewedCycle}</span>
                                                         </span>
                                                         <div className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
                                                             (Bebas Absen Lanjut)
@@ -638,32 +711,54 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             </div>
                                         </div>
 
-                                        {/* Cycle Progress Summary */}
-                                        <div className="flex items-center justify-between text-xs font-mono py-2 border-y border-slate-100 dark:border-white/5">
-                                            <span className="text-slate-600 dark:text-slate-400">
-                                                Progres: <strong className="text-slate-900 dark:text-white">{sessionInCycle}/8 Sesi</strong> (Siklus {currentCycle})
-                                            </span>
-                                            <span className="text-slate-500 dark:text-slate-400">
-                                                Total Sesi: <strong className="text-cyan-600 dark:text-cyan-400">{totalMeetings} Sesi</strong>
-                                            </span>
+                                        {/* Cycle Switcher Navigation Pills (Siklus 1, 2, 3...) */}
+                                        <div className="pt-2 pb-1 flex flex-wrap items-center gap-1.5 border-t border-slate-100 dark:border-white/5">
+                                            <span className="text-[10px] font-mono font-bold text-slate-400 mr-1 uppercase">Pilih Siklus:</span>
+                                            {cycleGroups.map((cg) => {
+                                                const isSelected = cg.cycleNumber === currentViewedCycle;
+                                                return (
+                                                    <button
+                                                        key={cg.cycleNumber}
+                                                        onClick={() => setStudentCycleView({ ...studentCycleView, [student.id]: cg.cycleNumber })}
+                                                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                                            isSelected
+                                                                ? 'bg-[#005792] text-white shadow-xs'
+                                                                : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                                                        }`}
+                                                    >
+                                                        <span>{cg.shortLabel}</span>
+                                                        <span className={`text-[10px] px-1 py-0.2 rounded-md ${
+                                                            isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-white/10'
+                                                        }`}>
+                                                            {cg.attendancesCount}/8
+                                                        </span>
+                                                        {cg.isCompleted && <span className="text-emerald-400 text-xs">✓</span>}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     {/* ── 8-SESSION INTERACTIVE PUNCH CARD ── */}
                                     <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 space-y-3">
                                         <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
-                                            <span>KARTU PRESENSI SIKLUS {currentCycle} (8 SESI)</span>
+                                            <span className="text-slate-800 dark:text-slate-200">
+                                                {currentCycleObj?.title || `Siklus ${currentViewedCycle}`}
+                                            </span>
                                             <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold">
-                                                {formatRupiah(student.fee_per_cycle)} / paket
+                                                {formatRupiah(student.fee_per_cycle)} / 8 sesi
                                             </span>
                                         </div>
 
                                         {/* 8 Punch Track Discs */}
                                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                                            {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNumber) => {
-                                                const attRecord = currentCycleAttendances.find(a => a.session_in_cycle === slotNumber);
+                                            {[1, 2, 3, 4, 5, 6, 7, 8].map((slotIdx) => {
+                                                const meetingTargetNumber = (currentViewedCycle - 1) * 8 + slotIdx;
+                                                const attRecord = cycleAttendances.find(
+                                                    a => a.meeting_number === meetingTargetNumber || a.session_in_cycle === slotIdx
+                                                );
                                                 const isFilled = Boolean(attRecord);
-                                                const isNextTarget = !isFilled && (slotNumber === sessionInCycle + 1 || (sessionInCycle === 8 && slotNumber === 1));
+                                                const isNextTarget = !isFilled && meetingTargetNumber === nextMeetingNumber;
 
                                                 let statusColor = 'border-slate-300 dark:border-white/20 bg-white dark:bg-slate-800 text-slate-400';
                                                 let icon = null;
@@ -688,22 +783,22 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
                                                 return (
                                                     <div
-                                                        key={slotNumber}
+                                                        key={slotIdx}
                                                         onClick={() => {
                                                             if (!attRecord) {
-                                                                handleOpenAttendance(student, (currentCycle - 1) * 8 + slotNumber);
+                                                                handleOpenAttendance(student, meetingTargetNumber);
                                                             } else {
-                                                                setSelectedStudentDetail(student);
+                                                                setDetailCycleStudent(student);
                                                             }
                                                         }}
-                                                        title={attRecord ? `Pertemuan ${attRecord.meeting_number} (${attRecord.status}): ${attRecord.topic || 'Belum ada catatan materi'}` : `Klik untuk absen pertemuan ${slotNumber}`}
+                                                        title={attRecord ? `Pertemuan #${attRecord.meeting_number} (${attRecord.status}): ${attRecord.topic || 'Belum ada catatan materi'}` : `Klik untuk absen pertemuan #${meetingTargetNumber}`}
                                                         className={`relative flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all cursor-pointer hover:scale-105 min-h-[60px] ${statusColor}`}
                                                     >
-                                                        <span className="text-[10px] font-mono font-bold opacity-80 mb-0.5">#{slotNumber}</span>
+                                                        <span className="text-[10px] font-mono font-bold opacity-80 mb-0.5">#{meetingTargetNumber}</span>
                                                         <div className="flex items-center justify-center h-5">
                                                             {icon ? icon : (
                                                                 <span className="text-xs font-bold font-mono">
-                                                                    {isNextTarget ? 'Absen' : slotNumber}
+                                                                    {isNextTarget ? 'Absen' : slotIdx}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -717,47 +812,59 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             })}
                                         </div>
 
-                                        {/* Celebration Banner when 8 sessions completed */}
-                                        {sessionInCycle === 8 && (
-                                            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-cyan-500/15 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-lg">🎉</span>
-                                                    <div>
-                                                        <strong className="text-slate-900 dark:text-white">8 Pertemuan Selesai!</strong>
-                                                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                                                            Paket Siklus {currentCycle} lengkap. {isPaidCurrentCycle ? 'Siap tagih Siklus ' + (currentCycle + 1) : 'Segera catat pembayaran.'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {!isPaidCurrentCycle && (
-                                                    <button
-                                                        onClick={() => handleOpenPayment(student, currentCycle)}
-                                                        className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-[11px] shrink-0 hover:bg-amber-600 cursor-pointer"
-                                                    >
-                                                        Catat Bayar
-                                                    </button>
-                                                )}
+                                        {/* Status Bar: Sesi Baru Otomatis Terbuka */}
+                                        <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-cyan-500 shrink-0" />
+                                                <span className="text-slate-700 dark:text-slate-300">
+                                                    {currentCycleObj?.isCompleted ? (
+                                                        <>
+                                                            <strong className="text-emerald-600 dark:text-emerald-400">8/8 Sesi Selesai.</strong>{' '}
+                                                            {activeCycle > currentViewedCycle ? (
+                                                                <button
+                                                                    onClick={() => setStudentCycleView({ ...studentCycleView, [student.id]: activeCycle })}
+                                                                    className="font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                                                                >
+                                                                    Buka Sesi Baru Siklus {activeCycle} (Sesi #{nextMeetingNumber}) →
+                                                                </button>
+                                                            ) : 'Siap mulai sesi berikutnya.'}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Siklus {currentViewedCycle} aktif • Sesi berikutnya: <strong className="text-cyan-600 dark:text-cyan-400">Pertemuan #{nextMeetingNumber}</strong>
+                                                        </>
+                                                    )}
+                                                </span>
                                             </div>
-                                        )}
+
+                                            {!isCurrentCyclePaid && (
+                                                <button
+                                                    onClick={() => handleOpenPayment(student, currentViewedCycle)}
+                                                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 cursor-pointer"
+                                                >
+                                                    Catat Bayar Siklus {currentViewedCycle}
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Action Buttons Row */}
                                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
                                         <div className="flex items-center gap-1.5">
-                                            {/* Quick Attendance */}
+                                            {/* Quick Attendance: Always points to the next real meeting */}
                                             <button
                                                 type="button"
-                                                onClick={() => handleOpenAttendance(student)}
+                                                onClick={() => handleOpenAttendance(student, nextMeetingNumber)}
                                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#005792] hover:bg-[#00487a] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                                             >
                                                 <UserCheck className="w-3.5 h-3.5" />
-                                                <span>Absen Sesi #{totalMeetings + 1}</span>
+                                                <span>Absen Sesi #{nextMeetingNumber}</span>
                                             </button>
 
                                             {/* Record Payment */}
                                             <button
                                                 type="button"
-                                                onClick={() => handleOpenPayment(student)}
+                                                onClick={() => handleOpenPayment(student, currentViewedCycle)}
                                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-600/20 transition-all cursor-pointer"
                                             >
                                                 <CreditCard className="w-3.5 h-3.5" />
@@ -766,24 +873,25 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         </div>
 
                                         <div className="flex items-center gap-1">
+                                            {/* Button: Lihat Lengkap Semua Sesi */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setDetailCycleStudent(student)}
+                                                title="Lihat Lengkap Semua Sesi (Siklus 1, 2, 3...)"
+                                                className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                                            >
+                                                <Layers className="w-3.5 h-3.5" />
+                                                <span className="hidden sm:inline">Semua Sesi</span>
+                                            </button>
+
                                             {/* WhatsApp Ortu */}
                                             <button
                                                 type="button"
-                                                onClick={() => handleSendWhatsApp(student, student.needs_payment_reminder ? 'billing' : 'summary')}
+                                                onClick={() => handleSendWhatsApp(student, student.needs_payment_reminder ? 'billing' : 'summary', currentViewedCycle)}
                                                 title="Hubungi WhatsApp Orang Tua"
                                                 className="p-2 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
                                             >
                                                 <MessageCircle className="w-4 h-4" />
-                                            </button>
-
-                                            {/* Detail Riwayat */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedStudentDetail(student)}
-                                                title="Lihat Detail Riwayat & Edit"
-                                                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                                            >
-                                                <FileSpreadsheet className="w-4 h-4" />
                                             </button>
 
                                             {/* Edit Student */}
@@ -795,6 +903,16 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             >
                                                 <Pencil className="w-4 h-4" />
                                             </button>
+
+                                            {/* Delete Student */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteStudent(student)}
+                                                title="Hapus Siswa"
+                                                className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -804,7 +922,162 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 4. VIEW 2: TABEL DAFTAR SISWA (DATA MANAGEMENT) ── */}
+            {/* ── 4. VIEW 2: RIWAYAT LENGKAP SEMUA SIKLUS (MATRIX 1, 2, 3...) ── */}
+            {subTab === 'all_cycles' && (
+                <div className="space-y-6">
+                    <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                                <Layers className="w-5 h-5 text-cyan-500" />
+                                <span>Detail Riwayat Lengkap Seluruh Sesi (Siklus 1, 2, 3...)</span>
+                            </h3>
+                            <p className="text-xs text-slate-500">
+                                Rekap kronologis 8 sesi pertama, kedua, ketiga, dan seterusnya per masing-masing anak les.
+                            </p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                            {filteredStudents.length} Siswa Terdaftar
+                        </span>
+                    </div>
+
+                    {filteredStudents.map((student) => {
+                        const cycleGroups = getStudentCycleGroups(student);
+                        const totalMeetings = student.total_meetings || 0;
+
+                        return (
+                            <div
+                                key={student.id}
+                                className="p-6 rounded-3xl bg-white dark:bg-[#0c1220] border border-slate-200/90 dark:border-white/10 shadow-sm space-y-6"
+                            >
+                                {/* Header Siswa */}
+                                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-white/5">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                                                {student.category}
+                                            </span>
+                                            <span className="text-xs text-slate-400 font-mono">
+                                                Total {totalMeetings} Sesi Pertemuan
+                                            </span>
+                                        </div>
+                                        <h4 className="font-heading font-black text-xl text-slate-900 dark:text-white">
+                                            {student.name}
+                                        </h4>
+                                        <p className="text-xs text-slate-500">
+                                            Orang Tua: <span className="font-semibold text-slate-700 dark:text-slate-300">{student.parent_name || '-'}</span> • WA: {student.whatsapp}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleOpenAttendance(student, totalMeetings + 1)}
+                                            className="px-3 py-1.5 rounded-xl bg-[#005792] text-white text-xs font-bold hover:bg-[#00487a] cursor-pointer"
+                                        >
+                                            + Absen Sesi #{totalMeetings + 1}
+                                        </button>
+                                        <button
+                                            onClick={() => setDetailCycleStudent(student)}
+                                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer"
+                                        >
+                                            Buka Modal Penuh ↗
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Siklus-Siklus Siswa (8 Sesi Pertama, Kedua, Ketiga...) */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {cycleGroups.map((cg) => (
+                                        <div
+                                            key={cg.cycleNumber}
+                                            className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/70 dark:border-white/5 space-y-3"
+                                        >
+                                            {/* Cycle Header */}
+                                            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/50 dark:border-white/5">
+                                                <div>
+                                                    <span className="font-heading font-bold text-sm text-slate-900 dark:text-white block">
+                                                        {cg.title}
+                                                    </span>
+                                                    <span className="text-[11px] font-mono text-slate-500">
+                                                        Progres: {cg.attendancesCount}/8 Sesi Hadir
+                                                    </span>
+                                                </div>
+
+                                                {cg.isPaid ? (
+                                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                        ✓ Lunas ({cg.payment?.receipt_number || 'Kuitansi'})
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleOpenPayment(student, cg.cycleNumber)}
+                                                        className="px-2 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] cursor-pointer"
+                                                    >
+                                                        + Bayar {formatRupiah(student.fee_per_cycle)}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Sesi-Sesi di dalam Siklus */}
+                                            {cg.attendances.length === 0 ? (
+                                                <div className="p-4 text-center rounded-xl border border-dashed border-slate-300 dark:border-white/10 text-xs text-slate-400">
+                                                    Sesi baru siap dimulai (Belum ada absensi di {cg.shortLabel}).
+                                                    <button
+                                                        onClick={() => handleOpenAttendance(student, cg.startMeeting)}
+                                                        className="mt-2 block mx-auto text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                                                    >
+                                                        + Mulai Pertemuan #{cg.startMeeting}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                    {cg.attendances.map((att) => (
+                                                        <div
+                                                            key={att.id}
+                                                            className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/5 flex items-center justify-between gap-2 text-xs"
+                                                        >
+                                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                                <span className="w-6 h-6 rounded-md bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono font-bold flex items-center justify-center text-[11px] shrink-0">
+                                                                    #{att.meeting_number}
+                                                                </span>
+                                                                <div className="min-w-0">
+                                                                    <div className="font-semibold text-slate-900 dark:text-white truncate">
+                                                                        {att.topic || 'Sesi Pembahasan Materi'}
+                                                                    </div>
+                                                                    <div className="text-[10px] text-slate-500 font-mono">
+                                                                        {String(att.date || '').slice(0, 10)} • {att.mentor_name || 'Instruktur'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                                                    att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                                                                    att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                                                }`}>
+                                                                    {att.status}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handleDeleteAttendance(att)}
+                                                                    className="p-1 rounded text-slate-400 hover:text-rose-500 cursor-pointer"
+                                                                    title="Hapus Sesi"
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* ── 5. VIEW 3: TABEL DAFTAR SISWA (DATA MANAGEMENT) ── */}
             {subTab === 'students_table' && (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
@@ -850,7 +1123,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         </td>
                                         <td className="py-3 px-4 text-center">
                                             <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">{st.total_meetings} Sesi</span>
-                                            <div className="text-[10px] text-slate-500">Siklus {st.current_cycle}</div>
+                                            <div className="text-[10px] text-slate-500">Siklus {st.active_cycle || st.current_cycle}</div>
                                         </td>
                                         <td className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200">
                                             {formatRupiah(st.fee_per_cycle)}
@@ -869,26 +1142,33 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         <td className="py-3 px-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => handleOpenAttendance(st)}
-                                                    className="px-2.5 py-1 rounded-lg bg-[#005792] text-white text-[11px] font-bold hover:bg-[#00487a]"
+                                                    onClick={() => setDetailCycleStudent(st)}
+                                                    className="px-2 py-1 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[11px] font-bold hover:bg-cyan-500/20 cursor-pointer"
+                                                    title="Lihat Semua Sesi Lengkap"
+                                                >
+                                                    Semua Sesi
+                                                </button>
+                                                <button
+                                                    onClick={() => handleOpenAttendance(st, (st.total_meetings || 0) + 1)}
+                                                    className="px-2.5 py-1 rounded-lg bg-[#005792] text-white text-[11px] font-bold hover:bg-[#00487a] cursor-pointer"
                                                 >
                                                     + Absen
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenPayment(st)}
-                                                    className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-500"
+                                                    className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-500 cursor-pointer"
                                                 >
                                                     Bayar
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenStudentModal(st)}
-                                                    className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
+                                                    className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteStudent(st)}
-                                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10"
+                                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
@@ -902,7 +1182,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 5. VIEW 3: LOG RIWAYAT SELURUH PRESENSI ── */}
+            {/* ── 6. VIEW 4: LOG RIWAYAT SELURUH PRESENSI ── */}
             {subTab === 'attendances_log' && (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
@@ -974,7 +1254,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 6. VIEW 4: BUKU KAS & PEMBAYARAN LANGIT EDUCATION ── */}
+            {/* ── 7. VIEW 5: BUKU KAS & PEMBAYARAN LANGIT EDUCATION ── */}
             {subTab === 'payments_log' && (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
@@ -1041,7 +1321,164 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 7. MODAL INPUT ABSENSI (ADMIN INPUT) ── */}
+            {/* ── 8. MODAL DETAIL SEMUA SIKLUS (MODAL DETAIL LENGKAP PER SISWA) ── */}
+            {detailCycleStudent && (
+                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-3xl shadow-2xl my-8 space-y-6 max-h-[92vh] overflow-y-auto animate-scaleUp">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                                        {detailCycleStudent.category}
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-mono">
+                                        Total {detailCycleStudent.total_meetings || 0} Sesi Pertemuan
+                                    </span>
+                                </div>
+                                <h3 className="font-heading font-black text-2xl text-slate-900 dark:text-white">
+                                    {detailCycleStudent.name}
+                                </h3>
+                                <p className="text-xs text-slate-500">
+                                    Orang Tua: <strong className="text-slate-700 dark:text-slate-300">{detailCycleStudent.parent_name || '-'}</strong> • WA: <span className="font-mono">{detailCycleStudent.whatsapp}</span> • Paket: {formatRupiah(detailCycleStudent.fee_per_cycle)} / 8 sesi
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setDetailCycleStudent(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* List Seluruh Siklus (8 Sesi Pertama, Kedua, Ketiga...) */}
+                        <div className="space-y-5">
+                            {getStudentCycleGroups(detailCycleStudent).map((cg) => (
+                                <div
+                                    key={cg.cycleNumber}
+                                    className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-4"
+                                >
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-white/5">
+                                        <div>
+                                            <h4 className="font-heading font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                                <Layers className="w-4 h-4 text-cyan-500" />
+                                                <span>{cg.title}</span>
+                                            </h4>
+                                            <p className="text-[11px] font-mono text-slate-500">
+                                                Progres Sesi: <strong className="text-slate-900 dark:text-white">{cg.attendancesCount}/8 Sesi</strong> {cg.isCompleted ? '(Lengkap ✓)' : '(Sedang Berjalan ⬤)'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            {cg.isPaid ? (
+                                                <div className="text-right">
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        <span>Lunas {formatRupiah(cg.payment?.amount || detailCycleStudent.fee_per_cycle)}</span>
+                                                    </span>
+                                                    <span className="block text-[10px] font-mono text-slate-400 mt-0.5">
+                                                        {cg.payment?.receipt_number} • {String(cg.payment?.payment_date || '').slice(0, 10)}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                                        Tagihan Pending
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const st = detailCycleStudent;
+                                                            setDetailCycleStudent(null);
+                                                            handleOpenPayment(st, cg.cycleNumber);
+                                                        }}
+                                                        className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer"
+                                                    >
+                                                        Catat Bayar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Table of Meetings in this cycle */}
+                                    {cg.attendances.length === 0 ? (
+                                        <div className="p-4 text-center rounded-xl border border-dashed border-slate-300 dark:border-white/10 text-xs text-slate-400">
+                                            Belum ada sesi yang tercatat di {cg.shortLabel}. Absensi berikutnya dapat langsung dicatat.
+                                        </div>
+                                    ) : (
+                                        <div className="min-w-0 max-w-full overflow-x-auto">
+                                            <table className="w-full text-left text-xs font-sans">
+                                                <thead className="border-b border-slate-200 dark:border-white/10 text-slate-400 uppercase text-[10px] font-mono">
+                                                    <tr>
+                                                        <th className="py-2 px-2.5 w-14 text-center">Sesi</th>
+                                                        <th className="py-2 px-2.5">Tanggal</th>
+                                                        <th className="py-2 px-2.5">Materi / Topik Pembelajaran</th>
+                                                        <th className="py-2 px-2.5">Instruktur</th>
+                                                        <th className="py-2 px-2.5 text-center">Status</th>
+                                                        <th className="py-2 px-2.5">Catatan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-sans">
+                                                    {cg.attendances.map((att) => (
+                                                        <tr key={att.id} className="hover:bg-white/50 dark:hover:bg-white/[0.02]">
+                                                            <td className="py-2 px-2.5 text-center font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                                                                #{att.meeting_number}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                                                {String(att.date || '').slice(0, 10)}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 font-semibold text-slate-900 dark:text-white">
+                                                                {att.topic || '-'}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                                                {att.mentor_name || '-'}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 text-center">
+                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                                                    att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                                                                    att.status === 'izin' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                                                }`}>
+                                                                    {att.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2.5 text-slate-500 italic text-[11px] max-w-xs truncate">
+                                                                {att.notes || '-'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="pt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-white/10">
+                            <button
+                                type="button"
+                                onClick={() => handleSendWhatsApp(detailCycleStudent, 'summary')}
+                                className="px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                <span>Kirim Rekap Lengkap via WhatsApp Ortu</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setDetailCycleStudent(null)}
+                                className="px-5 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── 9. MODAL INPUT ABSENSI (ADMIN INPUT) ── */}
             {attendanceModal.open && attendanceModal.student && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
@@ -1057,7 +1494,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             </div>
                             <button
                                 onClick={() => setAttendanceModal({ open: false, student: null, meetingNumber: 1 })}
-                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1070,7 +1507,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 <span>Pertemuan Ke-{attendanceModal.meetingNumber} (Siklus {intdivSafe(attendanceModal.meetingNumber - 1, 8) + 1} - Sesi {((attendanceModal.meetingNumber - 1) % 8) + 1}/8)</span>
                             </div>
                             <p className="text-[11px] leading-relaxed text-slate-600 dark:text-cyan-300/80">
-                                Kebijakan Langit Education: Sesi ke-8 dan seterusnya tidak mengunci absensi. Anda bebas menginput kehadiran tanpa hambatan pembayaran.
+                                Sesi absen langsung lanjut otomatis tanpa henti. Pembayaran bersifat fleksibel dan tidak mengunci presensi.
                             </p>
                         </div>
 
@@ -1121,7 +1558,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             type="button"
                                             key={opt.val}
                                             onClick={() => setAttForm({ ...attForm, status: opt.val })}
-                                            className={`py-2 px-2 rounded-xl border text-xs font-bold transition-all ${
+                                            className={`py-2 px-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                                                 attForm.status === opt.val
                                                     ? opt.col + ' ring-2 ring-offset-1 ring-cyan-500'
                                                     : 'border-slate-200 dark:border-white/10 text-slate-500 bg-slate-50 dark:bg-white/5'
@@ -1154,7 +1591,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                 type="button"
                                                 key={sugg}
                                                 onClick={() => setAttForm({ ...attForm, topic: sugg })}
-                                                className="px-2 py-0.5 rounded-lg text-[10px] bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-cyan-500 hover:text-white transition-colors"
+                                                className="px-2 py-0.5 rounded-lg text-[10px] bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-cyan-500 hover:text-white transition-colors cursor-pointer"
                                             >
                                                 + {sugg}
                                             </button>
@@ -1194,14 +1631,14 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 <button
                                     type="button"
                                     onClick={() => setAttendanceModal({ open: false, student: null, meetingNumber: 1 })}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="px-5 py-2.5 rounded-xl bg-[#005792] hover:bg-[#00487a] text-white text-xs font-bold shadow-md shadow-[#005792]/30 disabled:opacity-50 flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl bg-[#005792] hover:bg-[#00487a] text-white text-xs font-bold shadow-md shadow-[#005792]/30 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                                 >
                                     <Check className="w-4 h-4" />
                                     <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Presensi'}</span>
@@ -1212,7 +1649,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 8. MODAL CATAT PEMBAYARAN KAS ── */}
+            {/* ── 10. MODAL CATAT PEMBAYARAN KAS ── */}
             {paymentModal.open && paymentModal.student && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-md shadow-2xl my-8 space-y-5 animate-scaleUp">
@@ -1228,7 +1665,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             </div>
                             <button
                                 onClick={() => setPaymentModal({ open: false, student: null, cycleNumber: 1, amount: 600000 })}
-                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1242,7 +1679,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 <select
                                     value={paymentModal.cycleNumber}
                                     onChange={(e) => setPaymentModal({ ...paymentModal, cycleNumber: Number(e.target.value) })}
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold text-slate-900 dark:text-white"
+                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold text-slate-900 dark:text-white cursor-pointer"
                                 >
                                     {[1, 2, 3, 4, 5, 6, 7, 8].map(c => (
                                         <option key={c} value={c}>Siklus {c} (Pertemuan {(c - 1) * 8 + 1} - {c * 8})</option>
@@ -1288,7 +1725,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                     <select
                                         value={payForm.payment_method}
                                         onChange={(e) => setPayForm({ ...payForm, payment_method: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold uppercase"
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold uppercase cursor-pointer"
                                     >
                                         <option value="transfer">Transfer Bank</option>
                                         <option value="cash">Tunai / Cash</option>
@@ -1303,7 +1740,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 </label>
                                 <textarea
                                     rows="2"
-                                    placeholder="Contoh: Transfer BCA an Budi Santoso"
+                                    placeholder="Contoh: Transfer BCA an Orang Tua Siswa"
                                     value={payForm.notes}
                                     onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })}
                                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs"
@@ -1314,14 +1751,14 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 <button
                                     type="button"
                                     onClick={() => setPaymentModal({ open: false, student: null, cycleNumber: 1, amount: 600000 })}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                                 >
                                     <Check className="w-4 h-4" />
                                     <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Pembayaran'}</span>
@@ -1332,7 +1769,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 </div>
             )}
 
-            {/* ── 9. MODAL TAMBAH / EDIT ANAK LES ── */}
+            {/* ── 11. MODAL TAMBAH / EDIT ANAK LES ── */}
             {studentModal.open && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
@@ -1346,7 +1783,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                             </div>
                             <button
                                 onClick={() => setStudentModal({ open: false, editing: null })}
-                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1386,7 +1823,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             type="button"
                                             key={cp.label}
                                             onClick={() => setStuForm({ ...stuForm, category: cp.label })}
-                                            className="px-2 py-0.5 rounded-lg text-[10px] bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-cyan-500"
+                                            className="px-2 py-0.5 rounded-lg text-[10px] bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-cyan-500 cursor-pointer"
                                         >
                                             {cp.label}
                                         </button>
@@ -1445,7 +1882,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                     <select
                                         value={stuForm.status}
                                         onChange={(e) => setStuForm({ ...stuForm, status: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold"
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold cursor-pointer"
                                     >
                                         <option value="active">Aktif Les</option>
                                         <option value="inactive">Nonaktif / Cuti</option>
@@ -1471,165 +1908,20 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                 <button
                                     type="button"
                                     onClick={() => setStudentModal({ open: false, editing: null })}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                                 >
                                     <Check className="w-4 h-4" />
                                     <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Siswa'}</span>
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* ── 10. MODAL DETAIL RIWAYAT SISWA ── */}
-            {selectedStudentDetail && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-2xl shadow-2xl my-8 space-y-6 max-h-[90vh] overflow-y-auto animate-scaleUp">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
-                            <div>
-                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-                                    {selectedStudentDetail.category}
-                                </span>
-                                <h3 className="font-heading font-black text-xl text-slate-900 dark:text-white mt-1">
-                                    {selectedStudentDetail.name}
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                    Ortu: {selectedStudentDetail.parent_name || '-'} • WA: {selectedStudentDetail.whatsapp}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setSelectedStudentDetail(null)}
-                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Presensi Sesi Berdasarkan Siklus */}
-                        <div className="space-y-4">
-                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white flex items-center justify-between">
-                                <span>Riwayat Sesi Pertemuan ({selectedStudentDetail.attendances?.length || 0} Sesi)</span>
-                                <button
-                                    onClick={() => {
-                                        const st = selectedStudentDetail;
-                                        setSelectedStudentDetail(null);
-                                        handleOpenAttendance(st);
-                                    }}
-                                    className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
-                                >
-                                    + Catat Sesi Baru
-                                </button>
-                            </h4>
-
-                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                                {(!selectedStudentDetail.attendances || selectedStudentDetail.attendances.length === 0) ? (
-                                    <p className="text-xs text-slate-400 italic">Belum ada sesi presensi yang tercatat.</p>
-                                ) : (
-                                    selectedStudentDetail.attendances.map((att) => (
-                                        <div
-                                            key={att.id}
-                                            className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 text-xs"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono font-bold flex items-center justify-center shrink-0">
-                                                    #{att.meeting_number}
-                                                </span>
-                                                <div>
-                                                    <div className="font-bold text-slate-900 dark:text-white">
-                                                        {att.topic || 'Sesi Pembahasan Modul'}
-                                                    </div>
-                                                    <div className="text-[11px] text-slate-500">
-                                                        {String(att.date || '').slice(0, 10)} • Siklus {att.cycle_number} (Sesi {att.session_in_cycle}/8) • {att.mentor_name}
-                                                    </div>
-                                                    {att.notes && (
-                                                        <div className="text-[11px] text-slate-600 dark:text-slate-400 italic mt-0.5">
-                                                            "{att.notes}"
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
-                                                att.status === 'hadir' ? 'bg-emerald-500/15 text-emerald-600' :
-                                                att.status === 'izin' ? 'bg-amber-500/15 text-amber-600' : 'bg-rose-500/15 text-rose-600'
-                                            }`}>
-                                                {att.status}
-                                            </span>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Riwayat Pembayaran Siswa */}
-                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-white/10">
-                            <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white flex items-center justify-between">
-                                <span>Riwayat Pembayaran Kas ({selectedStudentDetail.payments?.length || 0})</span>
-                                <button
-                                    onClick={() => {
-                                        const st = selectedStudentDetail;
-                                        setSelectedStudentDetail(null);
-                                        handleOpenPayment(st);
-                                    }}
-                                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
-                                >
-                                    + Catat Pembayaran
-                                </button>
-                            </h4>
-
-                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                {(!selectedStudentDetail.payments || selectedStudentDetail.payments.length === 0) ? (
-                                    <p className="text-xs text-slate-400 italic">Belum ada riwayat pembayaran tercatat.</p>
-                                ) : (
-                                    selectedStudentDetail.payments.map((pay) => (
-                                        <div
-                                            key={pay.id}
-                                            className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-between gap-3 text-xs"
-                                        >
-                                            <div>
-                                                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                                    <span>Siklus {pay.cycle_number}</span>
-                                                    <span className="font-mono text-cyan-600 dark:text-cyan-400 text-[11px] font-normal">{pay.receipt_number}</span>
-                                                </div>
-                                                <div className="text-[11px] text-slate-500">
-                                                    {String(pay.payment_date || '').slice(0, 10)} • Metode: <strong className="uppercase">{pay.payment_method}</strong>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 block">
-                                                    {formatRupiah(pay.amount)}
-                                                </span>
-                                                <span className="text-[10px] text-emerald-500">✓ Lunas</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="pt-2 flex justify-between items-center border-t border-slate-200 dark:border-white/10">
-                            <button
-                                type="button"
-                                onClick={() => handleSendWhatsApp(selectedStudentDetail, selectedStudentDetail.needs_payment_reminder ? 'billing' : 'summary')}
-                                className="px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-1.5"
-                            >
-                                <MessageCircle className="w-4 h-4" /> Kirim Rincian via WA
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedStudentDetail(null)}
-                                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300"
-                            >
-                                Tutup
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

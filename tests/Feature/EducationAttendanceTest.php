@@ -262,4 +262,51 @@ class EducationAttendanceTest extends TestCase
             ->assertRedirect();
         $this->assertDatabaseMissing('education_students', ['id' => $student->id]);
     }
+
+    public function test_student_auto_advances_to_new_cycle_after_8_sessions_without_locking(): void
+    {
+        $admin = $this->createAdmin();
+
+        $student = EducationStudent::create([
+            'name' => 'Kezia Aurelia',
+            'category' => 'Microsoft Office & Administrasi',
+            'whatsapp' => '081299887766',
+            'fee_per_cycle' => 600000,
+        ]);
+
+        // Rekam 8 sesi lengkap Siklus 1
+        for ($i = 1; $i <= 8; $i++) {
+            EducationAttendance::create([
+                'student_id' => $student->id,
+                'meeting_number' => $i,
+                'cycle_number' => 1,
+                'session_in_cycle' => $i,
+                'date' => '2026-11-0' . $i,
+                'status' => 'hadir',
+                'topic' => 'Topik ' . $i,
+            ]);
+        }
+
+        $fresh = $student->fresh();
+        $this->assertSame(8, $fresh->total_meetings);
+        // Active cycle for taking next attendance is Cycle 2!
+        $this->assertSame(2, $fresh->active_cycle);
+        $this->assertSame(9, $fresh->next_meeting_number);
+
+        // Rekam sesi ke-9 (Siklus 2 sesi 1) secara langsung tanpa terkunci
+        $this->actingAs($admin)->post('/admin/education-attendance', [
+            'student_id' => $student->id,
+            'date' => '2026-11-10',
+            'status' => 'hadir',
+            'topic' => 'Sesi Baru Siklus 2',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $att9 = EducationAttendance::where('student_id', $student->id)->where('meeting_number', 9)->first();
+        $this->assertNotNull($att9);
+        $this->assertSame(2, $att9->cycle_number);
+        $this->assertSame(1, $att9->session_in_cycle);
+        $this->assertSame(9, $student->fresh()->total_meetings);
+        $this->assertSame(2, $student->fresh()->active_cycle);
+        $this->assertSame(10, $student->fresh()->next_meeting_number);
+    }
 }
