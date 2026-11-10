@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClientDelivery;
 use App\Models\ClientPhoto;
+use App\Models\ClientRawPhoto;
+use App\Models\ClientRawSelection;
 use App\Models\Collaboration;
 use App\Models\ComputerServiceTicket;
 use App\Models\Consultation;
@@ -303,7 +305,8 @@ class AdminDashboardController extends Controller
             'courses' => EducationCourse::withCount('registrations')->get(),
             'webPortfolios' => WebPortfolio::all(),
             'estimatorComponents' => WebEstimatorComponent::all(),
-            'clientDeliveries' => ClientDelivery::with(['photos', 'user'])->latest()->get(),
+            'clientDeliveries' => ClientDelivery::with(['photos', 'rawPhotos', 'rawSelections', 'user'])->latest()->get(),
+            'clientRawSelections' => ClientRawSelection::with(['delivery', 'user'])->latest()->get(),
         ]);
     }
 
@@ -1770,5 +1773,165 @@ class AdminDashboardController extends Controller
         $delivery->delete();
 
         return back()->with('success', 'Layanan foto pelanggan berhasil dihapus.');
+    }
+
+    /**
+     * Upload Foto Mentahan untuk Pelanggan (Proofing Gallery)
+     * Foto dikompresi menjadi WebP ringan beresolusi tajam & dibubuhi multiple watermark Langit Creative
+     */
+    public function uploadRawPhotos(Request $request, $id)
+    {
+        @ini_set('max_execution_time', '0');
+        @ini_set('memory_limit', '2048M');
+        @set_time_limit(0);
+
+        $delivery = ClientDelivery::findOrFail($id);
+
+        $request->validate([
+            'photos' => 'required|array|min:1',
+            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
+            'raw_price_per_photo' => 'nullable|numeric|min:0',
+            'raw_price_description' => 'nullable|string|max:255',
+            'raw_discount_5_percent' => 'nullable|numeric|min:0|max:100',
+            'raw_discount_10_percent' => 'nullable|numeric|min:0|max:100',
+            'raw_notes' => 'nullable|string|max:1000',
+        ]);
+
+        // Perbarui pengaturan jika dikirim bersama form upload
+        $settingsToUpdate = [];
+        if ($request->filled('raw_price_per_photo')) {
+            $settingsToUpdate['raw_price_per_photo'] = (float) $request->input('raw_price_per_photo');
+        }
+        if ($request->filled('raw_price_description')) {
+            $settingsToUpdate['raw_price_description'] = $request->input('raw_price_description');
+        }
+        if ($request->filled('raw_discount_5_percent')) {
+            $settingsToUpdate['raw_discount_5_percent'] = (float) $request->input('raw_discount_5_percent');
+        }
+        if ($request->filled('raw_discount_10_percent')) {
+            $settingsToUpdate['raw_discount_10_percent'] = (float) $request->input('raw_discount_10_percent');
+        }
+        if ($request->has('raw_notes')) {
+            $settingsToUpdate['raw_notes'] = $request->input('raw_notes');
+        }
+        if (!empty($settingsToUpdate)) {
+            $delivery->update($settingsToUpdate);
+        }
+
+        $count = 0;
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                $origName = $file->getClientOriginalName();
+                $size = $file->getSize();
+                $mime = $file->getClientMimeType() ?: 'image/jpeg';
+                $path = $file->store("client_raw_photos/{$delivery->id}", 'public');
+
+                $rawPhoto = ClientRawPhoto::create([
+                    'client_delivery_id' => $delivery->id,
+                    'file_path' => $path,
+                    'original_name' => $origName,
+                    'file_size' => $size,
+                    'mime_type' => $mime,
+                ]);
+
+                // Hasilkan thumbnail WebP tajam dengan watermark Langit Creative
+                \App\Support\ClientRawPhotoThumbnail::generate($rawPhoto);
+                $count++;
+            }
+        }
+
+        $msg = "{$count} foto mentahan berhasil diunggah ke album \"{$delivery->title}\". Preview ber-watermark telah siap.";
+
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'uploaded_count' => $count,
+                'total_raw_photos' => $delivery->rawPhotos()->count(),
+                'message' => $msg,
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Perbarui Pengaturan Harga & Diskon Foto Mentahan (min 5 foto & min 10 foto)
+     */
+    public function updateRawSettings(Request $request, $id)
+    {
+        $delivery = ClientDelivery::findOrFail($id);
+
+        $validated = $request->validate([
+            'raw_price_per_photo' => 'required|numeric|min:0',
+            'raw_price_description' => 'required|string|max:255',
+            'raw_discount_5_percent' => 'required|numeric|min:0|max:100',
+            'raw_discount_10_percent' => 'required|numeric|min:0|max:100',
+            'raw_notes' => 'nullable|string|max:1000',
+        ], [
+            'raw_price_per_photo.required' => 'Harga per foto mentahan wajib diisi.',
+            'raw_price_description.required' => 'Deskripsi harga wajib diisi.',
+            'raw_discount_5_percent.required' => 'Diskon minimal 5 foto wajib diisi.',
+            'raw_discount_10_percent.required' => 'Diskon minimal 10 foto wajib diisi.',
+        ]);
+
+        $delivery->update($validated);
+
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Pengaturan harga dan diskon foto mentahan untuk \"{$delivery->title}\" berhasil disimpan.",
+            ]);
+        }
+
+        return back()->with('success', "Pengaturan harga dan diskon foto mentahan untuk \"{$delivery->title}\" berhasil disimpan.");
+    }
+
+    /**
+     * Hapus Satu Foto Mentahan
+     */
+    public function deleteRawPhoto($photoId)
+    {
+        $photo = ClientRawPhoto::findOrFail($photoId);
+        \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+        Storage::disk('public')->delete($photo->file_path);
+        $photo->delete();
+
+        return back()->with('success', 'Foto mentahan berhasil dihapus.');
+    }
+
+    /**
+     * Perbarui Status Pengajuan Pilihan Foto Mentahan dari Pelanggan
+     */
+    public function updateRawSelectionStatus(Request $request, $id)
+    {
+        $selection = ClientRawSelection::findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending,in_review,editing,completed,cancelled',
+            'admin_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $selection->update($validated);
+
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Status pilihan foto mentahan pelanggan berhasil diperbarui.',
+                'selection' => $selection,
+            ]);
+        }
+
+        return back()->with('success', 'Status pilihan foto mentahan pelanggan berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Pengajuan Pilihan Foto Mentahan
+     */
+    public function deleteRawSelection($id)
+    {
+        $selection = ClientRawSelection::findOrFail($id);
+        $selection->delete();
+
+        return back()->with('success', 'Data pilihan foto mentahan pelanggan berhasil dihapus.');
     }
 }

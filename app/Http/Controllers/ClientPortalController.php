@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientDelivery;
 use App\Models\ClientPhoto;
+use App\Models\ClientRawPhoto;
+use App\Models\ClientRawSelection;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -89,16 +91,120 @@ class ClientPortalController extends Controller
         }
 
         $deliveries = ClientDelivery::where('user_id', $user->id)
-            ->with(['photos' => function ($query) {
-                $query->latest();
-            }])
+            ->with([
+                'photos' => function ($query) {
+                    $query->latest();
+                },
+                'rawPhotos' => function ($query) {
+                    $query->latest();
+                },
+                'rawSelections' => function ($query) {
+                    $query->latest();
+                },
+            ])
+            ->latest()
+            ->get();
+
+        $rawSelections = ClientRawSelection::where('user_id', $user->id)
+            ->with('delivery')
             ->latest()
             ->get();
 
         return Inertia::render('Client/Gallery', [
             'client' => $user,
             'deliveries' => $deliveries,
+            'rawSelections' => $rawSelections,
         ]);
+    }
+
+    /**
+     * Pratinjau Foto Mentahan Terkompresi Ber-Watermark
+     * Dialirkan hanya sebagai pratinjau inline tanpa akses unduh file mentah asli.
+     */
+    public function previewRawPhoto($id)
+    {
+        $photo = ClientRawPhoto::with('delivery')->findOrFail($id);
+        $user = Auth::user();
+
+        if (!$user || ($user->id !== $photo->delivery->user_id && !in_array($user->role, ['superadmin', 'admin'], true))) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        return \App\Support\ClientRawPhotoThumbnail::previewResponse($photo);
+    }
+
+    /**
+     * Kirim Pilihan Foto Mentahan ke Admin Studio Langit
+     */
+    public function submitRawSelection(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'Silakan login terlebih dahulu.');
+        }
+
+        $validated = $request->validate([
+            'client_delivery_id' => 'required|exists:client_deliveries,id',
+            'photo_ids' => 'required|array|min:1',
+            'photo_ids.*' => 'required|integer|exists:client_raw_photos,id',
+            'notes' => 'nullable|string|max:1000',
+        ], [
+            'photo_ids.required' => 'Pilih minimal satu foto mentahan sebelum mengirim.',
+            'photo_ids.min' => 'Pilih minimal satu foto mentahan sebelum mengirim.',
+        ]);
+
+        $delivery = ClientDelivery::where('id', $validated['client_delivery_id'])
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $photoIds = array_values(array_unique($validated['photo_ids']));
+        $totalPhotos = count($photoIds);
+
+        // Ambil harga dasar per foto dari album
+        $pricePerPhoto = (float) ($delivery->raw_price_per_photo ?? 15000);
+        $subtotal = $totalPhotos * $pricePerPhoto;
+
+        // Hitung diskon berjenjang (diatur admin per album)
+        // Jika >= 10 dapat diskon 10 foto, jika >= 5 dapat diskon 5 foto
+        $discountPercent = 0.0;
+        if ($totalPhotos >= 10 && ($delivery->raw_discount_10_percent ?? 0) > 0) {
+            $discountPercent = (float) $delivery->raw_discount_10_percent;
+        } elseif ($totalPhotos >= 5 && ($delivery->raw_discount_5_percent ?? 0) > 0) {
+            $discountPercent = (float) $delivery->raw_discount_5_percent;
+        }
+
+        $discountAmount = $subtotal * ($discountPercent / 100);
+        $totalPrice = max(0, $subtotal - $discountAmount);
+
+        $selection = ClientRawSelection::create([
+            'client_delivery_id' => $delivery->id,
+            'user_id' => $user->id,
+            'selected_photo_ids' => $photoIds,
+            'total_photos' => $totalPhotos,
+            'price_per_photo' => $pricePerPhoto,
+            'subtotal' => $subtotal,
+            'discount_percent' => $discountPercent,
+            'discount_amount' => $discountAmount,
+            'total_price' => $totalPrice,
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'pending',
+        ]);
+
+        $msg = "Pilihan {$totalPhotos} foto mentahan berhasil dikirim ke Admin Studio Langit.";
+        if ($discountPercent > 0) {
+            $msg .= " Anda mendapatkan diskon {$discountPercent}% (Hemat Rp " . number_format($discountAmount, 0, ',', '.') . ")!";
+        }
+
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'selection' => $selection,
+            ]);
+        }
+
+        return back()->with('success', $msg);
     }
 
     /**

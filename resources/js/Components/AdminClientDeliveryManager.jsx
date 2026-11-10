@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { uploadFiles } from '@/Utils/deliveryUploader.mjs';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
@@ -7,10 +7,22 @@ import {
     Camera, Upload, Clock, AlertTriangle, CheckCircle2, Trash2, 
     Plus, Eye, X, Calendar, RefreshCw, Download, FileImage, 
     User, Mail, Phone, Lock, ExternalLink, ShieldAlert, Key,
-    Copy, Check, MessageSquare
+    Copy, Check, MessageSquare, Sparkles
 } from 'lucide-react';
+import AdminRawPhotosManager from '@/Components/AdminRawPhotosManager';
+import AdminRawSelectionsManager from '@/Components/AdminRawSelectionsManager';
 
-export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
+export default function AdminClientDeliveryManager({ clientDeliveries = [], clientRawSelections = [], initialSubTab = 'deliveries' }) {
+    // Sub-tab state
+    const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
+
+    useEffect(() => {
+        if (initialSubTab) setActiveSubTab(initialSubTab);
+    }, [initialSubTab]);
+
+    const totalRawCount = clientDeliveries.reduce((sum, d) => sum + (d.raw_photos?.length || 0), 0);
+    const pendingRawCount = clientRawSelections.filter(s => s.status === 'pending').length;
+
     // Modal states
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [expiryModalDelivery, setExpiryModalDelivery] = useState(null);
@@ -220,6 +232,58 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
 
     return (
         <div className="min-w-0 space-y-6 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
+            {/* Sub-Tab Navigation Switcher */}
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-xs overflow-x-auto">
+                <button
+                    type="button"
+                    onClick={() => setActiveSubTab('deliveries')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                        activeSubTab === 'deliveries'
+                            ? 'bg-[#005792] text-white shadow-md'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                >
+                    <Camera className="w-4 h-4" />
+                    <span>Foto Jadi ({clientDeliveries.length})</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveSubTab('raw_photos')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                        activeSubTab === 'raw_photos'
+                            ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 shadow-md font-black'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                >
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Foto Mentahan & Diskon ({totalRawCount})</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveSubTab('selections')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                        activeSubTab === 'selections'
+                            ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>Pilihan dari Pelanggan</span>
+                    {pendingRawCount > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
+                            {pendingRawCount} Baru
+                        </span>
+                    ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-white/10">
+                            {clientRawSelections.length}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            {/* TAB CONTENT 1: FOTO JADI (DELIVERIES) */}
+            {activeSubTab === 'deliveries' && (
+                <>
             {/* Header & Primary Action */}
             <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -496,6 +560,18 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [] }) {
                         </table>
                     </div>
                 </div>
+            )}
+                </>
+            )}
+
+            {/* TAB CONTENT 2: FOTO MENTAHAN & DISKON */}
+            {activeSubTab === 'raw_photos' && (
+                <AdminRawPhotosManager clientDeliveries={clientDeliveries} />
+            )}
+
+            {/* TAB CONTENT 3: PILIHAN DARI PELANGGAN */}
+            {activeSubTab === 'selections' && (
+                <AdminRawSelectionsManager clientRawSelections={clientRawSelections} />
             )}
 
             {/* ── MODAL 1: TAMBAH PELANGGAN & UPLOAD FOTO ── */}

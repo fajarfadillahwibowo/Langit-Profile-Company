@@ -55,6 +55,10 @@ Route::prefix('pelanggan')->name('client.')->group(function () {
     Route::get('/foto/{id}/preview', [ClientPortalController::class, 'previewPhoto'])->name('photo.preview');
     Route::get('/foto/{id}/download', [ClientPortalController::class, 'downloadPhoto'])->name('photo.download');
     Route::get('/album/{id}/download-all', [ClientPortalController::class, 'downloadAllZip'])->name('album.download-all');
+
+    // Foto Mentahan (Watermarked Preview & Pemilihan Foto)
+    Route::get('/foto-mentahan/{id}/preview', [ClientPortalController::class, 'previewRawPhoto'])->name('raw-photo.preview');
+    Route::post('/foto-mentahan/pilih', [ClientPortalController::class, 'submitRawSelection'])->name('raw-photo.submit-selection');
 });
 
 // Media Optimization Endpoint (Public, Ultra-Fast Cached WebP Resizer)
@@ -153,6 +157,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/client-deliveries/{id}/credentials', [AdminDashboardController::class, 'updateClientCredentials'])->name('client-deliveries.update-credentials');
         Route::delete('/client-photos/{id}', [AdminDashboardController::class, 'deleteClientPhoto'])->name('client-photos.delete');
         Route::delete('/client-deliveries/{id}', [AdminDashboardController::class, 'deleteClientDelivery'])->name('client-deliveries.delete');
+
+        // Layanan Foto Mentahan & Pengaturan Diskon Pelanggan
+        Route::post('/client-deliveries/{id}/raw-photos', [AdminDashboardController::class, 'uploadRawPhotos'])->name('client-deliveries.upload-raw-photos');
+        Route::put('/client-deliveries/{id}/raw-settings', [AdminDashboardController::class, 'updateRawSettings'])->name('client-deliveries.update-raw-settings');
+        Route::delete('/client-raw-photos/{id}', [AdminDashboardController::class, 'deleteRawPhoto'])->name('client-raw-photos.delete');
+
+        // Menu Pilihan Foto Mentahan dari Pelanggan
+        Route::put('/client-raw-selections/{id}/status', [AdminDashboardController::class, 'updateRawSelectionStatus'])->name('client-raw-selections.update-status');
+        Route::delete('/client-raw-selections/{id}', [AdminDashboardController::class, 'deleteRawSelection'])->name('client-raw-selections.delete');
 
         // Admin Profile Management & Live Camera / Upload Avatar
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');

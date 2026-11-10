@@ -24,12 +24,20 @@ class ClientDelivery extends Model
         'expired_at',
         'is_active',
         'download_count',
+        'raw_price_per_photo',
+        'raw_price_description',
+        'raw_discount_5_percent',
+        'raw_discount_10_percent',
+        'raw_notes',
     ];
 
     protected $casts = [
         'expired_at' => 'datetime',
         'is_active' => 'boolean',
         'download_count' => 'integer',
+        'raw_price_per_photo' => 'float',
+        'raw_discount_5_percent' => 'float',
+        'raw_discount_10_percent' => 'float',
     ];
 
     protected $appends = [
@@ -37,6 +45,7 @@ class ClientDelivery extends Model
         'remaining_days',
         'total_size_formatted',
         'photo_count',
+        'raw_photo_count',
     ];
 
     public function user(): BelongsTo
@@ -47,6 +56,23 @@ class ClientDelivery extends Model
     public function photos(): HasMany
     {
         return $this->hasMany(ClientPhoto::class);
+    }
+
+    public function rawPhotos(): HasMany
+    {
+        return $this->hasMany(ClientRawPhoto::class);
+    }
+
+    public function rawSelections(): HasMany
+    {
+        return $this->hasMany(ClientRawSelection::class);
+    }
+
+    public function getRawPhotoCountAttribute(): int
+    {
+        return $this->relationLoaded('rawPhotos')
+            ? $this->rawPhotos->count()
+            : $this->rawPhotos()->count();
     }
 
     /**
