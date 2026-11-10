@@ -265,6 +265,17 @@ class ClientRawPhotoThumbnail
             ]);
         }
 
+        // Fallback: jika pembuatan thumbnail tertunda, alirkan file asli secara aman
+        $sourceFull = $disk->path($photo->file_path);
+        if (file_exists($sourceFull)) {
+            return response()->file($sourceFull, [
+                'Content-Type' => $photo->mime_type ?: 'image/jpeg',
+                'Cache-Control' => 'private, max-age=86400',
+                'Content-Disposition' => 'inline; filename="preview_langit_creative.jpg"',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
         abort(404, 'Pratinjau foto mentahan tidak ditemukan.');
     }
 

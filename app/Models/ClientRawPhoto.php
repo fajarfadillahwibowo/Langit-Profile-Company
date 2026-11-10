@@ -28,6 +28,7 @@ class ClientRawPhoto extends Model
     protected $appends = [
         'formatted_size',
         'preview_url',
+        'file_url',
         'effective_price',
     ];
 
@@ -49,6 +50,14 @@ class ClientRawPhoto extends Model
             return number_format($bytes / 1048576, 2) . ' MB';
         }
         return number_format($bytes / 1024, 0) . ' KB';
+    }
+
+    /**
+     * URL file asli di disk publik
+     */
+    public function getFileUrlAttribute(): string
+    {
+        return Storage::disk('public')->url($this->file_path);
     }
 
     /**

@@ -13,6 +13,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
 
     // Selected detail modal
     const [detailSelection, setDetailSelection] = useState(null);
+    const [inspectPhoto, setInspectPhoto] = useState(null);
     const [statusForm, setStatusForm] = useState({
         status: 'pending',
         admin_notes: '',
@@ -338,15 +339,27 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
                                     {detailSelection.selected_photos.map((photo, pIdx) => (
                                         <div 
                                             key={photo.id}
-                                            className="group relative rounded-xl overflow-hidden bg-slate-900 border border-cyan-500/30 flex flex-col shadow-xs"
+                                            onClick={() => setInspectPhoto(photo)}
+                                            className="group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-cyan-400 flex flex-col shadow-xs cursor-pointer transition-all hover:scale-[1.02]"
+                                            title="Klik untuk perbesar foto"
                                         >
                                             <div className="aspect-[4/3] w-full relative bg-slate-950 overflow-hidden">
                                                 <img
-                                                    src={photo.preview_url}
+                                                    src={photo.preview_url || photo.file_url}
                                                     alt={photo.original_name}
                                                     loading="lazy"
-                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        if (photo.file_url && e.target.src !== photo.file_url) {
+                                                            e.target.src = photo.file_url;
+                                                        }
+                                                    }}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
+                                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="p-2 rounded-full bg-white/20 backdrop-blur-md text-white">
+                                                        <Eye className="w-4 h-4" />
+                                                    </span>
+                                                </div>
                                                 <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-mono text-[9px] font-bold">
                                                     #{pIdx + 1}
                                                 </span>
@@ -424,6 +437,50 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── MODAL: PERBESAR PRATINJAU FOTO TERPILIH ── */}
+            {inspectPhoto && (
+                <div 
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-[80] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4"
+                    onClick={() => setInspectPhoto(null)}
+                >
+                    <div 
+                        className="w-full max-w-5xl flex items-center justify-between text-white pb-3 border-b border-white/10"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-cyan-400">
+                                {inspectPhoto.original_name}
+                            </span>
+                            <span className="text-slate-400 text-xs font-mono">
+                                • {inspectPhoto.formatted_size}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setInspectPhoto(null)}
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div 
+                        className="flex-1 w-full max-w-5xl flex items-center justify-center p-2"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={inspectPhoto.preview_url || inspectPhoto.file_url}
+                            alt={inspectPhoto.original_name}
+                            className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
+                        />
+                    </div>
+
+                    <div className="text-xs font-mono text-slate-400 pt-2">
+                        Klik area di luar gambar atau tombol X untuk menutup
                     </div>
                 </div>
             )}

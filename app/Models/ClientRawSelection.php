@@ -38,6 +38,7 @@ class ClientRawSelection extends Model
     protected $appends = [
         'status_label',
         'status_badge_color',
+        'selected_photos',
     ];
 
     public function delivery(): BelongsTo
@@ -55,8 +56,8 @@ class ClientRawSelection extends Model
      */
     public function getSelectedPhotosAttribute()
     {
-        if (empty($this->selected_photo_ids)) {
-            return collect();
+        if (empty($this->selected_photo_ids) || !is_array($this->selected_photo_ids)) {
+            return [];
         }
 
         return ClientRawPhoto::whereIn('id', $this->selected_photo_ids)->get();
