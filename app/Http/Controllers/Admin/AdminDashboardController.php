@@ -1705,7 +1705,7 @@ class AdminDashboardController extends Controller
             }
         }
 
-        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
+        if (!$request->header('X-Inertia') && $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'uploaded_count' => $count,
@@ -1842,15 +1842,6 @@ class AdminDashboardController extends Controller
 
         $msg = "{$count} foto mentahan berhasil diunggah ke album \"{$delivery->title}\". Preview ber-watermark telah siap.";
 
-        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
-            return response()->json([
-                'success' => true,
-                'uploaded_count' => $count,
-                'total_raw_photos' => $delivery->rawPhotos()->count(),
-                'message' => $msg,
-            ]);
-        }
-
         return back()->with('success', $msg);
     }
 
@@ -1875,13 +1866,6 @@ class AdminDashboardController extends Controller
         ]);
 
         $delivery->update($validated);
-
-        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
-            return response()->json([
-                'success' => true,
-                'message' => "Pengaturan harga dan diskon foto mentahan untuk \"{$delivery->title}\" berhasil disimpan.",
-            ]);
-        }
 
         return back()->with('success', "Pengaturan harga dan diskon foto mentahan untuk \"{$delivery->title}\" berhasil disimpan.");
     }
@@ -1912,14 +1896,6 @@ class AdminDashboardController extends Controller
         ]);
 
         $selection->update($validated);
-
-        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Status pilihan foto mentahan pelanggan berhasil diperbarui.',
-                'selection' => $selection,
-            ]);
-        }
 
         return back()->with('success', 'Status pilihan foto mentahan pelanggan berhasil diperbarui.');
     }
