@@ -404,11 +404,15 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
 
                                                             <button
                                                                 type="button"
-                                                                onClick={() => setClearModalDelivery(delivery)}
-                                                                className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 cursor-pointer"
-                                                                title={`Hapus Semua Foto Mentahan (${rawCount} Foto)`}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setClearModalDelivery(delivery);
+                                                                }}
+                                                                className="px-2.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                                                                title={`Hapus / Kosongkan Semua Foto Mentahan (${rawCount} Foto)`}
                                                             >
-                                                                <Trash2 className="w-4 h-4" />
+                                                                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                                                <span>Hapus</span>
                                                             </button>
                                                         </>
                                                     )}

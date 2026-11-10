@@ -1899,6 +1899,8 @@ class AdminDashboardController extends Controller
             $photo->delete();
         }
 
+        Storage::disk('public')->deleteDirectory("client_raw_photos/{$delivery->id}");
+
         return back()->with('success', "Seluruh {$count} foto mentahan pada album \"{$delivery->title}\" berhasil dikosongkan/dihapus.");
     }
 
