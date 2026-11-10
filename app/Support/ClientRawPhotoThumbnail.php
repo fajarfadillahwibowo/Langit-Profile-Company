@@ -169,63 +169,94 @@ class ClientRawPhotoThumbnail
     }
 
     /**
-     * Terapkan banyak watermark diagonal & tanda bukti Langit Creative ke canvas gambar
+     * Terapkan watermark miring diagonal profesional menggunakan aset logo resmi Langit Creative
      */
     protected static function applyWatermark($image, int $w, int $h): void
     {
-        $font = self::getAvailableFont();
-        $text = 'LANGIT CREATIVE';
-        $subtext = 'FOTO MENTAHAN • PROOF ONLY';
+        $stripPath = public_path('images/watermark-strip.png');
+        if (!file_exists($stripPath)) {
+            $stripPath = public_path('images/watermark-langit-creative.png');
+        }
 
-        // Alokasikan warna semi-transparan (alpha 0 - 127 di GD, 127 = 100% transparan)
-        $whiteAlpha = imagecolorallocatealpha($image, 255, 255, 255, 65); // ~50% transparan
-        $blackAlpha = imagecolorallocatealpha($image, 15, 23, 42, 85);    // shadow halus
-        $cyanAlpha  = imagecolorallocatealpha($image, 6, 182, 212, 70);   // cyan brand accent
+        if (file_exists($stripPath) && is_readable($stripPath)) {
+            $strip = @imagecreatefrompng($stripPath);
+            if ($strip) {
+                imagealphablending($strip, false);
+                imagesavealpha($strip, true);
+
+                $origStripW = imagesx($strip);
+                $origStripH = imagesy($strip);
+
+                // Skala strip watermark agar proporsional terhadap resolusi foto
+                $scaleRatio = max(0.55, min(1.3, $w / 1100));
+                $scaledW = (int) max(120, round($origStripW * $scaleRatio));
+                $scaledH = (int) max(14, round($origStripH * $scaleRatio));
+
+                $scaledStrip = imagecreatetruecolor($scaledW, $scaledH);
+                imagealphablending($scaledStrip, false);
+                imagesavealpha($scaledStrip, true);
+                $transColor = imagecolorallocatealpha($scaledStrip, 0, 0, 0, 127);
+                imagefill($scaledStrip, 0, 0, $transColor);
+                imagecopyresampled($scaledStrip, $strip, 0, 0, 0, 0, $scaledW, $scaledH, $origStripW, $origStripH);
+                @imagedestroy($strip);
+
+                // Putar miring 32 derajat (diagonal profesional miring)
+                $rot = @imagerotate($scaledStrip, 32, $transColor);
+                @imagedestroy($scaledStrip);
+
+                if ($rot) {
+                    imagealphablending($rot, false);
+                    imagesavealpha($rot, true);
+
+                    $rw = imagesx($rot);
+                    $rh = imagesy($rot);
+
+                    imagealphablending($image, true);
+
+                    // Kisi berulang diagonal (staggered repeating grid)
+                    $stepX = (int) max(140, round($rw * 0.85));
+                    $stepY = (int) max(100, round($rh * 1.3));
+
+                    $row = 0;
+                    for ($y = -$rh; $y < $h + $rh; $y += $stepY) {
+                        $offsetX = ($row % 2 === 0) ? 0 : (int) round($stepX / 2);
+                        for ($x = -$rw + $offsetX; $x < $w + $rw; $x += $stepX) {
+                            imagecopy($image, $rot, $x, $y, 0, 0, $rw, $rh);
+                        }
+                        $row++;
+                    }
+
+                    @imagedestroy($rot);
+                    return;
+                }
+            }
+        }
+
+        // Fallback jika file PNG tidak tersedia: gunakan rendering font TrueType miring
+        $font = self::getAvailableFont();
+        $text = 'l a n g i t . c r e a t i v e';
+
+        $whiteAlpha = imagecolorallocatealpha($image, 255, 255, 255, 65);
+        $blackAlpha = imagecolorallocatealpha($image, 15, 23, 42, 85);
 
         if ($font && function_exists('imagettftext')) {
             $fontSize = max(13, (int) round($w / 38));
-            $angle = 28; // Kemiringan diagonal
+            $angle = 32;
 
-            $stepX = max(180, (int) round($w / 3.5));
-            $stepY = max(130, (int) round($h / 3.5));
+            $stepX = max(180, (int) round($w / 3.2));
+            $stepY = max(130, (int) round($h / 3.2));
 
-            // Grid multiple watermark berulang (diagonal repeating pattern)
             for ($x = -100; $x < $w + 200; $x += $stepX) {
                 for ($y = -50; $y < $h + 150; $y += $stepY) {
-                    // Shadow tipis
                     @imagettftext($image, $fontSize, $angle, $x + 2, $y + 2, $blackAlpha, $font, $text);
-                    // Teks utama semi-transparan
                     @imagettftext($image, $fontSize, $angle, $x, $y, $whiteAlpha, $font, $text);
                 }
             }
-
-            // Tanda tengah besar mencolok
-            $centerFontSize = max(18, (int) round($w / 22));
-            $bbox = @imagettfbbox($centerFontSize, 0, $font, $text);
-            if ($bbox) {
-                $textW = abs($bbox[2] - $bbox[0]);
-                $centerX = (int) max(10, round(($w - $textW) / 2));
-                $centerY = (int) round($h / 2);
-
-                @imagettftext($image, $centerFontSize, 0, $centerX + 2, $centerY + 2, $blackAlpha, $font, $text);
-                @imagettftext($image, $centerFontSize, 0, $centerX, $centerY, $whiteAlpha, $font, $text);
-
-                // Subtext di bawah teks tengah
-                $subBbox = @imagettfbbox(max(10, (int) round($centerFontSize * 0.55)), 0, $font, $subtext);
-                if ($subBbox) {
-                    $subW = abs($subBbox[2] - $subBbox[0]);
-                    $subX = (int) max(10, round(($w - $subW) / 2));
-                    @imagettftext($image, max(10, (int) round($centerFontSize * 0.55)), 0, $subX, $centerY + 30, $cyanAlpha, $font, $subtext);
-                }
-            }
         } else {
-            // Fallback GD built-in string tanpa file TTF eksternal
-            $stepX = 180;
-            $stepY = 120;
-            for ($x = 20; $x < $w; $x += $stepX) {
-                for ($y = 20; $y < $h; $y += $stepY) {
-                    @imagestring($image, 5, $x + 1, $y + 1, 'LANGIT CREATIVE', $blackAlpha);
-                    @imagestring($image, 5, $x, $y, 'LANGIT CREATIVE', $whiteAlpha);
+            for ($x = 20; $x < $w; $x += 180) {
+                for ($y = 20; $y < $h; $y += 120) {
+                    @imagestring($image, 5, $x + 1, $y + 1, 'l a n g i t . c r e a t i v e', $blackAlpha);
+                    @imagestring($image, 5, $x, $y, 'l a n g i t . c r e a t i v e', $whiteAlpha);
                 }
             }
         }

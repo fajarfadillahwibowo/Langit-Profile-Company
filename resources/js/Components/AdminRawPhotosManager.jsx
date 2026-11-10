@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 import { 
     Camera, Upload, Sparkles, Tag, Percent, Settings, 
     Trash2, Eye, X, Check, RefreshCw, AlertCircle, 
     Plus, Image as ImageIcon, ExternalLink, ShieldCheck,
-    CheckCircle2
+    CheckCircle2, ChevronRight, Zap
 } from 'lucide-react';
+import { uploadRawPhotosBatch, formatUploadBytes } from '@/Utils/rawPhotoUploader.mjs';
 
 export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
     // Modals state
     const [uploadModalDelivery, setUploadModalDelivery] = useState(null);
     const [viewPhotosDelivery, setViewPhotosDelivery] = useState(null);
+    const [viewPhotosLimit, setViewPhotosLimit] = useState(48);
     const [settingsModalDelivery, setSettingsModalDelivery] = useState(null);
 
     // Upload Form State
@@ -21,7 +23,9 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
     const [uploadDisc10, setUploadDisc10] = useState(20);
     const [uploadNotes, setUploadNotes] = useState('');
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadProgressText, setUploadProgressText] = useState('');
+    const abortControllerRef = useRef(null);
 
     // Settings Form State
     const [settingsForm, setSettingsForm] = useState({
@@ -49,6 +53,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
         setUploadDisc5(delivery.raw_discount_5_percent || 10);
         setUploadDisc10(delivery.raw_discount_10_percent || 20);
         setUploadNotes(delivery.raw_notes || '');
+        setUploadProgress(0);
         setUploadProgressText('');
     };
 
@@ -64,37 +69,60 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
         });
     };
 
-    // Handle upload raw photos
-    const handleUploadSubmit = (e) => {
+    // Handle upload raw photos (Streaming batch intake with in-browser compression for 100-1000+ files)
+    const handleUploadSubmit = async (e) => {
         e.preventDefault();
         if (!uploadModalDelivery || uploadFiles.length === 0) return;
 
         setIsUploading(true);
-        setUploadProgressText(`Mengunggah & memproses ${uploadFiles.length} foto dengan watermark...`);
+        setUploadProgress(0);
+        setUploadProgressText(`Menyiapkan ${uploadFiles.length} foto mentahan...`);
 
-        const formData = new FormData();
-        uploadFiles.forEach((file) => {
-            formData.append('photos[]', file);
-        });
-        formData.append('raw_price_per_photo', uploadPrice);
-        formData.append('raw_price_description', uploadDesc);
-        formData.append('raw_discount_5_percent', uploadDisc5);
-        formData.append('raw_discount_10_percent', uploadDisc10);
-        if (uploadNotes) formData.append('raw_notes', uploadNotes);
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
-        router.post(`/admin/client-deliveries/${uploadModalDelivery.id}/raw-photos`, formData, {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: () => {
+        try {
+            const result = await uploadRawPhotosBatch({
+                deliveryId: uploadModalDelivery.id,
+                files: uploadFiles,
+                settings: {
+                    raw_price_per_photo: uploadPrice,
+                    raw_price_description: uploadDesc,
+                    raw_discount_5_percent: uploadDisc5,
+                    raw_discount_10_percent: uploadDisc10,
+                    raw_notes: uploadNotes,
+                },
+                batchSize: 10,
+                concurrency: 2,
+                signal: controller.signal,
+                onProgress: (p) => {
+                    setUploadProgress(p.percent);
+                    setUploadProgressText(p.statusText);
+                },
+            });
+
+            if (result.success) {
+                setUploadProgressText(`${result.uploadedCount} foto mentahan berhasil dikompresi & diunggah.`);
+                setTimeout(() => {
+                    setIsUploading(false);
+                    setUploadModalDelivery(null);
+                    setUploadFiles([]);
+                    router.reload({ only: ['clientDeliveries'] });
+                }, 800);
+            } else {
                 setIsUploading(false);
-                setUploadModalDelivery(null);
-                setUploadFiles([]);
-            },
-            onError: () => {
-                setIsUploading(false);
-                setUploadProgressText('Gagal mengunggah. Pastikan ukuran file sesuai dan coba kembali.');
+                setUploadProgressText(result.errors?.[0] || 'Gagal mengunggah foto.');
             }
-        });
+        } catch (err) {
+            setIsUploading(false);
+            if (err.name === 'AbortError') {
+                setUploadProgressText('Proses upload dibatalkan oleh admin.');
+            } else {
+                setUploadProgressText('Kendala jaringan: ' + (err.message || 'Silakan coba lagi.'));
+            }
+        } finally {
+            abortControllerRef.current = null;
+        }
     };
 
     // Handle save settings
@@ -355,9 +383,14 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                         <form onSubmit={handleUploadSubmit} className="space-y-4">
                             {/* File Selector */}
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                                    Pilih Berkas Foto Mentahan:
-                                </label>
+                                <div className="flex flex-wrap items-center justify-between gap-1">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                                        Pilih Berkas Foto Mentahan:
+                                    </label>
+                                    <span className="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
+                                        ⚡ Auto-Kompres Cepat (Bebas 100 - 1000+ Foto)
+                                    </span>
+                                </div>
                                 <input
                                     type="file"
                                     multiple
@@ -368,8 +401,8 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                 />
                                 <span className="text-[11px] font-mono text-slate-500 block">
                                     {uploadFiles.length > 0 
-                                        ? `${uploadFiles.length} foto dipilih untuk diunggah` 
-                                        : 'Mendukung multi-file upload beresolusi kamera'}
+                                        ? `${uploadFiles.length} foto dipilih (Kapasitas asli: ${formatUploadBytes(uploadFiles.reduce((s, f) => s + (f.size || 0), 0))}, otomatis dikompres Full HD sebelum dikirim agar kilat)` 
+                                        : 'Mendukung multi-file upload beresolusi kamera tanpa batas jumlah.'}
                                 </span>
                             </div>
 
@@ -448,22 +481,55 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                 />
                             </div>
 
-                            {uploadProgressText && (
-                                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs flex items-center gap-2">
-                                    <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                            {/* Live Streaming Progress Bar */}
+                            {isUploading && (
+                                <div className="space-y-2 p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+                                    <div className="flex items-center justify-between text-xs font-mono">
+                                        <span className="font-bold text-cyan-900 dark:text-cyan-200 flex items-center gap-2">
+                                            <RefreshCw className="w-4 h-4 animate-spin text-cyan-500" />
+                                            <span>{uploadProgressText}</span>
+                                        </span>
+                                        <span className="font-extrabold text-cyan-600 dark:text-cyan-400">
+                                            {uploadProgress}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2.5 overflow-hidden">
+                                        <div 
+                                            className="bg-gradient-to-r from-cyan-500 to-sky-600 h-2.5 rounded-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                        ⚡ Foto dikompresi otomatis & dikirim bertahap per-batch. Server bebas timeout.
+                                    </p>
+                                </div>
+                            )}
+
+                            {!isUploading && uploadProgressText && (
+                                <div className="p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs flex items-center gap-2">
+                                    <Check className="w-4 h-4 text-emerald-500" />
                                     <span>{uploadProgressText}</span>
                                 </div>
                             )}
 
                             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
-                                <button
-                                    type="button"
-                                    disabled={isUploading}
-                                    onClick={() => setUploadModalDelivery(null)}
-                                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold"
-                                >
-                                    Batal
-                                </button>
+                                {isUploading ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => abortControllerRef.current?.abort()}
+                                        className="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs cursor-pointer"
+                                    >
+                                        Batalkan Upload
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadModalDelivery(null)}
+                                        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                                    >
+                                        Batal
+                                    </button>
+                                )}
                                 <button
                                     type="submit"
                                     disabled={isUploading || uploadFiles.length === 0}
@@ -472,7 +538,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                     {isUploading ? (
                                         <>
                                             <RefreshCw className="w-4 h-4 animate-spin" />
-                                            <span>Memproses...</span>
+                                            <span>Mengunggah ({uploadProgress}%)...</span>
                                         </>
                                     ) : (
                                         <>
@@ -661,47 +727,69 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                     Belum ada foto mentahan.
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                    {viewPhotosDelivery.raw_photos.map((photo, idx) => (
-                                        <div 
-                                            key={photo.id}
-                                            className="group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 flex flex-col"
-                                        >
-                                            <div className="aspect-[4/3] w-full relative bg-slate-950 overflow-hidden">
-                                                <img
-                                                    src={photo.preview_url}
-                                                    alt={photo.original_name}
-                                                    loading="lazy"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-white font-mono text-[9px] font-bold">
-                                                    #{idx + 1}
-                                                </span>
-                                                <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-slate-300 font-mono text-[9px]">
-                                                    {photo.formatted_size}
-                                                </span>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {(viewPhotosDelivery.raw_photos || []).slice(0, viewPhotosLimit).map((photo, idx) => (
+                                            <div 
+                                                key={photo.id}
+                                                className="group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 flex flex-col"
+                                            >
+                                                <div className="aspect-[4/3] w-full relative bg-slate-950 overflow-hidden">
+                                                    <img
+                                                        src={photo.preview_url}
+                                                        alt={photo.original_name}
+                                                        loading="lazy"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-white font-mono text-[9px] font-bold">
+                                                        #{idx + 1}
+                                                    </span>
+                                                    <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-slate-300 font-mono text-[9px]">
+                                                        {photo.formatted_size}
+                                                    </span>
 
-                                                {/* Delete button overlay */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeletePhoto(photo.id)}
-                                                    className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                                    title="Hapus foto mentahan ini"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
+                                                    {/* Delete button overlay */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeletePhoto(photo.id)}
+                                                        className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                        title="Hapus foto mentahan ini"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
 
-                                            <div className="p-2 bg-white dark:bg-[#0c1220] flex items-center justify-between text-[10px] border-t border-slate-100 dark:border-white/5">
-                                                <span className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title={photo.original_name}>
-                                                    {photo.original_name}
-                                                </span>
-                                                <span className="font-mono text-cyan-600 font-bold">
-                                                    Rp {(photo.effective_price || viewPhotosDelivery.raw_price_per_photo || 15000).toLocaleString('id-ID')}
-                                                </span>
+                                                <div className="p-2 bg-white dark:bg-[#0c1220] flex items-center justify-between text-[10px] border-t border-slate-100 dark:border-white/5">
+                                                    <span className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title={photo.original_name}>
+                                                        {photo.original_name}
+                                                    </span>
+                                                    <span className="font-mono text-cyan-600 font-bold">
+                                                        Rp {(photo.effective_price || viewPhotosDelivery.raw_price_per_photo || 15000).toLocaleString('id-ID')}
+                                                    </span>
+                                                </div>
                                             </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Progressive Load for Admin Modal */}
+                                    {viewPhotosLimit < (viewPhotosDelivery.raw_photos?.length || 0) && (
+                                        <div className="pt-2 flex items-center justify-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setViewPhotosLimit(prev => prev + 48)}
+                                                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                                            >
+                                                Muat 48 Foto Berikutnya (Sisa {viewPhotosDelivery.raw_photos.length - viewPhotosLimit})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setViewPhotosLimit(viewPhotosDelivery.raw_photos.length)}
+                                                className="px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs font-semibold cursor-pointer"
+                                            >
+                                                Tampilkan Semua ({viewPhotosDelivery.raw_photos.length})
+                                            </button>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             )}
                         </div>

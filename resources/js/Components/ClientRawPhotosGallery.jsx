@@ -45,19 +45,19 @@ function RawPhotoCard({ photo, index, isSelected, onToggle, onInspect, pricePerP
                     } ${isSelected ? 'brightness-105' : 'group-hover:scale-105'}`}
                 />
 
-                {/* ── MULTIPLE WATERMARK SVG OVERLAY (LANGIT CREATIVE) ── */}
+                {/* ── MULTIPLE WATERMARK SVG OVERLAY (l a n g i t . c r e a t i v e - MIRING DIAGONAL) ── */}
                 <div 
-                    className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10 opacity-40 mix-blend-screen"
+                    className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10 opacity-45 mix-blend-screen"
                     aria-hidden="true"
                 >
                     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <pattern id={`wm-${photo.id}`} width="180" height="120" patternUnits="userSpaceOnUse" patternTransform="rotate(-26)">
-                                <text x="10" y="35" fill="rgba(255,255,255,0.7)" fontSize="11" fontWeight="bold" letterSpacing="1">
-                                    LANGIT CREATIVE
+                            <pattern id={`wm-${photo.id}`} width="220" height="130" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
+                                <text x="10" y="40" fill="rgba(255,255,255,0.75)" fontSize="12" fontWeight="bold" letterSpacing="4">
+                                    l a n g i t . c r e a t i v e
                                 </text>
-                                <text x="10" y="75" fill="rgba(6,182,212,0.6)" fontSize="9" fontWeight="bold" letterSpacing="1">
-                                    PROOF ONLY
+                                <text x="10" y="85" fill="rgba(6,182,212,0.65)" fontSize="9" fontWeight="bold" letterSpacing="2">
+                                    FOTO MENTAHAN • PROOF ONLY
                                 </text>
                             </pattern>
                         </defs>
@@ -67,8 +67,8 @@ function RawPhotoCard({ photo, index, isSelected, onToggle, onInspect, pricePerP
 
                 {/* Watermark Center Badge */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <span className="px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-xs border border-white/20 text-white/80 font-mono font-extrabold text-[10px] tracking-widest uppercase rotate-[-12deg] shadow-lg">
-                        Langit Creative • Proof
+                    <span className="px-3 py-1 rounded-md bg-black/50 backdrop-blur-xs border border-white/25 text-white/90 font-mono font-black text-[11px] tracking-widest uppercase rotate-[-32deg] shadow-xl">
+                        l a n g i t . c r e a t i v e
                     </span>
                 </div>
 
@@ -169,6 +169,26 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
 
     // Selected photo IDs state (per active delivery)
     const [selectedIds, setSelectedIds] = useState([]);
+
+    // Progressive display limit (e.g. 48 photos initially, supporting 100, 500, 1000+ smoothly)
+    const INITIAL_BATCH_SIZE = 48;
+    const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+
+    useEffect(() => {
+        setVisibleCount(INITIAL_BATCH_SIZE);
+    }, [activeDeliveryId]);
+
+    const handleLoadMore = () => {
+        setVisibleCount(prev => Math.min(prev + INITIAL_BATCH_SIZE, rawPhotos.length));
+    };
+
+    const handleShowAll = () => {
+        setVisibleCount(rawPhotos.length);
+    };
+
+    const visiblePhotos = useMemo(() => {
+        return rawPhotos.slice(0, visibleCount);
+    }, [rawPhotos, visibleCount]);
 
     // Lightbox modal state for raw preview
     const [inspectPhoto, setInspectPhoto] = useState(null);
@@ -529,18 +549,18 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
                             </button>
 
                             <span className="text-xs font-mono text-slate-500">
-                                {selectedIds.length} dari {rawPhotos.length} foto dipilih
+                                Menampilkan {Math.min(visibleCount, rawPhotos.length)} dari {rawPhotos.length} foto ({selectedIds.length} dipilih)
                             </span>
                         </div>
 
                         <div className="text-xs font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20">
-                            🛡️ Watermark & Anti-Download Aktif
+                            🛡️ Watermark Resmi l a n g i t . c r e a t i v e Aktif
                         </div>
                     </div>
 
                     {/* Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 pb-24">
-                        {rawPhotos.map((photo, idx) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 pb-8">
+                        {visiblePhotos.map((photo, idx) => (
                             <RawPhotoCard
                                 key={photo.id}
                                 photo={photo}
@@ -553,6 +573,29 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
                             />
                         ))}
                     </div>
+
+                    {/* Progressive Load More for High Volumes (100, 500, 1000 photos) */}
+                    {visibleCount < rawPhotos.length && (
+                        <div className="pt-2 pb-24 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleLoadMore}
+                                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-300 dark:border-white/15 text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2"
+                            >
+                                <span>Muat {Math.min(INITIAL_BATCH_SIZE, rawPhotos.length - visibleCount)} Foto Berikutnya</span>
+                                <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-normal">
+                                    (Sisa {rawPhotos.length - visibleCount} foto)
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleShowAll}
+                                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+                            >
+                                Tampilkan Semua ({rawPhotos.length} Foto)
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -875,18 +918,18 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
                                 className="max-w-full max-h-[78vh] object-contain rounded-xl shadow-2xl pointer-events-none"
                             />
 
-                            {/* Multiple Watermarks on Lightbox */}
+                            {/* Multiple Watermarks on Lightbox (l a n g i t . c r e a t i v e - Miring Diagonal) */}
                             <div 
-                                className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10 opacity-35 mix-blend-screen"
+                                className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10 opacity-40 mix-blend-screen"
                                 aria-hidden="true"
                             >
                                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                                     <defs>
-                                        <pattern id={`wm-inspect-${inspectPhoto.id}`} width="220" height="150" patternUnits="userSpaceOnUse" patternTransform="rotate(-26)">
-                                            <text x="15" y="45" fill="rgba(255,255,255,0.7)" fontSize="14" fontWeight="bold" letterSpacing="1.5">
-                                                LANGIT CREATIVE
+                                        <pattern id={`wm-inspect-${inspectPhoto.id}`} width="260" height="150" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
+                                            <text x="15" y="45" fill="rgba(255,255,255,0.75)" fontSize="14" fontWeight="bold" letterSpacing="5">
+                                                l a n g i t . c r e a t i v e
                                             </text>
-                                            <text x="15" y="95" fill="rgba(6,182,212,0.6)" fontSize="11" fontWeight="bold" letterSpacing="1.5">
+                                            <text x="15" y="95" fill="rgba(6,182,212,0.65)" fontSize="10" fontWeight="bold" letterSpacing="2">
                                                 FOTO MENTAHAN • PROOF ONLY
                                             </text>
                                         </pattern>

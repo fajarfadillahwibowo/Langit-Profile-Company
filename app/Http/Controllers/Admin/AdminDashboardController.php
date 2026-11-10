@@ -1847,6 +1847,15 @@ class AdminDashboardController extends Controller
 
         $msg = "{$count} foto mentahan berhasil diunggah ke album \"{$delivery->title}\". Preview ber-watermark telah siap.";
 
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
+            return response()->json([
+                'success' => true,
+                'uploaded_count' => $count,
+                'total_raw_photos' => $delivery->rawPhotos()->count(),
+                'message' => $msg,
+            ]);
+        }
+
         return back()->with('success', $msg);
     }
 
