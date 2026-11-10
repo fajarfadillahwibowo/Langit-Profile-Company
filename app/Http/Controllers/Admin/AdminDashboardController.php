@@ -17,6 +17,7 @@ use App\Models\InternshipPosition;
 use App\Models\RentalBooking;
 use App\Models\RentalEquipment;
 use App\Models\Service;
+use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\WebEstimatorComponent;
 use App\Models\WebPortfolio;
@@ -45,6 +46,10 @@ class AdminDashboardController extends Controller
             'pending_collaborations' => Collaboration::whereIn('status', ['new', 'in_discussion'])->count(),
             'total_client_deliveries' => ClientDelivery::count(),
             'active_client_deliveries' => ClientDelivery::where('is_active', true)->where('expired_at', '>', Carbon::now())->count(),
+            'total_raw_photos' => ClientRawPhoto::count(),
+            'pending_raw_selections' => ClientRawSelection::where('status', 'pending')->count(),
+            'total_team_members' => TeamMember::count(),
+            'active_team_members' => TeamMember::where('is_active', true)->count(),
         ];
 
         $services = Service::all();

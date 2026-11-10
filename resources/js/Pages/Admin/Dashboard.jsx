@@ -122,6 +122,18 @@ export default function AdminDashboard({
         return clientRawSelections.filter(s => s.status === 'pending').length;
     }, [clientRawSelections]);
 
+    const activeDeliveriesCount = useMemo(() => {
+        return clientDeliveries.filter(d => !d.is_expired).length;
+    }, [clientDeliveries]);
+
+    const totalRawPhotosCount = useMemo(() => {
+        return clientDeliveries.reduce((sum, d) => sum + (d.raw_photos?.length || 0), 0);
+    }, [clientDeliveries]);
+
+    const activeTeamMembersCount = useMemo(() => {
+        return teamMembers.filter(m => m.is_active).length;
+    }, [teamMembers]);
+
     // Realtime Clock Ticker for relative times (ticks every second)
     const [currentTime, setCurrentTime] = useState(() => Date.now());
     useEffect(() => {
@@ -1761,25 +1773,92 @@ export default function AdminDashboard({
                 {/* TAB 1: EXECUTIVE OVERVIEW (PRD 6.1) */}
                 {activeTab === 'overview' && (
                     <div className="space-y-8">
-                        {/* 7 Key Executive Metric Cards */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-                            <div onClick={() => setActiveTab('consultations')} className="p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 cursor-pointer hover:border-cyan-400 dark:hover:border-cyan-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-cyan-700 dark:text-cyan-400 uppercase block font-semibold tracking-wider">Leads Konsultasi</span>
-                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_consultations || 0}</span>
+                        {/* Key Executive Metric Cards (9 Divisi & Layanan Inti) */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-9 gap-4">
+                            {/* 1. Foto Pelanggan */}
+                            <div 
+                                onClick={() => setActiveTab('client_deliveries')} 
+                                className="p-4 rounded-2xl bg-pink-50 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/30 cursor-pointer hover:border-pink-400 dark:hover:border-pink-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-pink-700 dark:text-pink-400 uppercase block font-semibold tracking-wider">Foto Pelanggan</span>
+                                    <FolderHeart className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">
+                                    {clientDeliveries.length} Sesi
+                                </span>
+                                <div className="text-[11px] font-mono mt-0.5">
+                                    {pendingRawSelectionsCount > 0 ? (
+                                        <span className="text-amber-600 dark:text-amber-400 font-bold animate-pulse">
+                                            ● {pendingRawSelectionsCount} Pilihan Baru
+                                        </span>
+                                    ) : (
+                                        <span className="text-slate-500 dark:text-slate-400">
+                                            {activeDeliveriesCount} Aktif • {totalRawPhotosCount} Mentahan
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <div onClick={() => setActiveTab('tickets')} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-orange-700 dark:text-orange-400 uppercase block font-semibold tracking-wider">Tiket Servis Aktif</span>
+
+                            {/* 2. Our Team */}
+                            <div 
+                                onClick={() => setActiveTab('our_team')} 
+                                className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-indigo-700 dark:text-indigo-400 uppercase block font-semibold tracking-wider">Our Team</span>
+                                    <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">
+                                    {teamMembers.length} Personel
+                                </span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
+                                    {activeTeamMembersCount} Personel Aktif
+                                </span>
+                            </div>
+
+                            {/* 3. Leads Konsultasi */}
+                            <div onClick={() => setActiveTab('consultations')} className="p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 cursor-pointer hover:border-cyan-400 dark:hover:border-cyan-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-cyan-700 dark:text-cyan-400 uppercase block font-semibold tracking-wider">Leads Konsultasi</span>
+                                    <Ticket className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_consultations || recentConsultations.length}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">Konsultasi Masuk</span>
+                            </div>
+
+                            {/* 4. Tiket Servis */}
+                            <div onClick={() => setActiveTab('tickets')} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-orange-700 dark:text-orange-400 uppercase block font-semibold tracking-wider">Tiket Servis Lab</span>
+                                    <Cpu className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                </div>
                                 <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.pending_service_tickets || 0}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">Dalam Pengerjaan</span>
                             </div>
-                            <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 cursor-pointer hover:border-teal-400 dark:hover:border-teal-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-teal-700 dark:text-teal-400 uppercase block font-semibold tracking-wider">Alat Sedang Disewa</span>
+
+                            {/* 5. Sewa Alat */}
+                            <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 cursor-pointer hover:border-teal-400 dark:hover:border-teal-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-teal-700 dark:text-teal-400 uppercase block font-semibold tracking-wider">Alat Sedang Disewa</span>
+                                    <PackageCheck className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                                </div>
                                 <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{sidebarRentalBadge}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">Katalog {metrics.total_equipments || equipments.length} Gear</span>
                             </div>
-                            <div onClick={() => setActiveTab('internships')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-purple-700 dark:text-purple-400 uppercase block font-semibold tracking-wider">Pelamar Magang</span>
-                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.internship_applicants || 0}</span>
+
+                            {/* 6. Pelamar Magang */}
+                            <div onClick={() => setActiveTab('internships')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-purple-700 dark:text-purple-400 uppercase block font-semibold tracking-wider">Pelamar Magang</span>
+                                    <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.internship_applicants || internshipApplications.length}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">Pengajuan PKL & Karir</span>
                             </div>
-                            <div onClick={() => setActiveTab('collaborations')} className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 cursor-pointer hover:border-rose-400 dark:hover:border-rose-500/60 transition-all hover:scale-[1.02] shadow-sm">
+
+                            {/* 7. Kerja Sama B2B */}
+                            <div onClick={() => setActiveTab('collaborations')} className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 cursor-pointer hover:border-rose-400 dark:hover:border-rose-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="text-[11px] text-rose-700 dark:text-rose-400 uppercase block font-semibold tracking-wider">Kerja Sama & B2B</span>
                                     <Handshake className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
@@ -1787,13 +1866,25 @@ export default function AdminDashboard({
                                 <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_collaborations || collaborations.length}</span>
                                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">{metrics.pending_collaborations || 0} Perlu Respon</span>
                             </div>
-                            <div onClick={() => setActiveTab('galleries')} className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 cursor-pointer hover:border-amber-400 dark:hover:border-amber-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-amber-700 dark:text-amber-400 uppercase block font-semibold tracking-wider">Koleksi Galeri</span>
-                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_galleries || 0}</span>
+
+                            {/* 8. Langit Education */}
+                            <div onClick={() => setActiveTab('education_attendance')} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400 uppercase block font-semibold tracking-wider">Langit Education</span>
+                                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{educationStudents.length} Siswa</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">{educationFinancials.total_sessions || 0} Sesi Terlaksana</span>
                             </div>
-                            <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/60 transition-all shadow-sm">
-                                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 uppercase block font-semibold tracking-wider">Katalog Rental</span>
-                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_equipments || 0}</span>
+
+                            {/* 9. Koleksi Galeri */}
+                            <div onClick={() => setActiveTab('galleries')} className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 cursor-pointer hover:border-amber-400 dark:hover:border-amber-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-amber-700 dark:text-amber-400 uppercase block font-semibold tracking-wider">Koleksi Galeri</span>
+                                    <Camera className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">{metrics.total_galleries || galleries.length}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">Media Portofolio Visual</span>
                             </div>
                         </div>
 
@@ -2052,6 +2143,182 @@ export default function AdminDashboard({
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                        {/* Recent Client Deliveries & Raw Photos Overview Table */}
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                                        <FolderHeart className="w-5 h-5 text-pink-500 dark:text-pink-400" />
+                                        <span>Layanan Foto Pelanggan & Kurasi Mentahan Terbaru</span>
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Pemantauan sesi foto pelanggan, kapasitas foto jadi, serta status pemilihan foto mentahan.
+                                    </p>
+                                </div>
+                                <button onClick={() => setActiveTab('client_deliveries')} className="text-xs font-semibold text-pink-600 dark:text-pink-400 hover:underline">
+                                    Kelola Semua Foto Pelanggan ({clientDeliveries.length}) →
+                                </button>
+                            </div>
+
+                            {/* Pending Raw Selection Banner if any */}
+                            {pendingRawSelectionsCount > 0 && (
+                                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <Sparkles className="w-4 h-4 text-amber-500 shrink-0 animate-pulse" />
+                                        <span>
+                                            <strong>Perhatian Admin:</strong> Ada <strong>{pendingRawSelectionsCount}</strong> pengajuan pilihan foto mentahan dari pelanggan yang menunggu konfirmasi.
+                                        </span>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setActiveTab('client_deliveries')}
+                                        className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 cursor-pointer shadow-xs transition-all"
+                                    >
+                                        Tinjau Pilihan Sekarang →
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel ringkasan foto pelanggan">
+                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                    <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
+                                        <tr>
+                                            <th className="py-2.5 px-3 w-12 text-center">No</th>
+                                            <th className="py-2.5 px-3">Nama Pelanggan</th>
+                                            <th className="py-2.5 px-3">Judul Sesi Foto</th>
+                                            <th className="py-2.5 px-3">Foto Jadi (Siap Unduh)</th>
+                                            <th className="py-2.5 px-3">Foto Mentahan</th>
+                                            <th className="py-2.5 px-3">Masa Berlaku Akses</th>
+                                            <th className="py-2.5 px-3 text-right">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
+                                        {clientDeliveries.slice(0, 5).map((d, idx) => {
+                                            const rawCount = d.raw_photos?.length || 0;
+                                            const pendingSel = clientRawSelections.filter(s => s.client_delivery_id === d.id && s.status === 'pending');
+
+                                            return (
+                                                <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                    <td className="py-3 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{d.client_name}</span>
+                                                        <span className="text-[10px] font-mono text-slate-500">@{d.client_username || d.user?.username}</span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-slate-800 dark:text-slate-200 font-semibold">{d.title}</td>
+                                                    <td className="py-3 px-3">
+                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold font-mono">
+                                                            {d.photos?.length || 0} Foto • {d.total_size_formatted}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3">
+                                                        {rawCount > 0 ? (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[11px] font-bold font-mono">
+                                                                    {rawCount} Mentahan
+                                                                </span>
+                                                                {pendingSel.length > 0 && (
+                                                                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-[9px] animate-pulse">
+                                                                        {pendingSel.length} Pending
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-400 dark:text-slate-600 italic">Belum ada</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-3">
+                                                        {d.is_expired ? (
+                                                            <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-[10px]">
+                                                                Kedaluwarsa
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] font-mono">
+                                                                Sisa {d.remaining_days} Hari
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-3 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setActiveTab('client_deliveries')}
+                                                            className="px-3 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 font-bold text-[11px] transition-colors cursor-pointer"
+                                                        >
+                                                            Buka Sesi →
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {clientDeliveries.length === 0 && (
+                                            <tr>
+                                                <td colSpan="7" className="py-6 text-center text-slate-500 font-medium">
+                                                    Belum ada sesi foto pelanggan yang dibuat.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Our Team Creative Personnel Bento Panel */}
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                                        <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+                                        <span>Personel & Struktur Tim Kreatif (Our Team)</span>
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Direktori talenta internal, divisi layanan, dan status keaktifan tim Studio Langit.
+                                    </p>
+                                </div>
+                                <button onClick={() => setActiveTab('our_team')} className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    Kelola Semua Tim ({teamMembers.length}) →
+                                </button>
+                            </div>
+
+                            {teamMembers.length === 0 ? (
+                                <div className="py-8 text-center text-slate-500 text-xs font-medium">
+                                    Belum ada anggota tim yang didaftarkan.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                                    {teamMembers.slice(0, 8).map((m) => (
+                                        <div 
+                                            key={m.id}
+                                            onClick={() => setActiveTab('our_team')}
+                                            className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 hover:border-indigo-400 cursor-pointer transition-all flex items-center gap-3 group shadow-xs"
+                                        >
+                                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0 border border-slate-300 dark:border-white/15">
+                                                {m.photo_url ? (
+                                                    <img src={m.photo_url} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-500">
+                                                        {m.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                                        {m.name}
+                                                    </h4>
+                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${m.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} title={m.is_active ? 'Aktif' : 'Non-aktif'} />
+                                                </div>
+                                                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold block truncate">
+                                                    {m.role}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 dark:text-slate-400 block truncate">
+                                                    {m.division}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
