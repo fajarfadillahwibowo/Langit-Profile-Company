@@ -1705,7 +1705,7 @@ class AdminDashboardController extends Controller
             }
         }
 
-        if ($request->expectsJson() || $request->isJson()) {
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'uploaded_count' => $count,
@@ -1842,7 +1842,7 @@ class AdminDashboardController extends Controller
 
         $msg = "{$count} foto mentahan berhasil diunggah ke album \"{$delivery->title}\". Preview ber-watermark telah siap.";
 
-        if ($request->expectsJson() || $request->isJson()) {
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'uploaded_count' => $count,
@@ -1876,7 +1876,7 @@ class AdminDashboardController extends Controller
 
         $delivery->update($validated);
 
-        if ($request->expectsJson() || $request->isJson()) {
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => "Pengaturan harga dan diskon foto mentahan untuk \"{$delivery->title}\" berhasil disimpan.",
@@ -1913,7 +1913,7 @@ class AdminDashboardController extends Controller
 
         $selection->update($validated);
 
-        if ($request->expectsJson() || $request->isJson()) {
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => 'Status pilihan foto mentahan pelanggan berhasil diperbarui.',

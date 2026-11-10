@@ -196,7 +196,7 @@ class ClientPortalController extends Controller
             $msg .= " Anda mendapatkan diskon {$discountPercent}% (Hemat Rp " . number_format($discountAmount, 0, ',', '.') . ")!";
         }
 
-        if ($request->expectsJson() || $request->isJson()) {
+        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => $msg,
