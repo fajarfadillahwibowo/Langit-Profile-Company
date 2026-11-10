@@ -143,7 +143,7 @@ class ClientRawPhotoThumbnail
             imagecopyresampled($thumb, $srcImage, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
             @imagedestroy($srcImage);
 
-            // BUBURKAN MULTIPLE WATERMARK LANGIT CREATIVE
+            // Terapkan watermark resmi miring diagonal l a n g i t . c r e a t i v e
             self::applyWatermark($thumb, $newW, $newH);
 
             $saved = false;

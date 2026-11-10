@@ -45,31 +45,21 @@ function RawPhotoCard({ photo, index, isSelected, onToggle, onInspect, pricePerP
                     } ${isSelected ? 'brightness-105' : 'group-hover:scale-105'}`}
                 />
 
-                {/* ── MULTIPLE WATERMARK SVG OVERLAY (l a n g i t . c r e a t i v e - MIRING DIAGONAL) ── */}
+                {/* ── MULTIPLE WATERMARK SVG OVERLAY (l a n g i t . c r e a t i v e - RESMI MIRING DIAGONAL) ── */}
                 <div 
                     className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10 opacity-45 mix-blend-screen"
                     aria-hidden="true"
                 >
                     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <pattern id={`wm-${photo.id}`} width="220" height="130" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
-                                <text x="10" y="40" fill="rgba(255,255,255,0.75)" fontSize="12" fontWeight="bold" letterSpacing="4">
+                            <pattern id={`wm-${photo.id}`} width="220" height="110" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
+                                <text x="10" y="45" fill="rgba(255,255,255,0.75)" fontSize="13" fontWeight="bold" letterSpacing="4">
                                     l a n g i t . c r e a t i v e
-                                </text>
-                                <text x="10" y="85" fill="rgba(6,182,212,0.65)" fontSize="9" fontWeight="bold" letterSpacing="2">
-                                    FOTO MENTAHAN • PROOF ONLY
                                 </text>
                             </pattern>
                         </defs>
                         <rect width="100%" height="100%" fill={`url(#wm-${photo.id})`} />
                     </svg>
-                </div>
-
-                {/* Watermark Center Badge */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <span className="px-3 py-1 rounded-md bg-black/50 backdrop-blur-xs border border-white/25 text-white/90 font-mono font-black text-[11px] tracking-widest uppercase rotate-[-32deg] shadow-xl">
-                        l a n g i t . c r e a t i v e
-                    </span>
                 </div>
 
                 {/* Transparent Interaction Shield (Blocks direct image saving) */}
@@ -925,12 +915,9 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
                             >
                                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                                     <defs>
-                                        <pattern id={`wm-inspect-${inspectPhoto.id}`} width="260" height="150" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
-                                            <text x="15" y="45" fill="rgba(255,255,255,0.75)" fontSize="14" fontWeight="bold" letterSpacing="5">
+                                        <pattern id={`wm-inspect-${inspectPhoto.id}`} width="260" height="130" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
+                                            <text x="15" y="55" fill="rgba(255,255,255,0.75)" fontSize="15" fontWeight="bold" letterSpacing="5">
                                                 l a n g i t . c r e a t i v e
-                                            </text>
-                                            <text x="15" y="95" fill="rgba(6,182,212,0.65)" fontSize="10" fontWeight="bold" letterSpacing="2">
-                                                FOTO MENTAHAN • PROOF ONLY
                                             </text>
                                         </pattern>
                                     </defs>

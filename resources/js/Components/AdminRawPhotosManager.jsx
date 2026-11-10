@@ -4,7 +4,8 @@ import {
     Camera, Upload, Sparkles, Tag, Percent, Settings, 
     Trash2, Eye, X, Check, RefreshCw, AlertCircle, 
     Plus, Image as ImageIcon, ExternalLink, ShieldCheck,
-    CheckCircle2, ChevronRight, Zap
+    CheckCircle2, ChevronRight, Zap, CheckSquare, Square,
+    AlertTriangle
 } from 'lucide-react';
 import { uploadRawPhotosBatch, formatUploadBytes } from '@/Utils/rawPhotoUploader.mjs';
 
@@ -14,6 +15,12 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
     const [viewPhotosDelivery, setViewPhotosDelivery] = useState(null);
     const [viewPhotosLimit, setViewPhotosLimit] = useState(48);
     const [settingsModalDelivery, setSettingsModalDelivery] = useState(null);
+    const [clearModalDelivery, setClearModalDelivery] = useState(null);
+    const [isClearing, setIsClearing] = useState(false);
+
+    // Multi-select for deletion in view modal
+    const [selectedDeleteIds, setSelectedDeleteIds] = useState([]);
+    const [isBatchDeleting, setIsBatchDeleting] = useState(false);
 
     // Upload Form State
     const [uploadFiles, setUploadFiles] = useState([]);
@@ -159,8 +166,73 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                         raw_photos: prev.raw_photos.filter(p => p.id !== photoId)
                     }));
                 }
+                setSelectedDeleteIds(prev => prev.filter(id => id !== photoId));
             }
         });
+    };
+
+    // Clear all raw photos from delivery
+    const handleClearAllSubmit = (delivery) => {
+        if (!delivery) return;
+        setIsClearing(true);
+        router.delete(`/admin/client-deliveries/${delivery.id}/raw-photos/clear`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsClearing(false);
+                setClearModalDelivery(null);
+                if (viewPhotosDelivery?.id === delivery.id) {
+                    setViewPhotosDelivery(null);
+                }
+                setSelectedDeleteIds([]);
+            },
+            onError: () => {
+                setIsClearing(false);
+            }
+        });
+    };
+
+    // Batch delete selected raw photos
+    const handleBatchDeleteSubmit = () => {
+        if (!viewPhotosDelivery || selectedDeleteIds.length === 0) return;
+        if (!confirm(`Yakin ingin menghapus ${selectedDeleteIds.length} foto mentahan yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) {
+            return;
+        }
+
+        setIsBatchDeleting(true);
+        router.post(`/admin/client-deliveries/${viewPhotosDelivery.id}/raw-photos/batch-delete`, {
+            photo_ids: selectedDeleteIds
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsBatchDeleting(false);
+                const deletedSet = new Set(selectedDeleteIds);
+                setViewPhotosDelivery(prev => ({
+                    ...prev,
+                    raw_photos: (prev.raw_photos || []).filter(p => !deletedSet.has(p.id))
+                }));
+                setSelectedDeleteIds([]);
+            },
+            onError: () => {
+                setIsBatchDeleting(false);
+            }
+        });
+    };
+
+    // Toggle single photo selection for deletion
+    const toggleDeleteSelect = (photoId) => {
+        setSelectedDeleteIds(prev => 
+            prev.includes(photoId) ? prev.filter(id => id !== photoId) : [...prev, photoId]
+        );
+    };
+
+    // Select all / Deselect all photos for deletion in view modal
+    const toggleSelectAllDelete = () => {
+        const allPhotos = viewPhotosDelivery?.raw_photos || [];
+        if (selectedDeleteIds.length === allPhotos.length) {
+            setSelectedDeleteIds([]);
+        } else {
+            setSelectedDeleteIds(allPhotos.map(p => p.id));
+        }
     };
 
     return (
@@ -316,15 +388,29 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                                     </button>
 
                                                     {rawCount > 0 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setViewPhotosDelivery(delivery)}
-                                                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-                                                            title="Lihat Galeri Foto Mentahan"
-                                                        >
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                            <span>Lihat ({rawCount})</span>
-                                                        </button>
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setViewPhotosDelivery(delivery);
+                                                                    setSelectedDeleteIds([]);
+                                                                }}
+                                                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
+                                                                title="Lihat Galeri Foto Mentahan"
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" />
+                                                                <span>Lihat ({rawCount})</span>
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setClearModalDelivery(delivery)}
+                                                                className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 cursor-pointer"
+                                                                title={`Hapus Semua Foto Mentahan (${rawCount} Foto)`}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </>
                                                     )}
 
                                                     <button
@@ -713,18 +799,89 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setViewPhotosDelivery(null)}
+                                onClick={() => {
+                                    setViewPhotosDelivery(null);
+                                    setSelectedDeleteIds([]);
+                                }}
                                 className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
+                        {/* Bulk Action Toolbar inside View Modal */}
+                        {viewPhotosDelivery.raw_photos && viewPhotosDelivery.raw_photos.length > 0 && (
+                            <div className="mt-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={toggleSelectAllDelete}
+                                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-slate-50"
+                                    >
+                                        {selectedDeleteIds.length > 0 && selectedDeleteIds.length === (viewPhotosDelivery.raw_photos?.length || 0) ? (
+                                            <>
+                                                <CheckSquare className="w-3.5 h-3.5 text-rose-500" />
+                                                <span>Batalkan Pilihan</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Square className="w-3.5 h-3.5" />
+                                                <span>Pilih Semua ({viewPhotosDelivery.raw_photos?.length || 0})</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <span className="text-xs font-mono text-slate-500">
+                                        {selectedDeleteIds.length > 0 ? (
+                                            <strong className="text-rose-500 font-bold">{selectedDeleteIds.length} foto dipilih</strong>
+                                        ) : (
+                                            'Pilih foto untuk hapus sebagian'
+                                        )}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {selectedDeleteIds.length > 0 && (
+                                        <button
+                                            type="button"
+                                            disabled={isBatchDeleting}
+                                            onClick={handleBatchDeleteSubmit}
+                                            className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                                        >
+                                            {isBatchDeleting ? (
+                                                <>
+                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                    <span>Menghapus...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <span>Hapus {selectedDeleteIds.length} Foto Terpilih</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setClearModalDelivery(viewPhotosDelivery)}
+                                        className="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                                        title="Hapus semua foto mentahan dari album ini"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>Kosongkan Semua ({viewPhotosDelivery.raw_photos?.length || 0} Foto)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Photos Grid Scrollable */}
                         <div className="flex-1 overflow-y-auto py-4 pr-1">
                             {(!viewPhotosDelivery.raw_photos || viewPhotosDelivery.raw_photos.length === 0) ? (
-                                <div className="text-center py-12 text-slate-500 text-xs font-mono">
-                                    Belum ada foto mentahan.
+                                <div className="text-center py-16 text-slate-500 text-xs font-mono space-y-2">
+                                    <Camera className="w-10 h-10 mx-auto text-slate-400 opacity-50" />
+                                    <p>Seluruh foto mentahan telah kosong / dihapus.</p>
+                                    <p className="text-[11px] text-slate-400">Anda dapat mengunggah kembali foto mentahan yang benar kapan saja.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -732,7 +889,11 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                         {(viewPhotosDelivery.raw_photos || []).slice(0, viewPhotosLimit).map((photo, idx) => (
                                             <div 
                                                 key={photo.id}
-                                                className="group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 flex flex-col"
+                                                className={`group relative rounded-xl overflow-hidden bg-slate-900 border transition-all flex flex-col ${
+                                                    selectedDeleteIds.includes(photo.id)
+                                                        ? 'border-rose-500 ring-2 ring-rose-500/30'
+                                                        : 'border-slate-200 dark:border-white/10'
+                                                }`}
                                             >
                                                 <div className="aspect-[4/3] w-full relative bg-slate-950 overflow-hidden">
                                                     <img
@@ -741,19 +902,31 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                                         loading="lazy"
                                                         className="w-full h-full object-cover"
                                                     />
-                                                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-white font-mono text-[9px] font-bold">
-                                                        #{idx + 1}
-                                                    </span>
+
+                                                    {/* Checkbox select for delete */}
+                                                    <label 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="absolute top-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/80 text-white font-mono text-[9px] font-bold cursor-pointer hover:bg-black select-none border border-white/20"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedDeleteIds.includes(photo.id)}
+                                                            onChange={() => toggleDeleteSelect(photo.id)}
+                                                            className="w-3.5 h-3.5 rounded text-rose-600 focus:ring-0 cursor-pointer"
+                                                        />
+                                                        <span>#{idx + 1}</span>
+                                                    </label>
+
                                                     <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 text-slate-300 font-mono text-[9px]">
                                                         {photo.formatted_size}
                                                     </span>
 
-                                                    {/* Delete button overlay */}
+                                                    {/* Delete single button overlay */}
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDeletePhoto(photo.id)}
-                                                        className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                                        title="Hapus foto mentahan ini"
+                                                        className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+                                                        title="Hapus foto ini saja"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
@@ -797,10 +970,72 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                         <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex justify-end shrink-0">
                             <button
                                 type="button"
-                                onClick={() => setViewPhotosDelivery(null)}
+                                onClick={() => {
+                                    setViewPhotosDelivery(null);
+                                    setSelectedDeleteIds([]);
+                                }}
                                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold"
                             >
                                 Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── MODAL: KONFIRMASI HAPUS SEMUA FOTO MENTAHAN ── */}
+            {clearModalDelivery && (
+                <div 
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    onClick={() => !isClearing && setClearModalDelivery(null)}
+                >
+                    <div 
+                        className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c1220] border border-rose-500/30 p-6 sm:p-7 shadow-2xl text-center space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto border border-rose-500/20">
+                            <Trash2 className="w-7 h-7" />
+                        </div>
+
+                        <div>
+                            <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">
+                                Hapus Semua Foto Mentahan?
+                            </h3>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                                Anda akan menghapus seluruh <strong className="text-rose-500 font-bold">{clearModalDelivery.raw_photos?.length || 0} foto mentahan</strong> pada album <strong className="text-slate-900 dark:text-white">"{clearModalDelivery.title}"</strong> ({clearModalDelivery.client_name}).
+                            </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-[11px] text-rose-700 dark:text-rose-300 text-left leading-relaxed">
+                            ⚠️ <strong>Pemberitahuan:</strong> Seluruh file gambar asli dan thumbnail watermark di server akan dihapus secara bersih. Gunakan opsi ini jika admin tidak sengaja salah mengunggah ratusan foto, sehingga album dapat diisi ulang dengan foto mentahan yang benar.
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-white/10">
+                            <button
+                                type="button"
+                                disabled={isClearing}
+                                onClick={() => setClearModalDelivery(null)}
+                                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isClearing}
+                                onClick={() => handleClearAllSubmit(clearModalDelivery)}
+                                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
+                            >
+                                {isClearing ? (
+                                    <>
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        <span>Menghapus...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-4 h-4" />
+                                        <span>Ya, Hapus Semua ({clearModalDelivery.raw_photos?.length || 0} Foto)</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

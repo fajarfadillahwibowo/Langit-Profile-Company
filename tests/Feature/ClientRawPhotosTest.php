@@ -196,4 +196,85 @@ class ClientRawPhotosTest extends TestCase
         $this->assertSame('editing', $selection->status);
         $this->assertSame('Sedang diedit oleh tim fotografer', $selection->admin_notes);
     }
+
+    public function test_admin_can_clear_all_raw_photos_from_delivery(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = User::factory()->create(['role' => 'client']);
+        $delivery = ClientDelivery::create([
+            'user_id' => $client->id,
+            'client_name' => 'Clear Test',
+            'client_username' => 'cleartest',
+            'client_email' => 'cleartest@test.com',
+            'title' => 'Clear Test Album',
+            'expired_at' => now()->addDays(7),
+            'is_active' => true,
+        ]);
+
+        for ($i = 1; $i <= 5; $i++) {
+            ClientRawPhoto::create([
+                'client_delivery_id' => $delivery->id,
+                'file_path' => "client_raw_photos/{$delivery->id}/photo{$i}.jpg",
+                'original_name' => "IMG_{$i}.JPG",
+                'file_size' => 500000,
+            ]);
+        }
+
+        $this->assertSame(5, $delivery->rawPhotos()->count());
+
+        $response = $this->actingAs($admin)
+            ->withHeaders(['X-Inertia' => 'true'])
+            ->delete("/admin/client-deliveries/{$delivery->id}/raw-photos/clear");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertSame(0, $delivery->rawPhotos()->count());
+    }
+
+    public function test_admin_can_batch_delete_selected_raw_photos(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = User::factory()->create(['role' => 'client']);
+        $delivery = ClientDelivery::create([
+            'user_id' => $client->id,
+            'client_name' => 'Batch Delete Test',
+            'client_username' => 'batchtest',
+            'client_email' => 'batch@test.com',
+            'title' => 'Batch Test Album',
+            'expired_at' => now()->addDays(7),
+            'is_active' => true,
+        ]);
+
+        $p1 = ClientRawPhoto::create([
+            'client_delivery_id' => $delivery->id,
+            'file_path' => "client_raw_photos/{$delivery->id}/p1.jpg",
+            'original_name' => "IMG_1.JPG",
+            'file_size' => 500000,
+        ]);
+        $p2 = ClientRawPhoto::create([
+            'client_delivery_id' => $delivery->id,
+            'file_path' => "client_raw_photos/{$delivery->id}/p2.jpg",
+            'original_name' => "IMG_2.JPG",
+            'file_size' => 500000,
+        ]);
+        $p3 = ClientRawPhoto::create([
+            'client_delivery_id' => $delivery->id,
+            'file_path' => "client_raw_photos/{$delivery->id}/p3.jpg",
+            'original_name' => "IMG_3.JPG",
+            'file_size' => 500000,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->withHeaders(['X-Inertia' => 'true'])
+            ->post("/admin/client-deliveries/{$delivery->id}/raw-photos/batch-delete", [
+                'photo_ids' => [$p1->id, $p3->id],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertSame(1, $delivery->rawPhotos()->count());
+        $this->assertDatabaseHas('client_raw_photos', ['id' => $p2->id]);
+        $this->assertDatabaseMissing('client_raw_photos', ['id' => $p1->id]);
+        $this->assertDatabaseMissing('client_raw_photos', ['id' => $p3->id]);
+    }
 }

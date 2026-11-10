@@ -1885,6 +1885,48 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Hapus Semua Foto Mentahan dari Album / Pengiriman
+     */
+    public function clearAllRawPhotos($id)
+    {
+        $delivery = ClientDelivery::findOrFail($id);
+        $rawPhotos = $delivery->rawPhotos()->get();
+        $count = $rawPhotos->count();
+
+        foreach ($rawPhotos as $photo) {
+            \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+            Storage::disk('public')->delete($photo->file_path);
+            $photo->delete();
+        }
+
+        return back()->with('success', "Seluruh {$count} foto mentahan pada album \"{$delivery->title}\" berhasil dikosongkan/dihapus.");
+    }
+
+    /**
+     * Hapus Sebagian Foto Mentahan Terpilih Sekaligus (Batch Delete)
+     */
+    public function batchDeleteRawPhotos(Request $request, $id)
+    {
+        $delivery = ClientDelivery::findOrFail($id);
+        $photoIds = $request->input('photo_ids', []);
+
+        if (!is_array($photoIds) || empty($photoIds)) {
+            return back()->with('error', 'Tidak ada foto mentahan yang dipilih untuk dihapus.');
+        }
+
+        $photos = $delivery->rawPhotos()->whereIn('id', $photoIds)->get();
+        $count = $photos->count();
+
+        foreach ($photos as $photo) {
+            \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+            Storage::disk('public')->delete($photo->file_path);
+            $photo->delete();
+        }
+
+        return back()->with('success', "{$count} foto mentahan terpilih berhasil dihapus dari album \"{$delivery->title}\".");
+    }
+
+    /**
      * Hapus Satu Foto Mentahan
      */
     public function deleteRawPhoto($photoId)

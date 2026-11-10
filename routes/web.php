@@ -161,6 +161,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Layanan Foto Mentahan & Pengaturan Diskon Pelanggan
         Route::post('/client-deliveries/{id}/raw-photos', [AdminDashboardController::class, 'uploadRawPhotos'])->name('client-deliveries.upload-raw-photos');
         Route::put('/client-deliveries/{id}/raw-settings', [AdminDashboardController::class, 'updateRawSettings'])->name('client-deliveries.update-raw-settings');
+        Route::delete('/client-deliveries/{id}/raw-photos/clear', [AdminDashboardController::class, 'clearAllRawPhotos'])->name('client-deliveries.clear-raw-photos');
+        Route::post('/client-deliveries/{id}/raw-photos/batch-delete', [AdminDashboardController::class, 'batchDeleteRawPhotos'])->name('client-deliveries.batch-delete-raw-photos');
         Route::delete('/client-raw-photos/{id}', [AdminDashboardController::class, 'deleteRawPhoto'])->name('client-raw-photos.delete');
 
         // Menu Pilihan Foto Mentahan dari Pelanggan
