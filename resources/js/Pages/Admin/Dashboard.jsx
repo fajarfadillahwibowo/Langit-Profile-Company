@@ -1118,7 +1118,7 @@ export default function AdminDashboard({
                                 </button>
                                 <button
                                     onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                    className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                                         activeTab === 'client_deliveries'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -1128,35 +1128,18 @@ export default function AdminDashboard({
                                         <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
                                         <span className="truncate">Foto Pelanggan</span>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {clientDeliveries.length}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => { setActiveTab('client_raw_selections'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'client_raw_selections'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Sparkles className={`w-4 h-4 ${activeTab === 'client_raw_selections' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                        <span>Pilihan Foto Mentahan</span>
-                                    </div>
-                                    {pendingRawSelectionsCount > 0 ? (
-                                        <span className="px-2 py-0.5 rounded-full font-bold text-[11px] bg-amber-500 text-slate-950 animate-pulse">
-                                            {pendingRawSelectionsCount} Baru
-                                        </span>
-                                    ) : (
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        {pendingRawSelectionsCount > 0 && (
+                                            <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                                {pendingRawSelectionsCount} Baru
+                                            </span>
+                                        )}
                                         <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                            activeTab === 'client_raw_selections' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                            activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
                                         }`}>
-                                            {clientRawSelections.length}
+                                            {clientDeliveries.length}
                                         </span>
-                                    )}
+                                    </div>
                                 </button>
 
                                 {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
@@ -1494,37 +1477,20 @@ export default function AdminDashboard({
                                 <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
                                 <span className="truncate">Foto Pelanggan</span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'client_deliveries'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {clientDeliveries.length}
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('client_raw_selections')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'client_raw_selections'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === 'client_raw_selections' ? 'text-[#005792]' : 'text-amber-300'}`} />
-                                <span className="truncate">Pilihan Foto Mentahan</span>
-                            </div>
-                            {pendingRawSelectionsCount > 0 ? (
-                                <span className="px-2 py-0.5 rounded-full font-bold text-[11px] bg-amber-500 text-slate-950 animate-pulse shrink-0">
-                                    {pendingRawSelectionsCount} Baru
-                                </span>
-                            ) : (
-                                <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                    activeTab === 'client_raw_selections' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                {pendingRawSelectionsCount > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                        {pendingRawSelectionsCount} Baru
+                                    </span>
+                                )}
+                                <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                    activeTab === 'client_deliveries'
+                                        ? 'bg-[#005792]/15 text-[#005792]'
+                                        : 'bg-white/20 text-white'
                                 }`}>
-                                    {clientRawSelections.length}
+                                    {clientDeliveries.length}
                                 </span>
-                            )}
+                            </div>
                         </button>
 
                         {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
@@ -1703,7 +1669,6 @@ export default function AdminDashboard({
                                     {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
                                     {activeTab === 'education_attendance' && 'Absensi & Kas Langit Education'}
                                     {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan'}
-                                    {activeTab === 'client_raw_selections' && 'Pilihan Foto Mentahan dari Pelanggan'}
                                     {activeTab === 'our_team' && 'Manajemen Our Team'}
                                     {activeTab === 'tickets' && 'Manajemen Tiket Servis Komputer'}
                                     {activeTab === 'rentals' && 'Manajemen Sewa Alat & Gear'}
@@ -3084,11 +3049,10 @@ export default function AdminDashboard({
                 {activeTab === 'education_attendance' && (
                     <AdminEducationAttendance students={educationStudents} financials={educationFinancials} />
                 )}
-                {(activeTab === 'client_deliveries' || activeTab === 'client_raw_selections') && (
+                {activeTab === 'client_deliveries' && (
                     <AdminClientDeliveryManager 
                         clientDeliveries={clientDeliveries} 
                         clientRawSelections={clientRawSelections}
-                        initialSubTab={activeTab === 'client_raw_selections' ? 'selections' : 'deliveries'}
                     />
                 )}
 
