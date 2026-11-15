@@ -5,13 +5,14 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import WebArchitectureCockpit from '@/Components/WebArchitectureCockpit';
 import WebSolutionCard3D from '@/Components/WebSolutionCard3D';
 import ScrollingWebDevPillars from '@/Components/ScrollingWebDevPillars';
+import WebDevGallery from '@/Components/WebDevGallery';
 import { 
     Terminal, Zap, ShieldCheck, Layers, Database,
     ArrowRight, Sparkles,
     Building2, Briefcase, GraduationCap, ShoppingBag, Calendar, Newspaper, Rocket, Server
 } from 'lucide-react';
 
-export default function WebDevView({ service, portfolios = [], estimatorComponents = [] }) {
+export default function WebDevView({ service, portfolios = [], estimatorComponents = [], galleries = [] }) {
     const [selectedCategory, setSelectedCategory] = useState('all');
 
     const categories = [
@@ -296,6 +297,7 @@ export default function WebDevView({ service, portfolios = [], estimatorComponen
                 </section>
 
                 {/* 3D Stacked Card Scrolling Experience: 7 Pilar Rekayasa Web & Sistem Digital */}
+                <WebDevGallery galleries={galleries} />
                 <ScrollingWebDevPillars />
             </div>
         </PublicLayout>
