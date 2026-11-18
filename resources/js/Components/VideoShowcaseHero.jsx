@@ -22,6 +22,8 @@ const ACCENTS = {
         hint: 'text-amber-200/90',
         cta: 'bg-white/20 hover:bg-white/30 text-white border-white/30',
         scrim: '',
+        overlay: 'from-slate-950/90 via-slate-950/20 to-black/60',
+        videoOpacity: 'opacity-80',
     },
     purple: {
         frame: 'border-purple-500/40 dark:border-purple-500/30',
@@ -36,7 +38,9 @@ const ACCENTS = {
         statusDot: 'bg-purple-400',
         hint: 'text-purple-200/90',
         cta: 'bg-purple-500/25 hover:bg-purple-500/40 text-white border-purple-400/50',
-        scrim: 'bg-slate-950/55',
+        scrim: 'bg-slate-950/10',
+        overlay: 'from-slate-950/75 via-slate-950/10 to-black/35',
+        videoOpacity: 'opacity-100',
     },
 };
 
@@ -182,7 +186,7 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                         loop
                         onPlay={() => setShowreelPlaying(true)}
                         onPause={() => setShowreelPlaying(false)}
-                        className="absolute inset-0 w-full h-full object-cover transition-all duration-700 opacity-80 z-0 group-hover:scale-102"
+                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${theme.videoOpacity} z-0 group-hover:scale-102`}
                     />
                 )}
 
@@ -190,7 +194,7 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                 {theme.scrim ? <div className={`absolute inset-0 ${theme.scrim} z-10 pointer-events-none`} /> : null}
 
                 {/* Dark Gradient Overlay to ensure typography readability while video plays seamlessly */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-black/60 z-10 pointer-events-none" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${theme.overlay} z-10 pointer-events-none`} />
 
                 {/* Top Area: Controls & Shifted-Up Typography */}
                 <div className="relative z-30 w-full space-y-2 sm:space-y-3">
