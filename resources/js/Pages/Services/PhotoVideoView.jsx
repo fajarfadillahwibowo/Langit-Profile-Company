@@ -187,7 +187,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                     service={service}
                     showreel={showreel}
                     fallback={{
-                        video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                        video: "https://mdn.github.io/shared-assets/videos/flower.mp4",
                         poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80",
                         title: "Visual Sinematik Kelas Dunia.",
                         subtitle: "Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.",

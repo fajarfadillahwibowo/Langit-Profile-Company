@@ -408,7 +408,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                         service={service}
                         showreel={showreel}
                         fallback={{
-                            video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                            video: 'https://mdn.github.io/shared-assets/videos/flower.mp4',
                             poster: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80',
                             title: 'Sinematik Karya Talenta Muda.',
                             subtitle: 'Dokumentasi set produksi komersial, sesi studio, dan momen kolaborasi talenta magang Langit Creative bersama mentor divisi.',
