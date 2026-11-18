@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import PublicLayout from '@/Layouts/PublicLayout';
 import InteractiveInternshipCards from '@/Components/InteractiveInternshipCards';
+import VideoShowcaseHero from '@/Components/VideoShowcaseHero';
 import { 
     Sparkles, Upload, CheckCircle2, ArrowRight,
     Award, Loader2, FileText, MessageSquare, Key, Camera, Check, Phone
@@ -69,7 +70,7 @@ const defaultPositions = [
     },
 ];
 
-export default function InternshipView({ service, positions = [], galleries = [] }) {
+export default function InternshipView({ service, positions = [], galleries = [], showreel = null }) {
     const { getOptimizedImage } = useQuality();
     const activePositions = positions && positions.length > 0 ? positions : defaultPositions;
     const [selectedPositionId, setSelectedPositionId] = useState(activePositions[0]?.id || 1);
@@ -387,6 +388,38 @@ export default function InternshipView({ service, positions = [], galleries = []
                         </div>
                     </div>
                 </section>
+
+                {/* 1b. Video Showcase Magang (sama dengan header showreel Photography & Videography) */}
+                <div className="relative z-10 border-t border-slate-200/80 dark:border-white/10 pt-10 sm:pt-14">
+                    <div className="text-center max-w-3xl mx-auto mb-6 px-4">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#005792]/10 dark:bg-[#005792]/20 border border-[#005792]/30 text-[#005792] dark:text-sky-300 text-xs font-mono tracking-wider font-semibold uppercase mb-3">
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Video Showcase Magang</span>
+                        </div>
+                        <h2 className="font-heading font-extrabold text-2xl sm:text-3xl lg:text-4xl text-slate-900 dark:text-white tracking-tight">
+                            Atmosfer Studio &{' '}
+                            <span className="font-editorial italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#005792] via-purple-600 to-pink-500 dark:from-sky-300 dark:via-purple-300 dark:to-pink-300">
+                                Karya Talenta Magang.
+                            </span>
+                        </h2>
+                    </div>
+
+                    <VideoShowcaseHero
+                        service={service}
+                        showreel={showreel}
+                        fallback={{
+                            video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                            poster: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80',
+                            title: 'Sinematik Karya Talenta Muda.',
+                            subtitle: 'Dokumentasi set produksi komersial, sesi studio, dan momen kolaborasi talenta magang Langit Creative bersama mentor divisi.',
+                            badgeLead: 'Internship & Career',
+                            badgeTail: 'Showcase',
+                            ctaHref: '#form-pendaftaran',
+                            ctaLabel: 'Daftar Magang Sekarang',
+                            metaLabel: 'Master: Talent Incubator 2026',
+                        }}
+                    />
+                </div>
 
                 {/* 2. Open Role Cards Deck (Pinterest Reference Animation) */}
                 <InteractiveInternshipCards

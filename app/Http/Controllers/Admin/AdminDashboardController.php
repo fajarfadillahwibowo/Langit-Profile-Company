@@ -10,7 +10,10 @@ use App\Models\ClientRawSelection;
 use App\Models\Collaboration;
 use App\Models\ComputerServiceTicket;
 use App\Models\Consultation;
+use App\Models\EducationAttendance;
 use App\Models\EducationCourse;
+use App\Models\EducationPayment;
+use App\Models\EducationStudent;
 use App\Models\Gallery;
 use App\Models\InternshipApplication;
 use App\Models\InternshipPosition;
@@ -21,8 +24,14 @@ use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\WebEstimatorComponent;
 use App\Models\WebPortfolio;
+use App\Rules\DeliveryNonPhotoSizeLimit;
+use App\Rules\PhotoSizeLimit;
+use App\Support\ClientPhotoThumbnail;
+use App\Support\ClientRawPhotoThumbnail;
+use App\Support\GalleryAlbum;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -94,8 +103,8 @@ class AdminDashboardController extends Controller
                + InternshipApplication::whereBetween('created_at', [$startWeek, $endWeek])->count();
 
             $thirtyDaysData[] = [
-                'label' => 'Mgg ' . (4 - $w),
-                'date' => $startWeek->format('d M') . ' - ' . $endWeek->format('d M'),
+                'label' => 'Mgg '.(4 - $w),
+                'date' => $startWeek->format('d M').' - '.$endWeek->format('d M'),
                 'primary' => $p,
                 'secondary' => $s,
             ];
@@ -118,7 +127,7 @@ class AdminDashboardController extends Controller
 
             $yearData[] = [
                 'label' => $monthNames[$month->month] ?? $month->format('M'),
-                'date' => ($monthNames[$month->month] ?? $month->format('M')) . ' ' . $month->format('Y'),
+                'date' => ($monthNames[$month->month] ?? $month->format('M')).' '.$month->format('Y'),
                 'primary' => $p,
                 'secondary' => $s,
             ];
@@ -257,17 +266,17 @@ class AdminDashboardController extends Controller
             ],
         ];
 
-        $educationStudents = \App\Models\EducationStudent::with([
+        $educationStudents = EducationStudent::with([
             'attendances' => fn ($q) => $q->orderBy('meeting_number'),
             'payments' => fn ($q) => $q->orderBy('cycle_number'),
         ])->orderBy('name')->get();
 
-        $totalEducationIncome = (float) \App\Models\EducationPayment::where('status', 'paid')->sum('amount');
-        $thisMonthEducationIncome = (float) \App\Models\EducationPayment::where('status', 'paid')
+        $totalEducationIncome = (float) EducationPayment::where('status', 'paid')->sum('amount');
+        $thisMonthEducationIncome = (float) EducationPayment::where('status', 'paid')
             ->whereMonth('payment_date', now()->month)
             ->whereYear('payment_date', now()->year)
             ->sum('amount');
-        $totalEducationSessions = (int) \App\Models\EducationAttendance::where('status', 'hadir')->count();
+        $totalEducationSessions = (int) EducationAttendance::where('status', 'hadir')->count();
         $totalStudentsCount = $educationStudents->count();
 
         $pendingCyclesCount = 0;
@@ -294,7 +303,7 @@ class AdminDashboardController extends Controller
         ];
 
         return Inertia::render('Admin/Dashboard', [
-            'teamMembers' => \App\Models\TeamMember::orderBy('sort_order')->orderBy('id')->get(),
+            'teamMembers' => TeamMember::orderBy('sort_order')->orderBy('id')->get(),
             'educationStudents' => $educationStudents,
             'educationFinancials' => $educationFinancials,
             'metrics' => $metrics,
@@ -488,7 +497,7 @@ class AdminDashboardController extends Controller
      */
     public function createGallery(Request $request)
     {
-        $albumPlan = \App\Support\GalleryAlbum::validate($request);
+        $albumPlan = GalleryAlbum::validate($request);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -547,7 +556,7 @@ class AdminDashboardController extends Controller
             'file_webp_path' => $filePath,
             'before_file_path' => $beforeFilePath,
             'exif_metadata_json' => [
-                'sub_photos' => $albumPlan !== null ? \App\Support\GalleryAlbum::store($request, $albumPlan) : [],
+                'sub_photos' => $albumPlan !== null ? GalleryAlbum::store($request, $albumPlan) : [],
                 'description' => $validated['description'] ?? '',
                 'camera' => $validated['camera'] ?? 'Sony FX3',
                 'lens' => $validated['lens'] ?? '24-70mm GM II',
@@ -588,9 +597,9 @@ class AdminDashboardController extends Controller
     public function updateGallery(Request $request, $id)
     {
         $gallery = Gallery::findOrFail($id);
-        $albumPlan = \App\Support\GalleryAlbum::validate($request, $gallery);
+        $albumPlan = GalleryAlbum::validate($request, $gallery);
         // Validate all incoming files before writing any gallery assets.
-        $request->validate(['file_video' => ['nullable', 'file', new \App\Rules\PhotoSizeLimit]]);
+        $request->validate(['file_video' => ['nullable', 'file', new PhotoSizeLimit]]);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -673,7 +682,7 @@ class AdminDashboardController extends Controller
         }
 
         if ($albumPlan !== null) {
-            $exif['sub_photos'] = \App\Support\GalleryAlbum::store($request, $albumPlan);
+            $exif['sub_photos'] = GalleryAlbum::store($request, $albumPlan);
         }
         $oldCover = $gallery->file_webp_path;
         $gallery->update([
@@ -689,9 +698,9 @@ class AdminDashboardController extends Controller
 
         // Sync with related model on the live pages
         if ($albumPlan !== null) {
-            \App\Support\GalleryAlbum::deleteFiles($albumPlan['removed']);
+            GalleryAlbum::deleteFiles($albumPlan['removed']);
             if ($oldCover !== $filePath) {
-                \App\Support\GalleryAlbum::deleteFiles([$oldCover], 'covers');
+                GalleryAlbum::deleteFiles([$oldCover], 'covers');
             }
         }
         $service = $gallery->service ?: Service::find($gallery->service_id);
@@ -803,6 +812,7 @@ class AdminDashboardController extends Controller
     public function updateShowreel(Request $request)
     {
         $validated = $request->validate([
+            'service_slug' => 'nullable|string|in:photography-videography,internship',
             'video_file' => 'nullable|file|mimes:mp4,mov,webm,mkv|max:102400', // max 100MB
             'video_url' => 'nullable|string',
             'poster_photo' => 'nullable|file|mimes:jpeg,png,webp,jpg|max:2048',
@@ -811,20 +821,28 @@ class AdminDashboardController extends Controller
             'subtitle' => 'nullable|string',
         ]);
 
-        $service = Service::where('slug', 'photography-videography')->first();
+        $serviceSlug = $validated['service_slug'] ?? 'photography-videography';
+        $service = Service::where('slug', $serviceSlug)->first();
+
         $gallery = Gallery::where('service_id', $service?->id)
             ->where(function ($q) {
                 $q->where('media_type', 'video')->orWhere('category', 'showreel');
             })->first();
 
         if (! $gallery) {
+            $isInternship = $serviceSlug === 'internship';
+
             $gallery = new Gallery;
             $gallery->service_id = $service?->id;
-            $gallery->title = 'Cinema & Darkroom Showcase Showreel';
-            $gallery->slug = 'cinema-showreel-showcase';
+            $gallery->title = $isInternship
+                ? 'Internship & Career Showcase Video'
+                : 'Cinema & Darkroom Showcase Showreel';
+            $gallery->slug = $isInternship ? 'internship-showcase-video' : 'cinema-showreel-showcase';
             $gallery->category = 'showreel';
             $gallery->media_type = 'video';
-            $gallery->file_webp_path = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80';
+            $gallery->file_webp_path = $isInternship
+                ? 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80'
+                : 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80';
             $gallery->is_featured = true;
         }
 
@@ -880,7 +898,9 @@ class AdminDashboardController extends Controller
             $service->update(['hero_config_json' => $config]);
         }
 
-        return back()->with('success', 'Video Showreel Cinema berhasil diupload & aktif di website!');
+        return back()->with('success', $serviceSlug === 'internship'
+            ? 'Video Showcase Magang berhasil diupload & aktif di halaman Internship!'
+            : 'Video Showreel Cinema berhasil diupload & aktif di website!');
     }
 
     /**
@@ -912,8 +932,30 @@ class AdminDashboardController extends Controller
             }
         }
 
-        \App\Support\GalleryAlbum::deleteFiles($gallery->exif_metadata_json['sub_photos'] ?? []);
-        \App\Support\GalleryAlbum::deleteFiles([$gallery->file_webp_path], 'covers');
+        GalleryAlbum::deleteFiles($gallery->exif_metadata_json['sub_photos'] ?? []);
+        GalleryAlbum::deleteFiles([$gallery->file_webp_path], 'covers');
+
+        // Showreel/video: bersihkan konfigurasi hero layanan & berkas videonya agar tidak tampil basi.
+        if ($gallery->category === 'showreel' || $gallery->media_type === 'video') {
+            if ($gallery->video_url && preg_match('~\A/uploads/videos/[a-zA-Z0-9_.-]+\.(?:mp4|mov|webm|mkv)\z~i', $gallery->video_url)) {
+                $videoPath = public_path(ltrim($gallery->video_url, '/'));
+                if (file_exists($videoPath)) {
+                    @unlink($videoPath);
+                }
+            }
+
+            if ($service) {
+                $config = $service->hero_config_json ?? [];
+                unset(
+                    $config['showreel_video'],
+                    $config['showreel_poster'],
+                    $config['showreel_title'],
+                    $config['showreel_subtitle'],
+                );
+                $service->update(['hero_config_json' => $config]);
+            }
+        }
+
         $gallery->delete();
 
         return back()->with('success', 'Foto galeri berhasil dihapus dan disinkronkan ke halaman publik.');
@@ -1453,6 +1495,7 @@ class AdminDashboardController extends Controller
                         foreach ($dec as $sub) {
                             $walk($sub);
                         }
+
                         return;
                     }
                 }
@@ -1530,23 +1573,28 @@ class AdminDashboardController extends Controller
         if ($request->has('creation_uuid')) {
             abort_unless(in_array($request->user()?->role, ['admin', 'superadmin'], true), 403);
             $request->validate(['creation_uuid' => 'required|uuid']);
-            return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
-                $db = \Illuminate\Support\Facades\DB::class;
+
+            return DB::transaction(function () use ($request) {
+                $db = DB::class;
                 $db::table('delivery_creations')->insertOrIgnore(['id' => $request->input('creation_uuid'),
                     'user_id' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
                 $creation = $db::table('delivery_creations')->where('id', $request->input('creation_uuid'))->lockForUpdate()->first();
                 abort_unless($creation->user_id === $request->user()->id, 404);
                 if ($creation->client_delivery_id) {
                     abort_unless(ClientDelivery::find($creation->client_delivery_id), 410);
+
                     return response()->json(['success' => true, 'delivery_id' => $creation->client_delivery_id]);
                 }
                 // Reuse legacy validation/storage without recursively creating another key.
                 $inner = clone $request;
                 $inner->request->remove('creation_uuid');
-                if ($inner->isJson()) { $inner->json()->remove('creation_uuid'); }
+                if ($inner->isJson()) {
+                    $inner->json()->remove('creation_uuid');
+                }
                 $response = $this->createClientDelivery($inner);
                 $db::table('delivery_creations')->where('id', $creation->id)->update([
                     'client_delivery_id' => $response->getData(true)['delivery_id'], 'updated_at' => now()]);
+
                 return $response;
             }, 3);
         }
@@ -1564,7 +1612,7 @@ class AdminDashboardController extends Controller
             'notes' => 'nullable|string|max:1000',
             'expiry_days' => 'required|integer|min:1|max:365',
             'photos' => 'nullable|array',
-            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
+            'photos.*' => ['file', new DeliveryNonPhotoSizeLimit],
         ], [
             'client_name.required' => 'Nama pelanggan wajib diisi.',
             'client_username.required' => 'Nama pengguna pelanggan wajib diisi.',
@@ -1576,13 +1624,13 @@ class AdminDashboardController extends Controller
         ]);
 
         $username = Str::lower($validated['client_username']);
-        $email = !empty($validated['client_email']) 
-            ? $validated['client_email'] 
-            : $username . '@pelanggan.langit';
+        $email = ! empty($validated['client_email'])
+            ? $validated['client_email']
+            : $username.'@pelanggan.langit';
 
         // Buat akun User pelanggan menggunakan username dan password yang diberikan admin
         $user = User::where('username', $username)->orWhere('email', $email)->first();
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'name' => $validated['client_name'],
                 'username' => $username,
@@ -1629,7 +1677,7 @@ class AdminDashboardController extends Controller
                     'file_size' => $size,
                     'mime_type' => $mime,
                 ]);
-                \App\Support\ClientPhotoThumbnail::generate($pModel);
+                ClientPhotoThumbnail::generate($pModel);
             }
         }
 
@@ -1687,7 +1735,7 @@ class AdminDashboardController extends Controller
 
         $request->validate([
             'photos' => 'required|array|min:1',
-            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
+            'photos.*' => ['file', new DeliveryNonPhotoSizeLimit],
         ]);
 
         $count = 0;
@@ -1705,12 +1753,12 @@ class AdminDashboardController extends Controller
                     'file_size' => $size,
                     'mime_type' => $mime,
                 ]);
-                \App\Support\ClientPhotoThumbnail::generate($pModel);
+                ClientPhotoThumbnail::generate($pModel);
                 $count++;
             }
         }
 
-        if (!$request->header('X-Inertia') && $request->wantsJson()) {
+        if (! $request->header('X-Inertia') && $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'uploaded_count' => $count,
@@ -1735,11 +1783,11 @@ class AdminDashboardController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        if (!empty($validated['extend_days'])) {
+        if (! empty($validated['extend_days'])) {
             $base = $delivery->is_expired ? Carbon::now() : $delivery->expired_at;
             $delivery->expired_at = (clone $base)->addDays((int) $validated['extend_days'])->endOfDay();
             $delivery->is_active = true;
-        } elseif (!empty($validated['specific_date'])) {
+        } elseif (! empty($validated['specific_date'])) {
             $delivery->expired_at = Carbon::parse($validated['specific_date'])->endOfDay();
         }
 
@@ -1758,7 +1806,7 @@ class AdminDashboardController extends Controller
     public function deleteClientPhoto($photoId)
     {
         $photo = ClientPhoto::findOrFail($photoId);
-        \App\Support\ClientPhotoThumbnail::deleteThumbnail($photo);
+        ClientPhotoThumbnail::deleteThumbnail($photo);
         Storage::disk('public')->delete($photo->file_path);
         $photo->delete();
 
@@ -1772,7 +1820,7 @@ class AdminDashboardController extends Controller
     {
         $delivery = ClientDelivery::with('photos')->findOrFail($id);
         foreach ($delivery->photos as $photo) {
-            \App\Support\ClientPhotoThumbnail::deleteThumbnail($photo);
+            ClientPhotoThumbnail::deleteThumbnail($photo);
         }
         Storage::disk('public')->deleteDirectory("client_photos/{$delivery->id}");
         $delivery->delete();
@@ -1794,7 +1842,7 @@ class AdminDashboardController extends Controller
 
         $request->validate([
             'photos' => 'required|array|min:1',
-            'photos.*' => ['file', new \App\Rules\DeliveryNonPhotoSizeLimit],
+            'photos.*' => ['file', new DeliveryNonPhotoSizeLimit],
             'raw_price_per_photo' => 'nullable|numeric|min:0',
             'raw_price_description' => 'nullable|string|max:255',
             'raw_discount_5_percent' => 'nullable|numeric|min:0|max:100',
@@ -1819,7 +1867,7 @@ class AdminDashboardController extends Controller
         if ($request->has('raw_notes')) {
             $settingsToUpdate['raw_notes'] = $request->input('raw_notes');
         }
-        if (!empty($settingsToUpdate)) {
+        if (! empty($settingsToUpdate)) {
             $delivery->update($settingsToUpdate);
         }
 
@@ -1840,14 +1888,14 @@ class AdminDashboardController extends Controller
                 ]);
 
                 // Hasilkan thumbnail WebP tajam dengan watermark Langit Creative
-                \App\Support\ClientRawPhotoThumbnail::generate($rawPhoto);
+                ClientRawPhotoThumbnail::generate($rawPhoto);
                 $count++;
             }
         }
 
         $msg = "{$count} foto mentahan berhasil diunggah ke album \"{$delivery->title}\". Preview ber-watermark telah siap.";
 
-        if (!$request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
+        if (! $request->header('X-Inertia') && ($request->expectsJson() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'uploaded_count' => $count,
@@ -1894,7 +1942,7 @@ class AdminDashboardController extends Controller
         $count = $rawPhotos->count();
 
         foreach ($rawPhotos as $photo) {
-            \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+            ClientRawPhotoThumbnail::deleteThumbnail($photo);
             Storage::disk('public')->delete($photo->file_path);
             $photo->delete();
         }
@@ -1912,7 +1960,7 @@ class AdminDashboardController extends Controller
         $delivery = ClientDelivery::findOrFail($id);
         $photoIds = $request->input('photo_ids', []);
 
-        if (!is_array($photoIds) || empty($photoIds)) {
+        if (! is_array($photoIds) || empty($photoIds)) {
             return back()->with('error', 'Tidak ada foto mentahan yang dipilih untuk dihapus.');
         }
 
@@ -1920,7 +1968,7 @@ class AdminDashboardController extends Controller
         $count = $photos->count();
 
         foreach ($photos as $photo) {
-            \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+            ClientRawPhotoThumbnail::deleteThumbnail($photo);
             Storage::disk('public')->delete($photo->file_path);
             $photo->delete();
         }
@@ -1934,7 +1982,7 @@ class AdminDashboardController extends Controller
     public function deleteRawPhoto($photoId)
     {
         $photo = ClientRawPhoto::findOrFail($photoId);
-        \App\Support\ClientRawPhotoThumbnail::deleteThumbnail($photo);
+        ClientRawPhotoThumbnail::deleteThumbnail($photo);
         Storage::disk('public')->delete($photo->file_path);
         $photo->delete();
 

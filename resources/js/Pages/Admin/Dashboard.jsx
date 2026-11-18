@@ -252,6 +252,7 @@ export default function AdminDashboard({
 
     // Dedicated Showreel Video Showcase Modal State
     const [showreelModalOpen, setShowreelModalOpen] = useState(false);
+    const [showreelTargetService, setShowreelTargetService] = useState('photography-videography');
     const [showreelData, setShowreelData] = useState({
         video_url: '',
         poster_url: '',
@@ -425,8 +426,27 @@ export default function AdminDashboard({
     }, [galleries]);
 
     const currentShowreelItem = useMemo(() => {
-        return galleries.find(g => g.media_type === 'video' || g.category === 'showreel') || null;
-    }, [galleries]);
+        const photoVideoServiceId = services.find(s => s.slug === 'photography-videography')?.id;
+        return galleries.find(g => {
+            const isShowreel = g.media_type === 'video' || g.category === 'showreel';
+            const belongsToPhotoVideo = g.service?.slug === 'photography-videography'
+                || String(g.service_id) === String(photoVideoServiceId);
+            return isShowreel && belongsToPhotoVideo;
+        }) || null;
+    }, [galleries, services]);
+
+    const internshipServiceId = useMemo(() => {
+        return services.find(s => s.slug === 'internship')?.id;
+    }, [services]);
+
+    const currentInternshipShowreelItem = useMemo(() => {
+        return galleries.find(g => {
+            const isShowreel = g.media_type === 'video' || g.category === 'showreel';
+            const belongsToInternship = g.service?.slug === 'internship'
+                || String(g.service_id) === String(internshipServiceId);
+            return isShowreel && belongsToInternship;
+        }) || null;
+    }, [galleries, internshipServiceId]);
 
     const formatRupiah = (val) => {
         if (!val) return 'Rp 0';
@@ -916,14 +936,20 @@ export default function AdminDashboard({
         });
     };
 
-    // Open Showreel Modal
-    const openShowreelModal = () => {
-        const item = currentShowreelItem;
+    // Open Showreel Modal (photography-videography by default, or internship)
+    const openShowreelModal = (serviceSlug = 'photography-videography') => {
+        const isInternship = serviceSlug === 'internship';
+        const item = isInternship ? currentInternshipShowreelItem : currentShowreelItem;
+        setShowreelTargetService(serviceSlug);
         setShowreelData({
             video_url: item?.video_url || '',
-            poster_url: item?.file_webp_path || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80',
-            title: item?.title || 'Visual Sinematik Kelas Dunia.',
-            subtitle: 'Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.',
+            poster_url: item?.file_webp_path || (isInternship
+                ? 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80'
+                : 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80'),
+            title: item?.title || (isInternship ? 'Sinematik Karya Talenta Muda.' : 'Visual Sinematik Kelas Dunia.'),
+            subtitle: isInternship
+                ? 'Dokumentasi set produksi komersial, sesi studio, dan momen kolaborasi talenta magang Langit Creative bersama mentor divisi.'
+                : 'Dari storyboard komersial brand ternama hingga mahakarya pernikahan abadi, direkam dengan standar kamera sinema dan kalibrasi warna presisi.',
         });
         setVideoFile(null);
         setPosterFile(null);
@@ -934,6 +960,7 @@ export default function AdminDashboard({
         e.preventDefault();
         setIsSubmittingShowreel(true);
         const formData = new FormData();
+        formData.append('service_slug', showreelTargetService);
         if (videoFile) formData.append('video_file', videoFile);
         if (showreelData.video_url) formData.append('video_url', showreelData.video_url);
         if (posterFile) formData.append('poster_photo', posterFile);
@@ -2816,7 +2843,7 @@ export default function AdminDashboard({
 
                                         <button
                                             type="button"
-                                            onClick={openShowreelModal}
+                                            onClick={() => openShowreelModal('photography-videography')}
                                             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-transform active:scale-95 cursor-pointer shrink-0"
                                         >
                                             <Upload className="w-3.5 h-3.5" />
@@ -2925,6 +2952,77 @@ export default function AdminDashboard({
                                             Upload Foto dari PC / Tautan URL
                                         </span>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SPECIAL HIGHLIGHT CARD: Video Showcase Internship (upload video untuk halaman magang) */}
+                        {selectedGalleryService === 'internship' && (
+                            <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-500/10 via-slate-900/40 to-slate-950 border border-purple-500/30 dark:border-purple-500/20 shadow-xl flex flex-col justify-between space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 border border-purple-500/30">
+                                            <Film className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-purple-500/30">
+                                                    Header Video Showcase
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                    Internship & Career
+                                                </span>
+                                            </div>
+                                            <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white mt-0.5">
+                                                {currentInternshipShowreelItem?.title || 'Sinematik Karya Talenta Muda.'}
+                                            </h4>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => openShowreelModal('internship')}
+                                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-500/20 transition-transform active:scale-95 cursor-pointer shrink-0"
+                                    >
+                                        <Upload className="w-3.5 h-3.5" />
+                                        <span>Upload Video dari PC</span>
+                                    </button>
+                                </div>
+
+                                <div className="relative rounded-2xl overflow-hidden aspect-[21/9] bg-black/60 border border-white/10 flex items-center justify-center group">
+                                    {currentInternshipShowreelItem?.video_url ? (
+                                        <video
+                                            src={currentInternshipShowreelItem.video_url}
+                                            poster={currentInternshipShowreelItem.file_webp_path || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80'}
+                                            controls
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <>
+                                            <img
+                                                src={currentInternshipShowreelItem?.file_webp_path || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80'}
+                                                alt="Poster Video Showcase Magang"
+                                                className="w-full h-full object-cover opacity-60"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center pointer-events-none">
+                                                <div className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg mb-1">
+                                                    <Play className="w-5 h-5 fill-white ml-0.5" />
+                                                </div>
+                                                <span className="text-xs font-bold text-white">Video Showcase Magang Aktif di Website</span>
+                                                <span className="text-[10px] text-slate-300">Klik "Upload Video dari PC" untuk mengganti</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-white/5">
+                                    <span className="truncate max-w-[280px]">
+                                        Status: <strong className="text-slate-700 dark:text-slate-200">{currentInternshipShowreelItem?.video_url ? 'File Video Kustom Aktif' : 'Belum Ada Video (Poster Default)'}</strong>
+                                    </span>
+                                    <span className="text-purple-400 font-semibold font-mono">
+                                        Format: MP4, MOV, WebM
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -5054,10 +5152,14 @@ export default function AdminDashboard({
                             </div>
                             <div>
                                 <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
-                                    Upload Video Showreel Cinema & Poster
+                                    {showreelTargetService === 'internship'
+                                        ? 'Upload Video Showcase Magang & Poster'
+                                        : 'Upload Video Showreel Cinema & Poster'}
                                 </h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                    Upload video sinematik (.MP4, .MOV, .WebM) langsung dari komputer Anda untuk diputar di bagian header showreel.
+                                    {showreelTargetService === 'internship'
+                                        ? 'Upload video (.MP4, .MOV, .WebM) untuk diputar di bagian Video Showcase halaman Internship.'
+                                        : 'Upload video sinematik (.MP4, .MOV, .WebM) langsung dari komputer Anda untuk diputar di bagian header showreel.'}
                                 </p>
                             </div>
                         </div>

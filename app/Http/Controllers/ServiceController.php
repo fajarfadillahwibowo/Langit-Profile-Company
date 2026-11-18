@@ -153,12 +153,30 @@ class ServiceController extends Controller
     {
         $service = Service::where('slug', 'internship')->first();
         $positions = InternshipPosition::where('is_open', true)->get();
-        $galleries = Gallery::where('service_id', $service?->id)->get();
+
+        // Galeri dokumentasi (foto) — item showreel video dipisah agar tidak ikut grid foto.
+        $galleries = Gallery::where('service_id', $service?->id)
+            ->where(function ($q) {
+                $q->whereNull('category')->orWhere('category', '!=', 'showreel');
+            })
+            ->where('media_type', '!=', 'before_after')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
+        // Video showreel / showcase magang yang diunggah dari portal admin.
+        $showreel = Gallery::where('service_id', $service?->id)
+            ->where(function ($q) {
+                $q->where('media_type', 'video')->orWhere('category', 'showreel');
+            })
+            ->orderByDesc('id')
+            ->first();
 
         return Inertia::render('Services/InternshipView', [
             'service' => $service,
             'positions' => $positions,
             'galleries' => $galleries,
+            'showreel' => $showreel,
         ]);
     }
 
