@@ -33,6 +33,13 @@ docker compose up -d --build
 echo "⏳ Menunggu container database dan service siap..."
 sleep 10
 
+# 4b. Sinkronkan aset Vite dari image ke folder public yang di-mount nginx.
+# Bind-mount ./public tidak otomatis mengikuti hasil build di dalam image,
+# sehingga tanpa langkah ini aset ber-hash baru akan 404.
+echo "🎨 Sinkronisasi aset build (Vite) ke ./public/build..."
+docker cp langit_app:/var/www/html/public/build/. public/build/
+docker compose exec -T app php artisan optimize
+
 # 5. Tampilkan Status Container
 echo "=========================================================="
 echo "  ✅ Status Container Docker:                             "
