@@ -186,6 +186,7 @@ export default function PhotoVideoView({ service, galleries = [], beforeAfter = 
                 <VideoShowcaseHero
                     service={service}
                     showreel={showreel}
+                    accent="amber"
                     fallback={{
                         video: "https://mdn.github.io/shared-assets/videos/flower.mp4",
                         poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80",

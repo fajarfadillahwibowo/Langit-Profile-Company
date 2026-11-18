@@ -392,13 +392,13 @@ export default function InternshipView({ service, positions = [], galleries = []
                 {/* 1b. Video Showcase Magang (sama dengan header showreel Photography & Videography) */}
                 <div className="relative z-10 border-t border-slate-200/80 dark:border-white/10 pt-10 sm:pt-14">
                     <div className="text-center max-w-3xl mx-auto mb-6 px-4">
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#005792]/10 dark:bg-[#005792]/20 border border-[#005792]/30 text-[#005792] dark:text-sky-300 text-xs font-mono tracking-wider font-semibold uppercase mb-3">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-mono tracking-wider font-semibold uppercase mb-3">
                             <Camera className="w-3.5 h-3.5" />
                             <span>Video Showcase Magang</span>
                         </div>
                         <h2 className="font-heading font-extrabold text-2xl sm:text-3xl lg:text-4xl text-slate-900 dark:text-white tracking-tight">
                             Atmosfer Studio &{' '}
-                            <span className="font-editorial italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#005792] via-purple-600 to-pink-500 dark:from-sky-300 dark:via-purple-300 dark:to-pink-300">
+                            <span className="font-editorial italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 dark:from-purple-300 dark:via-fuchsia-300 dark:to-pink-300">
                                 Karya Talenta Magang.
                             </span>
                         </h2>
@@ -407,6 +407,7 @@ export default function InternshipView({ service, positions = [], galleries = []
                     <VideoShowcaseHero
                         service={service}
                         showreel={showreel}
+                        accent="purple"
                         fallback={{
                             video: 'https://mdn.github.io/shared-assets/videos/flower.mp4',
                             poster: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80',

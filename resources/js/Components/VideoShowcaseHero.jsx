@@ -4,6 +4,43 @@ import { Film, Play, Pause, Volume2, VolumeX, Zap, Sparkles, ArrowRight } from '
 import { useQuality } from '@/Context/QualityContext';
 
 /**
+ * Accent palettes so the same hero can follow the host page theme:
+ * amber = Photography & Videography (cinema), purple = Internship & Career.
+ */
+const ACCENTS = {
+    amber: {
+        frame: 'border-amber-500/30 dark:border-amber-500/20',
+        badge: 'bg-black/70 sm:bg-amber-500/20 border-amber-500/40 text-amber-300',
+        badgeIcon: 'text-amber-400',
+        titleAccent: 'text-amber-300',
+        playButton: 'from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 shadow-amber-500/25 text-slate-950',
+        playIcon: 'fill-slate-950',
+        muteIcon: 'text-amber-400',
+        muteLabel: 'text-amber-200',
+        statusPill: 'border-amber-500/40 text-amber-300',
+        statusDot: 'bg-amber-400',
+        hint: 'text-amber-200/90',
+        cta: 'bg-white/20 hover:bg-white/30 text-white border-white/30',
+        scrim: '',
+    },
+    purple: {
+        frame: 'border-purple-500/40 dark:border-purple-500/30',
+        badge: 'bg-black/70 sm:bg-purple-500/25 border-purple-400/50 text-purple-200',
+        badgeIcon: 'text-purple-300',
+        titleAccent: 'text-purple-300',
+        playButton: 'from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 shadow-purple-500/30 text-white',
+        playIcon: 'fill-white',
+        muteIcon: 'text-purple-300',
+        muteLabel: 'text-purple-200',
+        statusPill: 'border-purple-500/40 text-purple-200',
+        statusDot: 'bg-purple-400',
+        hint: 'text-purple-200/90',
+        cta: 'bg-purple-500/25 hover:bg-purple-500/40 text-white border-purple-400/50',
+        scrim: 'bg-slate-950/45',
+    },
+};
+
+/**
  * Cinema-style showreel hero shared by the Photography & Videography page and
  * the Internship page. Renders an autoplaying muted video with in-place SD/HD
  * and audio controls, a toggleable text overlay, play/pause and a CTA button.
@@ -12,8 +49,10 @@ import { useQuality } from '@/Context/QualityContext';
  * @param {object|null} props.service Service record (hero_config_json fallback).
  * @param {object|null} props.showreel Gallery record holding the video + poster.
  * @param {object} props.fallback Defaults used when no media is configured yet.
+ * @param {'amber'|'purple'} props.accent Color theme that follows the host page.
  */
-export default function VideoShowcaseHero({ service, showreel = null, fallback = {} }) {
+export default function VideoShowcaseHero({ service, showreel = null, fallback = {}, accent = 'amber' }) {
+    const theme = ACCENTS[accent] ?? ACCENTS.amber;
     const { isHd, setQuality, getOptimizedImage } = useQuality();
     const [showreelPlaying, setShowreelPlaying] = useState(true);
     const [isMuted, setIsMuted] = useState(true);
@@ -56,7 +95,7 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
             return parts.map((part, i) => {
                 if (part.toLowerCase() === 'sinematik' || part.toLowerCase() === 'cinematic') {
                     return (
-                        <span key={i} className="font-editorial italic font-normal text-amber-300 tracking-wide">
+                        <span key={i} className={`font-editorial italic font-normal tracking-wide ${theme.titleAccent}`}>
                             {part}
                         </span>
                     );
@@ -121,12 +160,12 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
         setIsMuted(videoRef.current.muted);
     };
 
-    const ctaClassName = 'px-3.5 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 text-xs font-bold transition-all hover:scale-105 active:scale-95 backdrop-blur-md flex items-center gap-1.5 shadow-sm';
+    const ctaClassName = `px-3.5 sm:px-4 py-2 rounded-lg sm:rounded-xl border ${theme.cta} text-xs font-bold transition-all hover:scale-105 active:scale-95 backdrop-blur-md flex items-center gap-1.5 shadow-sm`;
 
     return (
         <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-2 sm:pt-3 pb-8 sm:pb-12">
             <div
-                className="relative w-full min-w-0 rounded-3xl overflow-hidden border border-amber-500/30 dark:border-amber-500/20 shadow-2xl bg-slate-950 min-h-[420px] sm:min-h-[440px] lg:aspect-[21/9] lg:min-h-[460px] flex flex-col justify-between p-4 sm:p-5 md:p-6 group cursor-pointer"
+                className={`relative w-full min-w-0 rounded-3xl overflow-hidden border ${theme.frame} shadow-2xl bg-slate-950 min-h-[420px] sm:min-h-[440px] lg:aspect-[21/9] lg:min-h-[460px] flex flex-col justify-between p-4 sm:p-5 md:p-6 group cursor-pointer`}
                 onClick={() => setShowHeroText(prev => !prev)}
                 title="Klik area video untuk menyembunyikan atau menampilkan judul dan deskripsi"
             >
@@ -147,6 +186,9 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                     />
                 )}
 
+                {/* Extra scrim for light posters so the accent typography stays readable */}
+                {theme.scrim ? <div className={`absolute inset-0 ${theme.scrim} z-10 pointer-events-none`} /> : null}
+
                 {/* Dark Gradient Overlay to ensure typography readability while video plays seamlessly */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-black/60 z-10 pointer-events-none" />
 
@@ -155,8 +197,8 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                     {/* 1. TOP HEADER BAR: BADGE (LEFT) & IN-PLACE CONTROLS (RIGHT) */}
                     <div className="flex flex-wrap items-center justify-between gap-2 w-full pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Left: Cinema Showcase Badge */}
-                        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-black/70 sm:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] sm:text-xs font-mono uppercase tracking-wider font-bold backdrop-blur-md shadow-sm shrink-0">
-                            <Film className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                        <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full border ${theme.badge} text-[11px] sm:text-xs font-mono uppercase tracking-wider font-bold backdrop-blur-md shadow-sm shrink-0`}>
+                            <Film className={`w-3.5 h-3.5 shrink-0 ${theme.badgeIcon}`} />
                             <span className="hidden sm:inline">{badgeLead}</span>
                             <span>{badgeTail}</span>
                         </div>
@@ -202,8 +244,8 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                             >
                                 {isMuted ? (
                                     <>
-                                        <VolumeX className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                        <span className="hidden sm:inline text-amber-200">Mute</span>
+                                        <VolumeX className={`w-3.5 h-3.5 ${theme.muteIcon} shrink-0`} />
+                                        <span className={`hidden sm:inline ${theme.muteLabel}`}>Mute</span>
                                     </>
                                 ) : (
                                     <>
@@ -242,16 +284,16 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                         <button
                             type="button"
                             onClick={togglePlayShowreel}
-                            className="px-3.5 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/25 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                            className={`px-3.5 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-gradient-to-r ${theme.playButton} font-bold text-xs flex items-center gap-1.5 shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer`}
                         >
                             {showreelPlaying ? (
                                 <>
-                                    <Pause className="w-3.5 h-3.5 fill-slate-950" />
+                                    <Pause className={`w-3.5 h-3.5 ${theme.playIcon}`} />
                                     <span>Jeda Video</span>
                                 </>
                             ) : (
                                 <>
-                                    <Play className="w-3.5 h-3.5 fill-slate-950" />
+                                    <Play className={`w-3.5 h-3.5 ${theme.playIcon}`} />
                                     <span>Putar Video</span>
                                 </>
                             )}
@@ -273,15 +315,15 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
 
                     {/* 4. BOTTOM BAR: LIVE STATUS PILL & METADATA (DEDICATED SLOT - NO OVERLAP) */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1 text-[11px] font-mono text-slate-300 pointer-events-none">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 border border-amber-500/40 text-amber-300 text-[11px] font-mono backdrop-blur-md shadow-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 border ${theme.statusPill} text-[11px] font-mono backdrop-blur-md shadow-md pointer-events-auto`} onClick={(e) => e.stopPropagation()}>
+                            <span className={`w-2 h-2 rounded-full ${theme.statusDot} animate-ping shrink-0`} />
                             <span>
                                 {showreelPlaying ? '▶ Playing Showreel' : '⏸ Video Dijeda'} • {isHd ? '4K Cinema (HD)' : 'Mode Cepat (SD)'}
                             </span>
                         </div>
 
                         {/* Click to Toggle Hint */}
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 text-[10px] text-amber-200/90 font-mono backdrop-blur-md shadow pointer-events-auto">
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 text-[10px] ${theme.hint} font-mono backdrop-blur-md shadow pointer-events-auto`}>
                             <span>💡 Klik layar video untuk {showHeroText ? 'sembunyikan' : 'tampilkan'} teks</span>
                         </div>
 
