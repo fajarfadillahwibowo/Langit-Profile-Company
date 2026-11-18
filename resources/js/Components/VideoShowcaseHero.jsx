@@ -36,7 +36,7 @@ const ACCENTS = {
         statusDot: 'bg-purple-400',
         hint: 'text-purple-200/90',
         cta: 'bg-purple-500/25 hover:bg-purple-500/40 text-white border-purple-400/50',
-        scrim: 'bg-slate-950/45',
+        scrim: 'bg-slate-950/55',
     },
 };
 
