@@ -24,6 +24,7 @@ const ACCENTS = {
         scrim: '',
         overlay: 'from-slate-950/90 via-slate-950/20 to-black/60',
         videoOpacity: 'opacity-80',
+        halo: '',
     },
     purple: {
         frame: 'border-purple-500/40 dark:border-purple-500/30',
@@ -41,6 +42,7 @@ const ACCENTS = {
         scrim: 'bg-slate-950/10',
         overlay: 'from-slate-950/75 via-slate-950/10 to-black/35',
         videoOpacity: 'opacity-100',
+        halo: 'bg-[radial-gradient(ellipse_at_center,rgba(2,6,23,0.72),rgba(2,6,23,0.28)_55%,transparent_78%)]',
     },
 };
 
@@ -189,6 +191,9 @@ export default function VideoShowcaseHero({ service, showreel = null, fallback =
                         className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${theme.videoOpacity} z-0 group-hover:scale-102`}
                     />
                 )}
+
+                {/* Soft halo behind the headline only (keeps the rest of the video bright) */}
+                {theme.halo ? <div className={`absolute inset-x-0 top-0 h-[62%] ${theme.halo} z-10 pointer-events-none`} /> : null}
 
                 {/* Extra scrim for light posters so the accent typography stays readable */}
                 {theme.scrim ? <div className={`absolute inset-0 ${theme.scrim} z-10 pointer-events-none`} /> : null}
