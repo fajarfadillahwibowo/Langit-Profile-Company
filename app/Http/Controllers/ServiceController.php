@@ -22,7 +22,13 @@ class ServiceController extends Controller
     public function photoVideo()
     {
         $service = Service::where('slug', 'photography-videography')->first();
-        $galleries = Gallery::where('service_id', $service?->id)->get();
+
+        // Urutan default galeri: foto yang paling baru diunggah tampil lebih dahulu.
+        $galleries = Gallery::where('service_id', $service?->id)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
         $beforeAfter = Gallery::where('service_id', $service?->id)->where('media_type', 'before_after')->first()
             ?: Gallery::where('media_type', 'before_after')->first();
         $showreel = Gallery::where('service_id', $service?->id)
