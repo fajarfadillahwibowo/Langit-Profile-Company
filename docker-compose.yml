@@ -56,6 +56,7 @@ services:
       - certbot_var:/var/www/certbot
     networks:
       - langit_network
+      - proxy_shared
     depends_on:
       - app
 
@@ -187,3 +188,6 @@ networks:
   langit_network:
     name: langit_network
     driver: bridge
+  proxy_shared:
+    name: jaringan_proxy_bersama
+    external: true
