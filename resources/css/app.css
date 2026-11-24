@@ -48,6 +48,29 @@ input, select, textarea {
     max-width: 100%;
 }
 
+/* Prevent Chrome/Edge autofill from mismatching Light vs Dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #0f172a !important;
+    transition: background-color 9999s ease-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #0B1120 inset !important;
+    box-shadow: 0 0 0 1000px #0B1120 inset !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    caret-color: #f8fafc !important;
+    transition: background-color 9999s ease-out 0s;
+}
+
 @media (max-width: 639px) {
     /* iOS zooms the viewport when focusing inputs below 16px. */
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),

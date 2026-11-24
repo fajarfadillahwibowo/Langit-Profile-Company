@@ -35,10 +35,40 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $pendingRequestsCount = 0;
+        $customerBadges = [
+            'hasScanned' => false,
+            'matchedCount' => 0,
+            'cartCount' => 0,
+            'readyDownloadsCount' => 0,
+        ];
+
+        if ($user) {
+            if (in_array($user->role, ['admin', 'superadmin'], true)) {
+                $pendingRequestsCount = \App\Models\AiPhotoRequest::where('status', 'WAITING_MANUAL_PAYMENT')->count();
+            } elseif ($user->role === 'customer') {
+                $matchedIds = $request->session()->get('matched_photo_ids');
+                $cartIds = $request->session()->get('customer_cart_ids', []);
+                $customerBadges = [
+                    'hasScanned' => is_array($matchedIds),
+                    'matchedCount' => is_array($matchedIds) ? count($matchedIds) : 0,
+                    'cartCount' => is_array($cartIds) ? count($cartIds) : 0,
+                    'readyDownloadsCount' => \App\Models\AiPhotoRequest::where('customer_id', $user->id)
+                        ->where('status', 'SENT_BY_ADMIN')
+                        ->count(),
+                ];
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+            ],
+            'sidebarBadges' => [
+                'pendingRequestsCount' => $pendingRequestsCount,
+                ...$customerBadges,
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),

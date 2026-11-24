@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class LoginController extends Controller
@@ -21,6 +23,10 @@ class LoginController extends Controller
             if ($user->role === 'client') {
                 return redirect()->route('client.gallery');
             }
+            if ($user->role === 'customer') {
+                return redirect()->route('scan.index');
+            }
+
             return redirect()->route('admin.dashboard');
         }
 
@@ -28,8 +34,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Proses Login Terpadu (Admin & Pelanggan)
-     * Mengidentifikasi apakah pengguna adalah admin atau pelanggan berdasarkan username/email
+     * Proses Login Terpadu (Admin & Pelanggan) dengan Proteksi Brute-Force (Max 5x / menit)
      */
     public function login(Request $request)
     {
@@ -43,27 +48,49 @@ class LoginController extends Controller
 
         $loginInput = trim($validated['login']);
         $password = $validated['password'];
+        $throttleKey = 'login:'.Str::lower($loginInput).'|'.$request->ip();
 
-        // Cari pengguna berdasarkan nama pengguna (username) atau email
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return back()->withErrors([
+                'login' => "Terlalu banyak percobaan masuk. Silakan coba lagi dalam {$seconds} detik.",
+            ]);
+        }
+
         $user = User::where('username', $loginInput)
             ->orWhere('email', $loginInput)
             ->first();
 
         if ($user && Hash::check($password, $user->password)) {
+            RateLimiter::clear($throttleKey);
+
+            $user->forceFill([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+            ])->save();
+
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
-            // Pelanggan diarahkan ke galeri unduh foto
             if ($user->role === 'client') {
                 return redirect()->intended(route('client.gallery'));
             }
 
-            // Administrator diarahkan ke dashboard back-office CMS
+            if ($user->role === 'customer') {
+                return redirect()->intended(route('scan.index'));
+            }
+
             return redirect()->intended(route('admin.dashboard'));
         }
 
+        RateLimiter::hit($throttleKey, 60);
+        $remaining = RateLimiter::remaining($throttleKey, 5);
+
         return back()->withErrors([
-            'login' => 'Nama pengguna, email, atau kata sandi yang Anda masukkan tidak sesuai.',
+            'login' => $remaining > 0
+                ? "Nama pengguna, email, atau kata sandi tidak sesuai. Sisa percobaan: {$remaining}x."
+                : 'Terlalu banyak percobaan masuk gagal. Silakan tunggu 60 detik sebelum mencoba lagi.',
         ]);
     }
 

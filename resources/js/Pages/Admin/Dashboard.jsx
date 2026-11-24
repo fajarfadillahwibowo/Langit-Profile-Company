@@ -1,5 +1,5 @@
 import { guardPhotoSelection, photoLimitMiB, photoUploadError } from '@/Utils/photoUploadPolicy.mjs';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
@@ -13,8 +13,55 @@ import {
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
     Phone, Calendar, CalendarCheck, FileText, Download, Eye, Filter,
     ChevronDown, ChevronRight, Upload, Image as ImageIcon, RefreshCw,
-    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu, Users
+    Code2, GraduationCap, SlidersHorizontal, Video, Film, Play, Clock, FolderHeart, Menu, Users, ScanFace
 } from 'lucide-react';
+
+const langitLensNavItems = [
+    { label: 'Ringkasan AI', href: '/admin/langitlens', icon: LayoutDashboard, color: 'text-cyan-200', background: 'bg-cyan-300/15' },
+    { label: 'Upload & Galeri', href: '/admin/langitlens/photos', icon: ImageIcon, color: 'text-amber-200', background: 'bg-amber-300/15' },
+    { label: 'Permintaan Foto', href: '/admin/langitlens/requests', icon: FileText, color: 'text-violet-200', background: 'bg-violet-300/15' },
+    { label: 'Pelanggan Scan', href: '/admin/langitlens/customers', icon: Users, color: 'text-emerald-200', background: 'bg-emerald-300/15' },
+];
+
+function LangitLensSubmenu({ activeTab, url, onNavigate }) {
+    return (
+        <div className="ml-3 space-y-1 border-l-2 border-white/30 py-1 pl-2.5">
+            {langitLensNavItems.map((item) => {
+                const isSameRoute = url.split('?')[0] === item.href;
+                const selected = activeTab === 'langitlens' && isSameRoute;
+                const Icon = item.icon;
+
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        preserveScroll
+                        onClick={(e) => {
+                            if (isSameRoute) {
+                                e.preventDefault();
+                            }
+                            onNavigate?.();
+                        }}
+                        aria-current={selected ? 'page' : undefined}
+                        className={`group flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 ${selected ? 'bg-white font-bold text-[#005792] shadow-xs' : 'text-white/85 hover:bg-white/10 hover:text-white'}`}
+                    >
+                        <span className="flex min-w-0 items-center gap-2">
+                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-[#005792]/10 text-[#005792]' : `${item.background} ${item.color}`}`}>
+                                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                            </span>
+                            <span className="truncate text-[11px] font-semibold leading-tight">{item.label}</span>
+                        </span>
+                        {selected ? (
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#005792]" aria-hidden="true" />
+                        ) : (
+                            <ChevronRight className="h-3 w-3 text-white/40 group-hover:text-white/80" aria-hidden="true" />
+                        )}
+                    </Link>
+                );
+            })}
+        </div>
+    );
+}
 
 export default function AdminDashboard({
     metrics = {},
@@ -34,8 +81,11 @@ export default function AdminDashboard({
     teamMembers = [],
     educationStudents = [],
     educationFinancials = {},
+    children,
+    portalTitle = 'LangitLens AI',
 }) {
-    const { auth } = usePage().props;
+    const { auth, flash } = usePage().props;
+    const { url } = usePage();
     // Theme Management: Primary is 'dark', Secondary is 'light'
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -59,9 +109,19 @@ export default function AdminDashboard({
         localStorage.setItem('langit_theme', theme);
     }, [theme]);
 
-    const [activeTab, setActiveTab] = useState('overview'); // overview, tickets, rentals, galleries, internships, collaborations, consultations
+    const [activeTab, setActiveTab] = useState(children ? 'langitlens' : 'overview');
+    const [isLangitLensMenuOpen, setIsLangitLensMenuOpen] = useState(Boolean(children));
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const mobileDrawerRef = useRef(null);
+    const desktopNavRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (typeof window === 'undefined' || !desktopNavRef.current) return;
+        const savedScroll = Number(sessionStorage.getItem('langit_admin_sidebar_scroll') || 0);
+        if (savedScroll > 0) {
+            desktopNavRef.current.scrollTop = savedScroll;
+        }
+    }, []);
 
     useEffect(() => {
         if (!mobileSidebarOpen) return;
@@ -86,7 +146,7 @@ export default function AdminDashboard({
     }, [mobileSidebarOpen]);
 
     // Gallery Sub-Sidebar & Filtering State
-    const [isGalleryMenuOpen, setIsGalleryMenuOpen] = useState(true);
+    const [isGalleryMenuOpen, setIsGalleryMenuOpen] = useState(false);
     const [selectedGalleryService, setSelectedGalleryService] = useState('all'); // 'all' or slug
     const [gallerySubCategoryFilter, setGallerySubCategoryFilter] = useState('all');
 
@@ -982,7 +1042,7 @@ export default function AdminDashboard({
 
     return (
         <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
-            <Head title="Admin CMS Executive Dashboard — Langit" />
+            <Head title={activeTab === 'langitlens' ? `${portalTitle} — LangitLens` : 'Admin CMS Executive Dashboard — Langit'} />
 
             {/* Mobile Sidebar Overlay & Slide-Over Drawer */}
             {mobileSidebarOpen && (
@@ -1181,6 +1241,21 @@ export default function AdminDashboard({
                                     </div>
                                 </button>
 
+                                <div className="space-y-1">
+                                    <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
+                                        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
+                                            <span className="truncate">LangitLens</span>
+                                        </div>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
+                                    </button>
+                                    {isLangitLensMenuOpen && (
+                                        <LangitLensSubmenu activeTab={activeTab} url={url}
+                                            onNavigate={() => { setActiveTab('langitlens'); setMobileSidebarOpen(false); }} />
+                                    )}
+                                </div>
+
                                 {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
                                 <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
                                     Operasional & Pesanan
@@ -1298,6 +1373,7 @@ export default function AdminDashboard({
                                         {recentConsultations.length}
                                     </span>
                                 </button>
+
                             </nav>
                         </div>
 
@@ -1356,7 +1432,15 @@ export default function AdminDashboard({
                     </Link>
 
                     {/* Nav Items - Scrollable independently if items exceed viewport */}
-                    <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll">
+                    <nav
+                        ref={desktopNavRef}
+                        onScroll={(e) => {
+                            if (typeof window !== 'undefined') {
+                                sessionStorage.setItem('langit_admin_sidebar_scroll', String(e.currentTarget.scrollTop));
+                            }
+                        }}
+                        className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll"
+                    >
                         {/* KELOMPOK 1: KONTEN PUBLIK & INFORMASI */}
                         <div className="pt-1 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
                             Konten & Foto Publik
@@ -1532,6 +1616,20 @@ export default function AdminDashboard({
                             </div>
                         </button>
 
+                        <div className="space-y-1">
+                            <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
+                                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 text-white/90 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
+                                    <span className="truncate">LangitLens</span>
+                                </div>
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
+                            </button>
+                            {isLangitLensMenuOpen && (
+                                <LangitLensSubmenu activeTab={activeTab} url={url} onNavigate={() => setActiveTab('langitlens')} />
+                            )}
+                        </div>
+
                         {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
                         <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
                             Operasional & Pesanan
@@ -1659,6 +1757,7 @@ export default function AdminDashboard({
                                 {recentConsultations.length}
                             </span>
                         </button>
+
                     </nav>
                 </div>
 
@@ -1705,6 +1804,7 @@ export default function AdminDashboard({
 
                             <div className="order-last w-full md:order-none md:w-auto">
                                 <h1 className="font-heading font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white leading-tight">
+                                    {activeTab === 'langitlens' && `LangitLens — ${portalTitle}`}
                                     {activeTab === 'overview' && 'Executive Dashboard & Metrics'}
                                     {activeTab === 'education_attendance' && 'Absensi & Kas Langit Education'}
                                     {activeTab === 'client_deliveries' && 'Layanan Foto Pelanggan'}
@@ -1717,9 +1817,6 @@ export default function AdminDashboard({
                                     {activeTab === 'consultations' && 'Jadwal Konsultasi'}
                                     {activeTab === 'services' && '7 Divisi Layanan Terintegrasi'}
                                 </h1>
-                                <p className="text-[10.5px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">
-                                    Status Server: Online 200 OK • Laravel 13 • MySQL Connected
-                                </p>
                             </div>
                         </div>
 
@@ -1796,6 +1893,14 @@ export default function AdminDashboard({
                         );
                     })}
                 </div>
+
+                {activeTab === 'langitlens' && (
+                    <div className="space-y-4" data-admin-module="langitlens">
+                        {flash?.success && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-3.5 text-xs text-emerald-700 dark:text-emerald-300">{flash.success}</div>}
+                        {flash?.error && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3.5 text-xs text-rose-700 dark:text-rose-300">{flash.error}</div>}
+                        {children}
+                    </div>
+                )}
 
                 {/* TAB 1: EXECUTIVE OVERVIEW (PRD 6.1) */}
                 {activeTab === 'overview' && (

@@ -24,6 +24,10 @@ class EnsureAdmin
                 return redirect()->route('client.gallery');
             }
 
+            if ($user && $user->role === 'customer') {
+                return redirect()->route('scan.index');
+            }
+
             return redirect()->route('login');
         }
 

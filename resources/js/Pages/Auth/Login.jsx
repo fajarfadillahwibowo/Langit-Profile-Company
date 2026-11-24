@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { Lock, User, ArrowLeft, Eye, EyeOff, LogIn, Sun, Moon } from 'lucide-react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
+import { Lock, User, ArrowLeft, Eye, EyeOff, LogIn, Sun, Moon, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
 
 export default function UnifiedLogin() {
+    const { flash } = usePage().props;
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         login: '',
@@ -106,6 +107,20 @@ export default function UnifiedLogin() {
                         </p>
                     </div>
 
+                    {flash?.success && (
+                        <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
+                            <span>{flash.success}</span>
+                        </div>
+                    )}
+
+                    {flash?.error && (
+                        <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+                            <span>{flash.error}</span>
+                        </div>
+                    )}
+
                     {/* Login Form */}
                     <form onSubmit={submit} className="space-y-4">
                         <div>
@@ -120,7 +135,7 @@ export default function UnifiedLogin() {
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
                                     placeholder="Masukkan nama pengguna atau email"
-                                    className="w-full min-w-0 min-h-11 pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
+                                    className="w-full min-w-0 min-h-11 pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700/80 bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     autoCapitalize="none"
                                 />
                             </div>
@@ -141,7 +156,7 @@ export default function UnifiedLogin() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="Masukkan kata sandi"
-                                    className="w-full min-w-0 min-h-11 pl-10 pr-12 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-black/30 text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-all placeholder:text-slate-400"
+                                    className="w-full min-w-0 min-h-11 pl-10 pr-12 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700/80 bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#005792] dark:focus:ring-cyan-500 transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 <button
                                     type="button"
@@ -157,7 +172,7 @@ export default function UnifiedLogin() {
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between text-xs pt-1">
+                        <div className="flex items-center justify-between gap-2 text-xs pt-1">
                             <label className="min-h-11 flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
                                 <input
                                     type="checkbox"
@@ -167,9 +182,15 @@ export default function UnifiedLogin() {
                                 />
                                 <span>Ingat saya di perangkat ini</span>
                             </label>
+                            <Link
+                                href="/forgot-password"
+                                className="min-h-11 inline-flex items-center text-xs font-semibold text-[#005792] dark:text-cyan-400 hover:underline shrink-0"
+                            >
+                                Lupa Kata Sandi?
+                            </Link>
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-2.5">
                             <button
                                 type="submit"
                                 disabled={processing}
@@ -178,11 +199,42 @@ export default function UnifiedLogin() {
                                 <LogIn className="w-4 h-4" />
                                 <span>{processing ? 'Memverifikasi...' : 'Masuk'}</span>
                             </button>
+
+                            <a
+                                href="/auth/google/redirect?mode=login"
+                                className="w-full min-h-11 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-[#0B1120] dark:hover:bg-slate-800/90 border border-slate-300 dark:border-slate-700/80 text-slate-800 dark:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-2xs transition-all active:scale-98"
+                            >
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        fill="#EA4335"
+                                        d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-2 3l3.2 2.5c1.9-1.7 3-4.3 3-7.3 0-.7-.1-1.4-.2-2.1H12z"
+                                    />
+                                    <path
+                                        fill="#34A853"
+                                        d="M12 22c2.7 0 5-.9 6.7-2.4l-3.2-2.5c-.9.6-2.1 1-3.5 1-2.7 0-5-1.8-5.8-4.3H2.9v2.6C4.6 19.8 8 22 12 22z"
+                                    />
+                                    <path
+                                        fill="#FBBC05"
+                                        d="M6.2 13.8c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8V7.6H2.9C2.3 8.9 2 10.4 2 12s.3 3.1.9 4.4l3.3-2.6z"
+                                    />
+                                    <path
+                                        fill="#4285F4"
+                                        d="M12 5.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9C17 2.9 14.7 2 12 2 8 2 4.6 4.2 2.9 7.6l3.3 2.6C7 7.7 9.3 5.9 12 5.9z"
+                                    />
+                                </svg>
+                                <span>Masuk dengan Akun Google</span>
+                            </a>
                         </div>
                     </form>
 
-                    {/* Footer WhatsApp Link */}
-                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 text-center">
+                    {/* Footer Register & WhatsApp Link */}
+                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 text-center space-y-2.5">
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                            Belum punya akun?{' '}
+                            <Link href="/register" className="text-[#005792] dark:text-cyan-400 font-bold hover:underline">
+                                Daftar Akun Baru
+                            </Link>
+                        </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                             Kendala akun atau login? Hubungi kami via{' '}
                             <a 

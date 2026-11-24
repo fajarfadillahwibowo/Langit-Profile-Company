@@ -35,3 +35,8 @@ extract_media.ps1
 update_comp.ps1
 /security-audit-skill-main/
 /public/uploads/*
+
+# LangitLens AI service downloaded models & Python cache
+/ai-service/models/
+/ai-service/__pycache__/
+/ai-service/.venv/

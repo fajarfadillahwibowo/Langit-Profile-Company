@@ -35,13 +35,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class AdminDashboardController extends Controller
 {
     /**
      * Main Admin Dashboard & Analytics (PRD 6.1)
      */
-    public function index()
+    public function index(): Response
+    {
+        return Inertia::render('Admin/Dashboard', $this->portalProps());
+    }
+
+    /**
+     * Data portal utama dipakai juga oleh modul LangitLens di dalam navigasi yang sama.
+     *
+     * @return array<string, mixed>
+     */
+    public function portalProps(): array
     {
         $metrics = [
             'total_consultations' => Consultation::count(),
@@ -302,7 +313,7 @@ class AdminDashboardController extends Controller
             'pending_amount_estimate' => $pendingAmountEstimate,
         ];
 
-        return Inertia::render('Admin/Dashboard', [
+        return [
             'teamMembers' => TeamMember::orderBy('sort_order')->orderBy('id')->get(),
             'educationStudents' => $educationStudents,
             'educationFinancials' => $educationFinancials,
@@ -321,7 +332,7 @@ class AdminDashboardController extends Controller
             'estimatorComponents' => WebEstimatorComponent::all(),
             'clientDeliveries' => ClientDelivery::with(['photos', 'rawPhotos', 'rawSelections', 'user'])->latest()->get(),
             'clientRawSelections' => ClientRawSelection::with(['delivery', 'user'])->latest()->get(),
-        ]);
+        ];
     }
 
     /**

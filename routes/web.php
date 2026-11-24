@@ -1,16 +1,25 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\DeliveryUploadController;
+use App\Http\Controllers\Admin\EducationAttendanceController;
+use App\Http\Controllers\Admin\LangitLensAdminController;
+use App\Http\Controllers\Admin\TeamMemberController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractiveActionController;
+use App\Http\Controllers\MediaOptimizationController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ScanFotoController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,7 +45,7 @@ Route::prefix('layanan')->group(function () {
 
 // Main Topbar Direct Pages
 Route::get('/portofolio', [PortfolioController::class, 'index'])->name('portfolio.index');
-Route::get('/our-team', [\App\Http\Controllers\TeamController::class, 'index'])->name('team.index');
+Route::get('/our-team', [TeamController::class, 'index'])->name('team.index');
 Route::get('/internship', fn () => redirect()->route('services.internship'));
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');
 Route::get('/konsultasi', [ConsultationController::class, 'wizard'])->name('consultation.wizard');
@@ -45,6 +54,49 @@ Route::get('/konsultasi', [ConsultationController::class, 'wizard'])->name('cons
 Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Registrasi Mandiri Pelanggan Scan Foto AI + Verifikasi OTP Email
+Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
+Route::get('/register/verify-otp', [RegisterController::class, 'showVerifyOtp'])->name('register.otp');
+Route::post('/register/verify-otp', [RegisterController::class, 'verifyOtp'])->name('register.otp.verify');
+Route::post('/register/resend-otp', [RegisterController::class, 'resendOtp'])->name('register.otp.resend');
+
+// Lupa & Reset Kata Sandi via OTP Email
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showRequestForm'])->name('password.request');
+Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'sendResetOtp'])->name('password.otp.send');
+Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset.form');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset.submit');
+Route::post('/forgot-password/resend-otp', [ForgotPasswordController::class, 'resendResetOtp'])->name('password.otp.resend');
+
+// Login & Daftar Cepat Menggunakan Akun Google (Laravel Socialite)
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+// Portal Pelanggan Scan Kamera AI (Terpisah dari /pelanggan/galeri milik pelanggan resmi Langit)
+Route::prefix('scan-foto')
+    ->name('scan.')
+    ->middleware(['auth', 'scan_customer'])
+    ->group(function () {
+        Route::get('/', [ScanFotoController::class, 'scanPage'])->name('index');
+        Route::post('/detect', [ScanFotoController::class, 'detectScanFaces'])->name('detect');
+        Route::post('/search', [ScanFotoController::class, 'submitFaceScan'])->name('search');
+
+        Route::get('/hasil', [ScanFotoController::class, 'photos'])->name('photos');
+        Route::post('/hasil/{photo}/claim-free', [ScanFotoController::class, 'claimFreePhoto'])->name('photos.claim-free');
+        Route::post('/keranjang/toggle', [ScanFotoController::class, 'toggleCart'])->name('cart.toggle');
+
+        Route::get('/keranjang', [ScanFotoController::class, 'cart'])->name('cart');
+        Route::post('/pesanan', [ScanFotoController::class, 'submitRequest'])->name('requests.store');
+
+        Route::get('/unduhan', [ScanFotoController::class, 'downloads'])->name('downloads');
+        Route::get('/unduhan/{photoRequest}/item/{item}', [ScanFotoController::class, 'downloadOriginal'])->name('downloads.file');
+        Route::get('/unduhan/{photoRequest}/zip', [ScanFotoController::class, 'downloadZip'])->name('downloads.zip');
+
+        Route::get('/profil', [ScanFotoController::class, 'profile'])->name('profile');
+        Route::put('/profil', [ScanFotoController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profil/password', [ScanFotoController::class, 'updatePassword'])->name('profile.password');
+    });
 
 // Portal Pelanggan (Ambil Foto & Galeri)
 Route::prefix('pelanggan')->name('client.')->group(function () {
@@ -62,7 +114,7 @@ Route::prefix('pelanggan')->name('client.')->group(function () {
 });
 
 // Media Optimization Endpoint (Public, Ultra-Fast Cached WebP Resizer)
-Route::get('/media/optimized', [\App\Http\Controllers\MediaOptimizationController::class, 'optimize'])->name('media.optimized');
+Route::get('/media/optimized', [MediaOptimizationController::class, 'optimize'])->name('media.optimized');
 
 // Interactive Action Endpoints (Public)
 Route::get('/api/service-tracker/{receipt_number}', [InteractiveActionController::class, 'serviceTracker'])->name('api.service-tracker');
@@ -89,21 +141,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-        Route::post('/team-members', [\App\Http\Controllers\Admin\TeamMemberController::class, 'store'])->name('team-members.store');
-        Route::post('/team-members/{id}/update', [\App\Http\Controllers\Admin\TeamMemberController::class, 'update'])->name('team-members.update');
-        Route::delete('/team-members/{id}', [\App\Http\Controllers\Admin\TeamMemberController::class, 'destroy'])->name('team-members.destroy');
+        Route::post('/team-members', [TeamMemberController::class, 'store'])->name('team-members.store');
+        Route::post('/team-members/{id}/update', [TeamMemberController::class, 'update'])->name('team-members.update');
+        Route::delete('/team-members/{id}', [TeamMemberController::class, 'destroy'])->name('team-members.destroy');
 
         // Langit Education Attendance & Payments
-        Route::post('/education-students', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storeStudent'])->name('education-students.store');
-        Route::put('/education-students/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'updateStudent'])->name('education-students.update');
-        Route::delete('/education-students/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyStudent'])->name('education-students.destroy');
+        Route::post('/education-students', [EducationAttendanceController::class, 'storeStudent'])->name('education-students.store');
+        Route::put('/education-students/{id}', [EducationAttendanceController::class, 'updateStudent'])->name('education-students.update');
+        Route::delete('/education-students/{id}', [EducationAttendanceController::class, 'destroyStudent'])->name('education-students.destroy');
 
-        Route::post('/education-attendance', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storeAttendance'])->name('education-attendance.store');
-        Route::put('/education-attendance/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'updateAttendance'])->name('education-attendance.update');
-        Route::delete('/education-attendance/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyAttendance'])->name('education-attendance.destroy');
+        Route::post('/education-attendance', [EducationAttendanceController::class, 'storeAttendance'])->name('education-attendance.store');
+        Route::put('/education-attendance/{id}', [EducationAttendanceController::class, 'updateAttendance'])->name('education-attendance.update');
+        Route::delete('/education-attendance/{id}', [EducationAttendanceController::class, 'destroyAttendance'])->name('education-attendance.destroy');
 
-        Route::post('/education-payments', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'storePayment'])->name('education-payments.store');
-        Route::delete('/education-payments/{id}', [\App\Http\Controllers\Admin\EducationAttendanceController::class, 'destroyPayment'])->name('education-payments.destroy');
+        Route::post('/education-payments', [EducationAttendanceController::class, 'storePayment'])->name('education-payments.store');
+        Route::delete('/education-payments/{id}', [EducationAttendanceController::class, 'destroyPayment'])->name('education-payments.destroy');
 
         // Computer Service Tickets
         Route::post('/tickets', [AdminDashboardController::class, 'createTicket'])->name('tickets.create');
@@ -146,9 +198,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/services/{id}', [AdminDashboardController::class, 'updateService'])->name('services.update');
         Route::post('/services/{id}/update', [AdminDashboardController::class, 'updateService'])->name('services.update-post');
 
-        Route::post('/client-deliveries/{id}/uploads/{upload}', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'start']);
-        Route::post('/client-deliveries/{id}/uploads/{upload}/chunks', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'chunk']);
-        Route::post('/client-deliveries/{id}/uploads/{upload}/complete', [\App\Http\Controllers\Admin\DeliveryUploadController::class, 'complete']);
+        Route::post('/client-deliveries/{id}/uploads/{upload}', [DeliveryUploadController::class, 'start']);
+        Route::post('/client-deliveries/{id}/uploads/{upload}/chunks', [DeliveryUploadController::class, 'chunk']);
+        Route::post('/client-deliveries/{id}/uploads/{upload}/complete', [DeliveryUploadController::class, 'complete']);
 
         // Layanan Pengambilan Foto Pelanggan (Client Deliveries)
         Route::post('/client-deliveries', [AdminDashboardController::class, 'createClientDelivery'])->name('client-deliveries.create');
@@ -174,5 +226,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/avatar', [AdminProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
         Route::delete('/profile/avatar', [AdminProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+
+        // LangitLens AI Face Photo Finder (Sub-menu Admin Langit)
+        Route::prefix('langitlens')->name('langitlens.')->group(function () {
+            Route::get('/', [LangitLensAdminController::class, 'dashboard'])->name('dashboard');
+            Route::get('/photos', [LangitLensAdminController::class, 'photos'])->name('photos');
+            Route::post('/photos', [LangitLensAdminController::class, 'storePhoto'])->name('photos.store');
+            Route::post('/photos/reindex-all', [LangitLensAdminController::class, 'reindexAllInsightFace'])->name('photos.reindex-all');
+            Route::get('/photos/{photo}/clean-source', [LangitLensAdminController::class, 'cleanSource'])->name('photos.clean-source');
+            Route::patch('/photos/{photo}', [LangitLensAdminController::class, 'updatePrice'])->name('photos.update');
+            Route::post('/photos/{photo}/reindex-faces', [LangitLensAdminController::class, 'reindexFaces'])->name('photos.reindex');
+            Route::delete('/photos/{photo}', [LangitLensAdminController::class, 'destroyPhoto'])->name('photos.destroy');
+            Route::put('/discount', [LangitLensAdminController::class, 'updateDiscount'])->name('discount.update');
+            Route::get('/requests', [LangitLensAdminController::class, 'requests'])->name('requests');
+            Route::post('/requests/{photoRequest}/send-originals', [LangitLensAdminController::class, 'sendOriginals'])->name('requests.send');
+            Route::post('/requests/{photoRequest}/cancel', [LangitLensAdminController::class, 'cancelRequest'])->name('requests.cancel');
+            Route::get('/customers', [LangitLensAdminController::class, 'customers'])->name('customers');
+            Route::delete('/customers/{customer}', [LangitLensAdminController::class, 'destroyCustomer'])->name('customers.destroy');
+        });
     });
 });

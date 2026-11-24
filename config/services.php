@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'insightface' => [
+        'url' => env('INSIGHTFACE_URL', 'http://127.0.0.1:8001'),
+        'timeout' => (int) env('INSIGHTFACE_TIMEOUT', 120),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://127.0.0.1:8000/auth/google/callback'),
+    ],
+
 ];

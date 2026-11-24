@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Camera, Code2, GraduationCap, Cpu, Sparkles, PackageCheck, Handshake,
-    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle, LogIn
+    ChevronDown, Menu, X, ArrowRight, Sun, Moon, Sparkle, LogIn, UserPlus
 } from 'lucide-react';
 import InteractiveBentoCard from '@/Components/InteractiveBentoCard';
 
@@ -241,52 +241,18 @@ export default function FloatingHeadbar({
 
                     {/* 3. RIGHT CONTROLS: THEME SWITCHER, CMS LINK & CTA (SD/HD moved in-place to Photo & Video sections) */}
                     <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
-                        {/* Segmented Dual-Theme Switcher (Icon-Only, No Text - Responsive Mobile & Desktop) */}
-                        {setTheme && (
+                        {/* Single-Icon Theme Switcher (1 Logo, Hemat Tempat) */}
+                        {(setTheme || toggleTheme) && (
                             <button
                                 type="button"
-                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                onClick={() =>
+                                    setTheme
+                                        ? setTheme(theme === 'dark' ? 'light' : 'dark')
+                                        : toggleTheme()
+                                }
                                 aria-label={theme === 'dark' ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
-                                className="sm:hidden w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-amber-400 border border-[#005792]/20"
-                            >
-                                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                            </button>
-                        )}
-                        {setTheme ? (
-                            <div className="hidden sm:flex items-center p-0.5 rounded-full bg-slate-200/80 dark:bg-white/10 border border-[#005792]/20 dark:border-[#005792]/30 shadow-inner transition-all duration-300 gap-0.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setTheme('dark')}
-                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
-                                        theme === 'dark'
-                                            ? 'bg-slate-900 text-indigo-300 shadow-sm scale-[1.05]'
-                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
-                                    }`}
-                                    title="Mode Gelap (Tema Utama)"
-                                    aria-label="Mode Gelap"
-                                >
-                                    <Moon className="w-3.5 h-3.5 shrink-0" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setTheme('light')}
-                                    className={`p-1.5 rounded-full transition-all duration-200 cursor-pointer ${
-                                        theme === 'light'
-                                            ? 'bg-white text-amber-500 shadow-sm scale-[1.05]'
-                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
-                                    }`}
-                                    title="Mode Terang (Tema Kedua)"
-                                    aria-label="Mode Terang"
-                                >
-                                    <Sun className="w-3.5 h-3.5 shrink-0" />
-                                </button>
-                            </div>
-                        ) : toggleTheme ? (
-                            <button
-                                type="button"
-                                onClick={toggleTheme}
-                                aria-label="Toggle Theme"
-                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-amber-400 border border-[#005792]/20 dark:border-[#005792]/30 transition-transform active:scale-95 shadow-sm"
+                                title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                                className="w-9 h-9 sm:w-9 sm:h-9 shrink-0 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-amber-400 border border-[#005792]/20 dark:border-[#005792]/30 transition-transform active:scale-95 shadow-2xs cursor-pointer"
                             >
                                 {theme === 'dark' ? (
                                     <Sun className="w-4 h-4 text-amber-400" />
@@ -294,9 +260,9 @@ export default function FloatingHeadbar({
                                     <Moon className="w-4 h-4 text-slate-700" />
                                 )}
                             </button>
-                        ) : null}
+                        )}
 
-                        {/* Login Unified CTA Button (Topbar Kanan Atas) */}
+                        {/* Masuk & Daftar CTA Buttons (Topbar Kanan Atas) */}
                         <Link
                             href="/login"
                             className={`shrink-0 flex items-center gap-1.5 rounded-full bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-semibold text-[11px] sm:text-xs shadow-xs hover:shadow-sm border border-[#005792] active:scale-95 transition-all whitespace-nowrap cursor-pointer ${
@@ -305,7 +271,18 @@ export default function FloatingHeadbar({
                             title="Masuk ke Akun"
                         >
                             <LogIn className="w-3.5 h-3.5 shrink-0" />
-                            <span>Login</span>
+                            <span>Masuk</span>
+                        </Link>
+
+                        <Link
+                            href="/register"
+                            className={`shrink-0 flex items-center gap-1.5 rounded-full bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 text-[#005792] dark:text-cyan-300 font-semibold text-[11px] sm:text-xs shadow-xs border border-[#005792]/35 dark:border-cyan-500/35 active:scale-95 transition-all whitespace-nowrap cursor-pointer ${
+                                scrolled ? 'px-3 py-1 sm:py-1.5' : 'px-3.5 sm:px-4 py-1.5'
+                            }`}
+                            title="Daftar Akun Baru"
+                        >
+                            <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                            <span>Daftar</span>
                         </Link>
 
                         {/* Mobile Hamburger Toggle */}
@@ -480,8 +457,16 @@ export default function FloatingHeadbar({
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="block px-3 py-2 rounded-xl text-sm font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 flex items-center justify-between"
                             >
-                                <span>Login Akun</span>
+                                <span>Masuk Akun</span>
                                 <LogIn className="w-4 h-4 shrink-0" />
+                            </Link>
+                            <Link 
+                                href="/register" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block px-3 py-2 rounded-xl text-sm font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 flex items-center justify-between"
+                            >
+                                <span>Daftar Akun</span>
+                                <UserPlus className="w-4 h-4 shrink-0" />
                             </Link>
                             <Link 
                                 href="/konsultasi" 
