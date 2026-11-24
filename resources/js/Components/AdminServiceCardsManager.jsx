@@ -178,7 +178,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     };
 
     return (
-        <div className="min-w-0 space-y-6 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
+        <div className="min-w-0 space-y-6 break-words [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Header info bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-md">
                 <div>

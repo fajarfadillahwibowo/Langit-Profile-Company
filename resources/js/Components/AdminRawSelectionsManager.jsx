@@ -6,6 +6,7 @@ import {
     User, Calendar, Filter, Send, RefreshCw, Tag
 } from 'lucide-react';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 
 export default function AdminRawSelectionsManager({ clientRawSelections = [] }) {
     // Filter state
@@ -134,7 +135,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
             ) : (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel pilihan foto mentahan pelanggan">
-                        <table className="w-full min-w-[64rem] text-left border-collapse [&_td]:max-w-xs text-xs">
+                        <table className="w-full min-w-[64rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap text-xs">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-[11px] font-mono uppercase text-slate-500">
                                     <th className="px-5 py-3.5">Tanggal</th>
@@ -212,43 +213,39 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
                                             </td>
 
                                             <td className="px-5 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => openDetailModal(sel)}
-                                                        className="px-3 py-1.5 rounded-xl bg-[#005792] hover:bg-[#004270] text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-                                                        title="Lihat Rincian Foto Terpilih"
-                                                    >
-                                                        <Eye className="w-3.5 h-3.5" />
-                                                        <span>Lihat Foto</span>
-                                                    </button>
-
-                                                    {clientPhone && (
-                                                        <a
-                                                            href={getWhatsAppUrl('client-delivery', {
-                                                                phone: clientPhone,
-                                                                clientName: clientName,
-                                                                title: sel.delivery?.title || 'Foto Mentahan',
-                                                                customMessage: `Halo Kak ${clientName}, kami dari Admin Studio Langit telah menerima ${sel.total_photos} foto mentahan pilihan Anda untuk album "${sel.delivery?.title}". Total pembayaran: Rp ${Number(sel.total_price).toLocaleString('id-ID')}. Kami akan segera memulai proses editing.`
-                                                            })}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-colors"
-                                                            title="Hubungi Klien via WhatsApp"
-                                                        >
-                                                            <MessageSquare className="w-4 h-4" />
-                                                        </a>
-                                                    )}
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteSelection(sel.id)}
-                                                        className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
-                                                        title="Hapus Pengajuan"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <AdminActionMenu
+                                                    buttonTitle="Aksi Pilihan Foto"
+                                                    items={[
+                                                        {
+                                                            label: 'Lihat Foto Terpilih',
+                                                            icon: Eye,
+                                                            tone: 'primary',
+                                                            onClick: () => openDetailModal(sel),
+                                                        },
+                                                        {
+                                                            label: 'Hubungi via WhatsApp',
+                                                            icon: MessageSquare,
+                                                            tone: 'emerald',
+                                                            hidden: !clientPhone,
+                                                            external: true,
+                                                            href: clientPhone
+                                                                ? getWhatsAppUrl('client-delivery', {
+                                                                      phone: clientPhone,
+                                                                      clientName: clientName,
+                                                                      title: sel.delivery?.title || 'Foto Mentahan',
+                                                                      customMessage: `Halo Kak ${clientName}, kami dari Admin Studio Langit telah menerima ${sel.total_photos} foto mentahan pilihan Anda untuk album "${sel.delivery?.title}". Total pembayaran: Rp ${Number(sel.total_price).toLocaleString('id-ID')}. Kami akan segera memulai proses editing.`,
+                                                                  })
+                                                                : undefined,
+                                                        },
+                                                        {
+                                                            label: 'Hapus Pengajuan',
+                                                            icon: Trash2,
+                                                            tone: 'danger',
+                                                            dividerBefore: true,
+                                                            onClick: () => handleDeleteSelection(sel.id),
+                                                        },
+                                                    ]}
+                                                />
                                             </td>
                                         </tr>
                                     );

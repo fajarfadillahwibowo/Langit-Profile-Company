@@ -181,8 +181,8 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                     {recentRequests.length === 0 ? (
                         <p className="text-xs text-slate-400 py-4 text-center">Belum ada permintaan foto.</p>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
+                        <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+                            <table className="w-full min-w-[36rem] text-left text-xs [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b border-slate-800 text-slate-400">
                                         <th className="pb-2.5 pr-4">Kode</th>

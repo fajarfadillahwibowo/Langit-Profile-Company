@@ -8,6 +8,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import { uploadRawPhotosBatch, formatUploadBytes } from '@/Utils/rawPhotoUploader.mjs';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 
 export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
     // Modals state
@@ -304,7 +305,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
             ) : (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel foto mentahan pelanggan">
-                        <table className="w-full min-w-[62rem] text-left border-collapse [&_td]:max-w-xs">
+                        <table className="w-full min-w-[62rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-[11px] font-mono uppercase text-slate-500">
                                     <th className="px-5 py-3.5">Pelanggan</th>
@@ -376,56 +377,41 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                                             </td>
 
                                             <td className="px-5 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => openUploadModal(delivery)}
-                                                        className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-                                                        title="Upload Foto Mentahan"
-                                                    >
-                                                        <Plus className="w-3.5 h-3.5" />
-                                                        <span>Upload</span>
-                                                    </button>
-
-                                                    {rawCount > 0 && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setViewPhotosDelivery(delivery);
-                                                                    setSelectedDeleteIds([]);
-                                                                }}
-                                                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-                                                                title="Lihat Galeri Foto Mentahan"
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5" />
-                                                                <span>Lihat ({rawCount})</span>
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setClearModalDelivery(delivery);
-                                                                }}
-                                                                className="px-2.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                                                                title={`Hapus / Kosongkan Semua Foto Mentahan (${rawCount} Foto)`}
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                                                                <span>Hapus</span>
-                                                            </button>
-                                                        </>
-                                                    )}
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => openSettingsModal(delivery)}
-                                                        className="p-1.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-600 dark:text-slate-300 cursor-pointer"
-                                                        title="Atur Harga & Diskon"
-                                                    >
-                                                        <Settings className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <AdminActionMenu
+                                                    buttonTitle="Aksi Foto Mentahan"
+                                                    items={[
+                                                        {
+                                                            label: 'Upload Mentahan',
+                                                            icon: Plus,
+                                                            tone: 'primary',
+                                                            onClick: () => openUploadModal(delivery),
+                                                        },
+                                                        {
+                                                            label: `Lihat Galeri (${rawCount})`,
+                                                            icon: Eye,
+                                                            tone: 'default',
+                                                            hidden: rawCount === 0,
+                                                            onClick: () => {
+                                                                setViewPhotosDelivery(delivery);
+                                                                setSelectedDeleteIds([]);
+                                                            },
+                                                        },
+                                                        {
+                                                            label: 'Atur Harga & Diskon',
+                                                            icon: Settings,
+                                                            tone: 'amber',
+                                                            onClick: () => openSettingsModal(delivery),
+                                                        },
+                                                        {
+                                                            label: 'Hapus Semua Mentahan',
+                                                            icon: Trash2,
+                                                            tone: 'danger',
+                                                            dividerBefore: true,
+                                                            hidden: rawCount === 0,
+                                                            onClick: () => setClearModalDelivery(delivery),
+                                                        },
+                                                    ]}
+                                                />
                                             </td>
                                         </tr>
                                     );

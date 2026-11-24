@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { router } from '@inertiajs/react';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 import {
     GraduationCap,
     CalendarCheck,
@@ -1303,42 +1304,45 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                             )}
                                         </td>
                                         <td className="py-3 px-4 text-right whitespace-nowrap">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    onClick={() => {
-                                                        setDetailCycleStudent(st);
-                                                        setModalCycleFilter('all');
-                                                    }}
-                                                    className="px-2 py-1 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[11px] font-bold hover:bg-cyan-500/20 cursor-pointer"
-                                                    title="Lihat Semua Sesi Lengkap"
-                                                >
-                                                    Semua Sesi
-                                                </button>
-                                                <button
-                                                    onClick={() => handleOpenAttendance(st, (st.total_meetings || 0) + 1)}
-                                                    className="px-2.5 py-1 rounded-lg bg-[#005792] text-white text-[11px] font-bold hover:bg-[#00487a] cursor-pointer"
-                                                >
-                                                    + Absen
-                                                </button>
-                                                <button
-                                                    onClick={() => handleOpenPayment(st)}
-                                                    className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-500 cursor-pointer"
-                                                >
-                                                    Bayar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleOpenStudentModal(st)}
-                                                    className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer"
-                                                >
-                                                    <Pencil className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteStudent(st)}
-                                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
+                                            <AdminActionMenu
+                                                buttonTitle={`Aksi Siswa ${st.name}`}
+                                                items={[
+                                                    {
+                                                        label: 'Lihat Semua Sesi',
+                                                        icon: CalendarCheck,
+                                                        tone: 'primary',
+                                                        onClick: () => {
+                                                            setDetailCycleStudent(st);
+                                                            setModalCycleFilter('all');
+                                                        },
+                                                    },
+                                                    {
+                                                        label: 'Catat Absen (+1)',
+                                                        icon: Plus,
+                                                        tone: 'primary',
+                                                        onClick: () => handleOpenAttendance(st, (st.total_meetings || 0) + 1),
+                                                    },
+                                                    {
+                                                        label: 'Catat Pembayaran',
+                                                        icon: Wallet,
+                                                        tone: 'emerald',
+                                                        onClick: () => handleOpenPayment(st),
+                                                    },
+                                                    {
+                                                        label: 'Edit Data Siswa',
+                                                        icon: Pencil,
+                                                        tone: 'amber',
+                                                        onClick: () => handleOpenStudentModal(st),
+                                                    },
+                                                    {
+                                                        label: 'Hapus Siswa',
+                                                        icon: Trash2,
+                                                        tone: 'danger',
+                                                        dividerBefore: true,
+                                                        onClick: () => handleDeleteStudent(st),
+                                                    },
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))}
@@ -1404,13 +1408,17 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         </td>
                                         <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{att.mentor_name || '-'}</td>
                                         <td className="py-3 px-4 text-right whitespace-nowrap">
-                                            <button
-                                                onClick={() => handleDeleteAttendance(att)}
-                                                className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
-                                                title="Hapus Catatan Absen"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
+                                            <AdminActionMenu
+                                                buttonTitle="Aksi Catatan Absen"
+                                                items={[
+                                                    {
+                                                        label: 'Hapus Catatan Absen',
+                                                        icon: Trash2,
+                                                        tone: 'danger',
+                                                        onClick: () => handleDeleteAttendance(att),
+                                                    },
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))}
@@ -1471,13 +1479,17 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                         </td>
                                         <td className="py-3 px-4 text-slate-500">{pay.notes || '-'}</td>
                                         <td className="py-3 px-4 text-right whitespace-nowrap">
-                                            <button
-                                                onClick={() => handleDeletePayment(pay)}
-                                                className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
-                                                title="Hapus Catatan Pembayaran"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
+                                            <AdminActionMenu
+                                                buttonTitle="Aksi Pembayaran"
+                                                items={[
+                                                    {
+                                                        label: 'Hapus Pembayaran',
+                                                        icon: Trash2,
+                                                        tone: 'danger',
+                                                        onClick: () => handleDeletePayment(pay),
+                                                    },
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))}
@@ -1768,13 +1780,17 @@ export default function AdminEducationAttendance({ students = [], financials = {
                                                                     {att.notes || '-'}
                                                                 </td>
                                                                 <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                                                                    <button
-                                                                        onClick={() => handleDeleteAttendance(att)}
-                                                                        className="p-1 rounded text-slate-400 hover:text-rose-500 cursor-pointer"
-                                                                        title="Hapus Sesi"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
+                                                                    <AdminActionMenu
+                                                                        buttonTitle="Aksi Sesi"
+                                                                        items={[
+                                                                            {
+                                                                                label: 'Hapus Sesi',
+                                                                                icon: Trash2,
+                                                                                tone: 'danger',
+                                                                                onClick: () => handleDeleteAttendance(att),
+                                                                            },
+                                                                        ]}
+                                                                    />
                                                                 </td>
                                                             </tr>
                                                         ))}

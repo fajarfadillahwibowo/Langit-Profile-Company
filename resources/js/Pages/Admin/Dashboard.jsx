@@ -8,6 +8,7 @@ import AdminClientDeliveryManager from '@/Components/AdminClientDeliveryManager'
 import AdminTeamManager from '@/Components/AdminTeamManager';
 import AdminGalleryAlbum, { GalleryPhotoPreview } from '@/Components/AdminGalleryAlbum';
 import AdminEducationAttendance from '@/Components/AdminEducationAttendance';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 import { 
     LayoutDashboard, Cpu, PackageCheck, Camera, Sparkles, Handshake,
     Ticket, LogOut, Check, X, Plus, Trash2, Edit3, ExternalLink,
@@ -81,6 +82,7 @@ export default function AdminDashboard({
     teamMembers = [],
     educationStudents = [],
     educationFinancials = {},
+    langitLensOverview = {},
     children,
     portalTitle = 'LangitLens AI',
 }) {
@@ -181,6 +183,18 @@ export default function AdminDashboard({
     const pendingRawSelectionsCount = useMemo(() => {
         return clientRawSelections.filter(s => s.status === 'pending').length;
     }, [clientRawSelections]);
+
+    const langitLensStats = useMemo(() => ({
+        total_photos: langitLensOverview?.stats?.total_photos ?? metrics.langitlens_total_photos ?? 0,
+        indexed_faces: langitLensOverview?.stats?.indexed_faces ?? metrics.langitlens_indexed_faces ?? 0,
+        pending_requests: langitLensOverview?.stats?.pending_requests ?? metrics.langitlens_pending_requests ?? 0,
+        completed_requests: langitLensOverview?.stats?.completed_requests ?? metrics.langitlens_completed_requests ?? 0,
+        total_requests: langitLensOverview?.stats?.total_requests ?? metrics.langitlens_total_requests ?? 0,
+        total_customers: langitLensOverview?.stats?.total_customers ?? metrics.langitlens_total_customers ?? 0,
+        total_revenue: langitLensOverview?.stats?.total_revenue ?? metrics.langitlens_total_revenue ?? 0,
+    }), [langitLensOverview, metrics]);
+
+    const langitLensRecentRequests = langitLensOverview?.recent_requests || [];
 
     const activeDeliveriesCount = useMemo(() => {
         return clientDeliveries.filter(d => !d.is_expired).length;
@@ -515,6 +529,13 @@ export default function AdminDashboard({
             currency: 'IDR',
             maximumFractionDigits: 0,
         }).format(val);
+    };
+
+    const formatShortDate = (dateStr) => {
+        if (!dateStr) return '-';
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return String(dateStr).split('T')[0];
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
     // Actions
@@ -1041,7 +1062,7 @@ export default function AdminDashboard({
     };
 
     return (
-        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
+        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_table]:[overflow-wrap:normal] [&_table]:break-normal [&_th]:whitespace-nowrap [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title={activeTab === 'langitlens' ? `${portalTitle} — LangitLens` : 'Admin CMS Executive Dashboard — Langit'} />
 
             {/* Mobile Sidebar Overlay & Slide-Over Drawer */}
@@ -1085,12 +1106,189 @@ export default function AdminDashboard({
 
                             {/* Nav Items Scrollable */}
                             <nav className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1 -mr-1 sidebar-scroll">
-                                {/* KELOMPOK 1: KONTEN PUBLIK & INFORMASI */}
-                                <div className="pt-1 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                                {/* UTAMA: EXECUTIVE OVERVIEW */}
+                                <button
+                                    onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'overview'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
+                                    <span className="truncate">Executive Overview</span>
+                                </button>
+
+                                {/* KELOMPOK 1: KELOLA PELANGGAN */}
+                                <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                                    Kelola Pelanggan
+                                </div>
+
+                                {/* 1. Foto Pelanggan (Delivery) */}
+                                <button
+                                    onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'client_deliveries'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
+                                        <span className="truncate">Foto Pelanggan</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        {pendingRawSelectionsCount > 0 && (
+                                            <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                                {pendingRawSelectionsCount} Baru
+                                            </span>
+                                        )}
+                                        <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                            activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                        }`}>
+                                            {clientDeliveries.length}
+                                        </span>
+                                    </div>
+                                </button>
+
+                                {/* 2. LangitLens */}
+                                <div className="space-y-1">
+                                    <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
+                                        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                            activeTab === 'langitlens'
+                                                ? 'bg-white/15 text-white font-bold'
+                                                : 'text-white/90 hover:text-white hover:bg-white/10'
+                                        }`}>
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
+                                            <span className="truncate">LangitLens</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            {langitLensStats.pending_requests > 0 && (
+                                                <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                                    {langitLensStats.pending_requests} Baru
+                                                </span>
+                                            )}
+                                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
+                                        </div>
+                                    </button>
+                                    {isLangitLensMenuOpen && (
+                                        <LangitLensSubmenu activeTab={activeTab} url={url}
+                                            onNavigate={() => { setActiveTab('langitlens'); setMobileSidebarOpen(false); }} />
+                                    )}
+                                </div>
+
+                                {/* KELOMPOK 2: OPERASIONAL & PESANAN */}
+                                <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                                    Operasional & Pesanan
+                                </div>
+
+                                {/* 3. Computer Servis */}
+                                <button
+                                    onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'tickets'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
+                                        <span>Computer Servis</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'tickets' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {metrics.pending_service_tickets ?? serviceTickets.length}
+                                    </span>
+                                </button>
+
+                                {/* 4. Sewa Alat */}
+                                <button
+                                    onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'rentals'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
+                                        <span>Sewa Alat & Gear</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {sidebarRentalBadge}
+                                    </span>
+                                </button>
+
+                                {/* 5. Internship Pelamar */}
+                                <button
+                                    onClick={() => { setActiveTab('internships'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'internships'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Sparkles className={`w-4 h-4 ${activeTab === 'internships' ? 'text-[#005792]' : 'text-purple-300'}`} />
+                                        <span>Internship Pelamar</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'internships' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {internshipApplications.length}
+                                    </span>
+                                </button>
+
+                                {/* 6. Proposal Kerja Sama */}
+                                <button
+                                    onClick={() => { setActiveTab('collaborations'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'collaborations'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Handshake className={`w-4 h-4 ${activeTab === 'collaborations' ? 'text-[#005792]' : 'text-rose-300'}`} />
+                                        <span>Proposal Kerja Sama</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'collaborations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {collaborations.length}
+                                    </span>
+                                </button>
+
+                                {/* 7. Jadwal Konsultasi */}
+                                <button
+                                    onClick={() => { setActiveTab('consultations'); setMobileSidebarOpen(false); }}
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'consultations'
+                                            ? 'bg-white text-[#005792] font-bold shadow-md'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Ticket className={`w-4 h-4 ${activeTab === 'consultations' ? 'text-[#005792]' : 'text-sky-300'}`} />
+                                        <span>Jadwal Konsultasi</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                        activeTab === 'consultations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                    }`}>
+                                        {recentConsultations.length}
+                                    </span>
+                                </button>
+
+                                {/* KELOMPOK 3: KONTEN & FOTO PUBLIK */}
+                                <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
                                     Konten & Foto Publik
                                 </div>
 
-                                {/* 1. Beranda (7 Kartu Layanan) */}
+                                {/* 8. Beranda (7 Kartu Layanan) */}
                                 <button
                                     onClick={() => { setActiveTab('services'); setMobileSidebarOpen(false); }}
                                     className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -1110,7 +1308,7 @@ export default function AdminDashboard({
                                     </span>
                                 </button>
 
-                                {/* 2. Accordion Galeri & Foto Layanan */}
+                                {/* 9. Accordion Galeri & Foto Layanan */}
                                 <div className="space-y-1">
                                     <button
                                         onClick={() => {
@@ -1207,170 +1405,23 @@ export default function AdminDashboard({
                                     )}
                                 </div>
 
-                                {/* 3. Foto Pelanggan (Delivery) */}
+                                {/* 10. Our Team */}
                                 <button
                                     onClick={() => { setActiveTab('our_team'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-colors ${activeTab === 'our_team' ? 'bg-white text-[#005792] font-bold shadow-md' : 'text-white/90 hover:bg-white/10'}`}
-                                >
-                                    <span className="flex items-center gap-3"><Users className="h-4 w-4" />Our Team</span>
-                                    <span className="text-xs">{teamMembers.length}</span>
-                                </button>
-                                <button
-                                    onClick={() => { setActiveTab('client_deliveries'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'client_deliveries'
+                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                                        activeTab === 'our_team'
                                             ? 'bg-white text-[#005792] font-bold shadow-md'
                                             : 'text-white/90 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                        <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
-                                        <span className="truncate">Foto Pelanggan</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                        {pendingRawSelectionsCount > 0 && (
-                                            <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
-                                                {pendingRawSelectionsCount} Baru
-                                            </span>
-                                        )}
-                                        <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                            activeTab === 'client_deliveries' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                        }`}>
-                                            {clientDeliveries.length}
-                                        </span>
-                                    </div>
-                                </button>
-
-                                <div className="space-y-1">
-                                    <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
-                                        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
-                                        <div className="flex items-center gap-2.5 min-w-0">
-                                            <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
-                                            <span className="truncate">LangitLens</span>
-                                        </div>
-                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
-                                    </button>
-                                    {isLangitLensMenuOpen && (
-                                        <LangitLensSubmenu activeTab={activeTab} url={url}
-                                            onNavigate={() => { setActiveTab('langitlens'); setMobileSidebarOpen(false); }} />
-                                    )}
-                                </div>
-
-                                {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
-                                <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
-                                    Operasional & Pesanan
-                                </div>
-
-                                {/* 4. Overview */}
-                                <button
-                                    onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'overview'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <LayoutDashboard className={`w-4 h-4 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
-                                    <span>Executive Overview</span>
-                                </button>
-
-                                {/* 5. Computer Servis */}
-                                <button
-                                    onClick={() => { setActiveTab('tickets'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'tickets'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Cpu className={`w-4 h-4 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
-                                        <span>Computer Servis</span>
+                                        <Users className={`w-4 h-4 shrink-0 ${activeTab === 'our_team' ? 'text-[#005792]' : 'text-indigo-200'}`} />
+                                        <span className="truncate">Our Team</span>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'tickets' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
+                                        activeTab === 'our_team' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
                                     }`}>
-                                        {metrics.pending_service_tickets ?? serviceTickets.length}
-                                    </span>
-                                </button>
-
-                                {/* 6. Sewa Alat */}
-                                <button
-                                    onClick={() => { setActiveTab('rentals'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'rentals'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <PackageCheck className={`w-4 h-4 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
-                                        <span>Sewa Alat & Gear</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'rentals' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {sidebarRentalBadge}
-                                    </span>
-                                </button>
-
-                                {/* 7. Internship Pelamar */}
-                                <button
-                                    onClick={() => { setActiveTab('internships'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'internships'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Sparkles className={`w-4 h-4 ${activeTab === 'internships' ? 'text-[#005792]' : 'text-purple-300'}`} />
-                                        <span>Internship Pelamar</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'internships' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {internshipApplications.length}
-                                    </span>
-                                </button>
-
-                                {/* 8. Proposal Kerja Sama */}
-                                <button
-                                    onClick={() => { setActiveTab('collaborations'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'collaborations'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Handshake className={`w-4 h-4 ${activeTab === 'collaborations' ? 'text-[#005792]' : 'text-rose-300'}`} />
-                                        <span>Proposal Kerja Sama</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'collaborations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {collaborations.length}
-                                    </span>
-                                </button>
-
-                                {/* 9. Jadwal Konsultasi */}
-                                <button
-                                    onClick={() => { setActiveTab('consultations'); setMobileSidebarOpen(false); }}
-                                    className={`w-full flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
-                                        activeTab === 'consultations'
-                                            ? 'bg-white text-[#005792] font-bold shadow-md'
-                                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Ticket className={`w-4 h-4 ${activeTab === 'consultations' ? 'text-[#005792]' : 'text-sky-300'}`} />
-                                        <span>Jadwal Konsultasi</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                        activeTab === 'consultations' ? 'bg-[#005792]/15 text-[#005792]' : 'bg-white/20 text-white'
-                                    }`}>
-                                        {recentConsultations.length}
+                                        {teamMembers.length}
                                     </span>
                                 </button>
 
@@ -1441,12 +1492,200 @@ export default function AdminDashboard({
                         }}
                         className="flex-1 min-h-0 overflow-y-auto space-y-1.5 text-xs font-medium pr-1.5 -mr-1.5 sidebar-scroll"
                     >
-                        {/* KELOMPOK 1: KONTEN PUBLIK & INFORMASI */}
-                        <div className="pt-1 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                        {/* UTAMA: EXECUTIVE OVERVIEW */}
+                        <button
+                            onClick={() => setActiveTab('overview')}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'overview'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
+                            <span className="truncate">Executive Overview</span>
+                        </button>
+
+                        {/* KELOMPOK 1: KELOLA PELANGGAN */}
+                        <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                            Kelola Pelanggan
+                        </div>
+
+                        {/* 1. Foto Pelanggan (Delivery & Ambil Foto) */}
+                        <button
+                            onClick={() => setActiveTab('client_deliveries')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'client_deliveries'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
+                                <span className="truncate">Foto Pelanggan</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                {pendingRawSelectionsCount > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                        {pendingRawSelectionsCount} Baru
+                                    </span>
+                                )}
+                                <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                                    activeTab === 'client_deliveries'
+                                        ? 'bg-[#005792]/15 text-[#005792]'
+                                        : 'bg-white/20 text-white'
+                                }`}>
+                                    {clientDeliveries.length}
+                                </span>
+                            </div>
+                        </button>
+
+                        {/* 2. LangitLens */}
+                        <div className="space-y-1">
+                            <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
+                                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                    activeTab === 'langitlens'
+                                        ? 'bg-white/15 text-white font-bold'
+                                        : 'text-white/90 hover:text-white hover:bg-white/10'
+                                }`}>
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
+                                    <span className="truncate">LangitLens</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {langitLensStats.pending_requests > 0 && (
+                                        <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
+                                            {langitLensStats.pending_requests} Baru
+                                        </span>
+                                    )}
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
+                                </div>
+                            </button>
+                            {isLangitLensMenuOpen && (
+                                <LangitLensSubmenu activeTab={activeTab} url={url} onNavigate={() => setActiveTab('langitlens')} />
+                            )}
+                        </div>
+
+                        {/* KELOMPOK 2: OPERASIONAL & PESANAN */}
+                        <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
+                            Operasional & Pesanan
+                        </div>
+
+                        {/* 3. Computer Servis */}
+                        <button
+                            onClick={() => setActiveTab('tickets')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'tickets'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Cpu className={`w-4 h-4 shrink-0 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
+                                <span className="truncate">Computer Servis</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
+                                activeTab === 'tickets'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {metrics.pending_service_tickets ?? serviceTickets.length}
+                            </span>
+                        </button>
+
+                        {/* 4. Sewa Alat & Gear */}
+                        <button
+                            onClick={() => setActiveTab('rentals')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'rentals'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <PackageCheck className={`w-4 h-4 shrink-0 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
+                                <span className="truncate">Sewa Alat & Gear</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
+                                activeTab === 'rentals'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {sidebarRentalBadge}
+                            </span>
+                        </button>
+
+                        {/* 5. Internship Pelamar */}
+                        <button
+                            onClick={() => setActiveTab('internships')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'internships'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === 'internships' ? 'text-[#005792]' : 'text-purple-300'}`} />
+                                <span className="truncate">Internship Pelamar</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
+                                activeTab === 'internships'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {internshipApplications.length}
+                            </span>
+                        </button>
+
+                        {/* 6. Proposal Kerja Sama */}
+                        <button
+                            onClick={() => setActiveTab('collaborations')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'collaborations'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Handshake className={`w-4 h-4 shrink-0 ${activeTab === 'collaborations' ? 'text-[#005792]' : 'text-rose-300'}`} />
+                                <span className="truncate">Proposal Kerja Sama</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
+                                activeTab === 'collaborations'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {collaborations.length}
+                            </span>
+                        </button>
+
+                        {/* 7. Jadwal Konsultasi */}
+                        <button
+                            onClick={() => setActiveTab('consultations')}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
+                                activeTab === 'consultations'
+                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
+                                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Ticket className={`w-4 h-4 shrink-0 ${activeTab === 'consultations' ? 'text-[#005792]' : 'text-sky-300'}`} />
+                                <span className="truncate">Jadwal Konsultasi</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
+                                activeTab === 'consultations'
+                                    ? 'bg-[#005792]/15 text-[#005792]'
+                                    : 'bg-white/20 text-white'
+                            }`}>
+                                {recentConsultations.length}
+                            </span>
+                        </button>
+
+                        {/* KELOMPOK 3: KONTEN & FOTO PUBLIK */}
+                        <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
                             Konten & Foto Publik
                         </div>
 
-                        {/* 1. Beranda (7 Layanan) */}
+                        {/* 8. Beranda (7 Layanan) */}
                         <button
                             onClick={() => setActiveTab('services')}
                             className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
@@ -1468,7 +1707,7 @@ export default function AdminDashboard({
                             </span>
                         </button>
 
-                        {/* 2. Sub-Sidebar: Galeri & EXIF Media with Services Accordion */}
+                        {/* 9. Sub-Sidebar: Semua Layanan (Galeri & EXIF Media with Services Accordion) */}
                         <div className="space-y-1">
                             <button
                                 onClick={() => {
@@ -1580,181 +1819,25 @@ export default function AdminDashboard({
                             )}
                         </div>
 
-                        {/* 3. Layanan Foto Pelanggan (Delivery & Ambil Foto) */}
+                        {/* 10. Our Team */}
                         <button
                             onClick={() => setActiveTab('our_team')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-colors ${activeTab === 'our_team' ? 'bg-white text-[#005792] font-bold shadow-md' : 'text-white/90 hover:bg-white/10'}`}
-                        >
-                            <span className="flex items-center gap-2.5 min-w-0 truncate"><Users className="h-4 w-4 shrink-0" />Our Team</span>
-                            <span className="text-xs shrink-0">{teamMembers.length}</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('client_deliveries')}
                             className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'client_deliveries'
+                                activeTab === 'our_team'
                                     ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
                                     : 'text-white/90 hover:text-white hover:bg-white/10'
                             }`}
                         >
                             <div className="flex items-center gap-2.5 min-w-0">
-                                <FolderHeart className={`w-4 h-4 shrink-0 ${activeTab === 'client_deliveries' ? 'text-[#005792]' : 'text-pink-300'}`} />
-                                <span className="truncate">Foto Pelanggan</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                {pendingRawSelectionsCount > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-500 text-slate-950 animate-pulse">
-                                        {pendingRawSelectionsCount} Baru
-                                    </span>
-                                )}
-                                <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                                    activeTab === 'client_deliveries'
-                                        ? 'bg-[#005792]/15 text-[#005792]'
-                                        : 'bg-white/20 text-white'
-                                }`}>
-                                    {clientDeliveries.length}
-                                </span>
-                            </div>
-                        </button>
-
-                        <div className="space-y-1">
-                            <button type="button" onClick={() => setIsLangitLensMenuOpen((v) => !v)} aria-expanded={isLangitLensMenuOpen}
-                                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 text-white/90 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                    <ScanFace className="w-4 h-4 shrink-0 text-cyan-300" />
-                                    <span className="truncate">LangitLens</span>
-                                </div>
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangitLensMenuOpen ? 'rotate-180' : ''} text-white/70`} />
-                            </button>
-                            {isLangitLensMenuOpen && (
-                                <LangitLensSubmenu activeTab={activeTab} url={url} onNavigate={() => setActiveTab('langitlens')} />
-                            )}
-                        </div>
-
-                        {/* KELOMPOK 2: OPERASIONAL & LAYANAN KLIEN */}
-                        <div className="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-sky-200/85 font-mono">
-                            Operasional & Pesanan
-                        </div>
-
-                        {/* 4. Overview */}
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'overview'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === 'overview' ? 'text-[#005792]' : 'text-sky-200'}`} />
-                            <span className="truncate">Executive Overview</span>
-                        </button>
-
-                        {/* 5. Computer Servis */}
-                        <button
-                            onClick={() => setActiveTab('tickets')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'tickets'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <Cpu className={`w-4 h-4 shrink-0 ${activeTab === 'tickets' ? 'text-[#005792]' : 'text-orange-300'}`} />
-                                <span className="truncate">Computer Servis</span>
+                                <Users className={`w-4 h-4 shrink-0 ${activeTab === 'our_team' ? 'text-[#005792]' : 'text-indigo-200'}`} />
+                                <span className="truncate">Our Team</span>
                             </div>
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'tickets'
+                                activeTab === 'our_team'
                                     ? 'bg-[#005792]/15 text-[#005792]'
                                     : 'bg-white/20 text-white'
                             }`}>
-                                {metrics.pending_service_tickets ?? serviceTickets.length}
-                            </span>
-                        </button>
-
-                        {/* 6. Sewa Alat & Gear */}
-                        <button
-                            onClick={() => setActiveTab('rentals')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'rentals'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <PackageCheck className={`w-4 h-4 shrink-0 ${activeTab === 'rentals' ? 'text-[#005792]' : 'text-teal-300'}`} />
-                                <span className="truncate">Sewa Alat & Gear</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'rentals'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {sidebarRentalBadge}
-                            </span>
-                        </button>
-
-                        {/* 7. Internship Pelamar */}
-                        <button
-                            onClick={() => setActiveTab('internships')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'internships'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === 'internships' ? 'text-[#005792]' : 'text-purple-300'}`} />
-                                <span className="truncate">Internship Pelamar</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'internships'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {internshipApplications.length}
-                            </span>
-                        </button>
-
-                        {/* 8. Proposal Kerja Sama */}
-                        <button
-                            onClick={() => setActiveTab('collaborations')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'collaborations'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <Handshake className={`w-4 h-4 shrink-0 ${activeTab === 'collaborations' ? 'text-[#005792]' : 'text-rose-300'}`} />
-                                <span className="truncate">Proposal Kerja Sama</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'collaborations'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {collaborations.length}
-                            </span>
-                        </button>
-
-                        {/* 9. Jadwal Konsultasi */}
-                        <button
-                            onClick={() => setActiveTab('consultations')}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl whitespace-nowrap min-w-0 transition-all cursor-pointer ${
-                                activeTab === 'consultations'
-                                    ? 'bg-white text-[#005792] font-bold shadow-md shadow-black/15'
-                                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <Ticket className={`w-4 h-4 shrink-0 ${activeTab === 'consultations' ? 'text-[#005792]' : 'text-sky-300'}`} />
-                                <span className="truncate">Jadwal Konsultasi</span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${
-                                activeTab === 'consultations'
-                                    ? 'bg-[#005792]/15 text-[#005792]'
-                                    : 'bg-white/20 text-white'
-                            }`}>
-                                {recentConsultations.length}
+                                {teamMembers.length}
                             </span>
                         </button>
 
@@ -1866,21 +1949,30 @@ export default function AdminDashboard({
                 <div className="flex min-w-0 max-w-full md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-5 text-xs font-medium" aria-label="Tab dashboard">
                     {[
                         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                        { id: 'our_team', label: `Our Team (${teamMembers.length})`, icon: Users },
                         { id: 'client_deliveries', label: `Foto Pelanggan (${clientDeliveries.length})`, icon: FolderHeart },
+                        { id: 'langitlens', label: `LangitLens (${langitLensStats.total_photos})`, icon: ScanFace, href: '/admin/langitlens' },
                         { id: 'tickets', label: `Servis (${serviceTickets.length})`, icon: Cpu },
                         { id: 'rentals', label: `Rental (${sidebarRentalBadge})`, icon: PackageCheck },
-                        { id: 'galleries', label: `Galeri (${galleries.length})`, icon: Camera },
                         { id: 'internships', label: `Magang (${internshipApplications.length})`, icon: Sparkles },
                         { id: 'collaborations', label: `Kerja Sama (${collaborations.length})`, icon: Handshake },
                         { id: 'consultations', label: `Konsultasi (${recentConsultations.length})`, icon: Ticket },
                         { id: 'services', label: `7 Layanan (${services.length})`, icon: SlidersHorizontal },
+                        { id: 'galleries', label: `Semua Layanan (${galleries.length})`, icon: Camera },
+                        { id: 'our_team', label: `Our Team (${teamMembers.length})`, icon: Users },
                     ].map(tab => {
                         const Icon = tab.icon;
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => {
+                                    if (tab.href) {
+                                        setIsLangitLensMenuOpen(true);
+                                        setActiveTab('langitlens');
+                                        router.visit(tab.href);
+                                    } else {
+                                        setActiveTab(tab.id);
+                                    }
+                                }}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap shrink-0 transition-all ${
                                     activeTab === tab.id
                                         ? 'bg-[#005792] text-white font-bold shadow-md shadow-[#005792]/25'
@@ -1905,8 +1997,8 @@ export default function AdminDashboard({
                 {/* TAB 1: EXECUTIVE OVERVIEW (PRD 6.1) */}
                 {activeTab === 'overview' && (
                     <div className="space-y-8">
-                        {/* Key Executive Metric Cards (9 Divisi & Layanan Inti) */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-9 gap-4">
+                        {/* Key Executive Metric Cards (10 Divisi & Layanan Inti) */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {/* 1. Foto Pelanggan */}
                             <div 
                                 onClick={() => setActiveTab('client_deliveries')} 
@@ -1927,6 +2019,35 @@ export default function AdminDashboard({
                                     ) : (
                                         <span className="text-slate-500 dark:text-slate-400">
                                             {activeDeliveriesCount} Aktif • {totalRawPhotosCount} Mentahan
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 2. LangitLens AI */}
+                            <div
+                                onClick={() => {
+                                    setIsLangitLensMenuOpen(true);
+                                    setActiveTab('langitlens');
+                                    router.visit('/admin/langitlens');
+                                }}
+                                className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 cursor-pointer hover:border-sky-400 dark:hover:border-sky-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-sky-700 dark:text-sky-400 uppercase block font-semibold tracking-wider">LangitLens AI</span>
+                                    <ScanFace className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                                </div>
+                                <span className="text-2xl font-extrabold font-heading text-slate-900 dark:text-white mt-1 block">
+                                    {langitLensStats.total_photos} Foto
+                                </span>
+                                <div className="text-[11px] font-mono mt-0.5">
+                                    {langitLensStats.pending_requests > 0 ? (
+                                        <span className="text-amber-600 dark:text-amber-400 font-bold animate-pulse">
+                                            ● {langitLensStats.pending_requests} Permintaan Baru
+                                        </span>
+                                    ) : (
+                                        <span className="text-slate-500 dark:text-slate-400">
+                                            {langitLensStats.indexed_faces} Wajah • {langitLensStats.total_customers} Scan
                                         </span>
                                     )}
                                 </div>
@@ -2049,7 +2170,7 @@ export default function AdminDashboard({
                             </div>
 
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-3 w-12 text-center">No</th>
@@ -2105,38 +2226,32 @@ export default function AdminDashboard({
                                                         </a>
                                                     </td>
                                                     <td className="py-3 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedConsultationDetail(c)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingConsultation({ ...c })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Tiket Konsultasi"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteConsultation(c.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(c)}</span>
-                                                        </div>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Konsultasi"
+                                                            metaText={formatRelativeTime(c)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedConsultationDetail(c),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Konsultasi',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingConsultation({ ...c }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteConsultation(c.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             ))
@@ -2159,7 +2274,7 @@ export default function AdminDashboard({
                             </div>
 
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-3 w-12 text-center">No</th>
@@ -2229,38 +2344,32 @@ export default function AdminDashboard({
                                                         </a>
                                                     </td>
                                                     <td className="py-3 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedCollabDetail(c)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingCollaboration({ ...c })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Proposal Kerja Sama"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteCollaboration(c.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(c)}</span>
-                                                        </div>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Proposal Kerja Sama"
+                                                            metaText={formatRelativeTime(c)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedCollabDetail(c),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Proposal',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingCollaboration({ ...c }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteCollaboration(c.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -2314,7 +2423,7 @@ export default function AdminDashboard({
                             )}
 
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel ringkasan foto pelanggan">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-3 w-12 text-center">No</th>
@@ -2372,13 +2481,17 @@ export default function AdminDashboard({
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-3 text-right">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setActiveTab('client_deliveries')}
-                                                            className="px-3 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 font-bold text-[11px] transition-colors cursor-pointer"
-                                                        >
-                                                            Buka Sesi →
-                                                        </button>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Foto Pelanggan"
+                                                            items={[
+                                                                {
+                                                                    label: 'Buka Sesi Pelanggan',
+                                                                    icon: FolderHeart,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setActiveTab('client_deliveries'),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -2387,6 +2500,167 @@ export default function AdminDashboard({
                                             <tr>
                                                 <td colSpan="7" className="py-6 text-center text-slate-500 font-medium">
                                                     Belum ada sesi foto pelanggan yang dibuat.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* LangitLens AI Overview Panel */}
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                                        <ScanFace className="w-5 h-5 text-sky-500 dark:text-sky-400" />
+                                        <span>LangitLens AI — Pencari Foto Wajah & Permintaan Terbaru</span>
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Ringkasan indeks foto AI, wajah terdeteksi, pelanggan scan, dan pesanan foto asli yang masuk.
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Link
+                                        href="/admin/langitlens/photos"
+                                        onClick={() => { setIsLangitLensMenuOpen(true); setActiveTab('langitlens'); }}
+                                        className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline"
+                                    >
+                                        Upload & Galeri ({langitLensStats.total_photos}) →
+                                    </Link>
+                                    <Link
+                                        href="/admin/langitlens"
+                                        onClick={() => { setIsLangitLensMenuOpen(true); setActiveTab('langitlens'); }}
+                                        className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline"
+                                    >
+                                        Buka Ringkasan AI →
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* LangitLens Quick Stats Strip */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Total Foto AI</span>
+                                    <span className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5 block">{langitLensStats.total_photos}</span>
+                                </div>
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Wajah Terdata</span>
+                                    <span className="text-lg font-extrabold text-cyan-600 dark:text-cyan-400 mt-0.5 block">{langitLensStats.indexed_faces}</span>
+                                </div>
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Pelanggan Scan</span>
+                                    <span className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5 block">{langitLensStats.total_customers}</span>
+                                </div>
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Menunggu Kirim</span>
+                                    <span className="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 block">{langitLensStats.pending_requests}</span>
+                                </div>
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Selesai Terkirim</span>
+                                    <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">{langitLensStats.completed_requests}</span>
+                                </div>
+                                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Pendapatan AI</span>
+                                    <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block truncate" title={formatRupiah(langitLensStats.total_revenue)}>
+                                        {formatRupiah(langitLensStats.total_revenue)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Pending LangitLens Request Banner if any */}
+                            {langitLensStats.pending_requests > 0 && (
+                                <div className="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-900 dark:text-sky-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <ScanFace className="w-4 h-4 text-sky-500 shrink-0 animate-pulse" />
+                                        <span>
+                                            <strong>Perhatian LangitLens:</strong> Ada <strong>{langitLensStats.pending_requests}</strong> permintaan foto asli dari pelanggan yang menunggu verifikasi & pengiriman.
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href="/admin/langitlens/requests"
+                                        onClick={() => { setIsLangitLensMenuOpen(true); setActiveTab('langitlens'); }}
+                                        className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shrink-0 shadow-xs transition-all text-center"
+                                    >
+                                        Proses Permintaan →
+                                    </Link>
+                                </div>
+                            )}
+
+                            <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel ringkasan permintaan LangitLens">
+                                <table className="w-full min-w-[54rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
+                                    <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
+                                        <tr>
+                                            <th className="py-2.5 px-3 w-12 text-center">No</th>
+                                            <th className="py-2.5 px-3">Kode Request</th>
+                                            <th className="py-2.5 px-3">Pelanggan</th>
+                                            <th className="py-2.5 px-3">Foto Dipilih</th>
+                                            <th className="py-2.5 px-3">Total Harga</th>
+                                            <th className="py-2.5 px-3">Status</th>
+                                            <th className="py-2.5 px-3">Waktu</th>
+                                            <th className="py-2.5 px-3 text-right">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-300">
+                                        {langitLensRecentRequests.map((req, idx) => (
+                                            <tr key={req.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                <td className="py-3 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                                <td className="py-3 px-3 font-bold font-mono text-sky-600 dark:text-sky-400">{req.request_code}</td>
+                                                <td className="py-3 px-3">
+                                                    <span className="font-bold text-slate-900 dark:text-white block">{req.customer_name}</span>
+                                                    {req.customer_username && (
+                                                        <span className="text-[10px] font-mono text-slate-500">@{req.customer_username}</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3 font-semibold">{req.total_selected_photos} Foto</td>
+                                                <td className="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                                                    {formatRupiah(req.total_final_price)}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
+                                                        req.status === 'SENT_BY_ADMIN'
+                                                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                                            : req.status === 'CANCELLED'
+                                                                ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                                                                : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                                    }`}>
+                                                        {req.status === 'SENT_BY_ADMIN'
+                                                            ? 'Terkirim'
+                                                            : req.status === 'CANCELLED'
+                                                                ? 'Dibatalkan'
+                                                                : 'Menunggu Kirim'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                                    {req.requested_at || '-'}
+                                                </td>
+                                                <td className="py-3 px-3 text-right">
+                                                    <AdminActionMenu
+                                                        buttonTitle="Aksi Permintaan LangitLens"
+                                                        items={[
+                                                            {
+                                                                label: 'Kelola Permintaan',
+                                                                icon: FileText,
+                                                                tone: 'primary',
+                                                                href: '/admin/langitlens/requests',
+                                                                onClick: () => { setIsLangitLensMenuOpen(true); setActiveTab('langitlens'); },
+                                                            },
+                                                            {
+                                                                label: 'Buka Ringkasan AI',
+                                                                icon: ScanFace,
+                                                                tone: 'default',
+                                                                href: '/admin/langitlens',
+                                                                onClick: () => { setIsLangitLensMenuOpen(true); setActiveTab('langitlens'); },
+                                                            },
+                                                        ]}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {langitLensRecentRequests.length === 0 && (
+                                            <tr>
+                                                <td colSpan="8" className="py-6 text-center text-slate-500 font-medium">
+                                                    Belum ada permintaan foto LangitLens yang masuk.
                                                 </td>
                                             </tr>
                                         )}
@@ -2480,7 +2754,7 @@ export default function AdminDashboard({
                             </div>
 
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2504,22 +2778,28 @@ export default function AdminDashboard({
                                             serviceTickets.map((t, idx) => (
                                                 <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                                     <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                                                    <td className="py-3.5 px-3 font-bold text-orange-600 dark:text-orange-400 tracking-wide">{t.receipt_number}</td>
-                                                    <td className="py-3.5 px-3">
+                                                    <td className="py-3.5 px-3 font-bold text-orange-600 dark:text-orange-400 tracking-wide whitespace-nowrap">{t.receipt_number}</td>
+                                                    <td className="py-3.5 px-3 whitespace-nowrap">
                                                         <span className="font-bold text-slate-900 dark:text-white block">{t.customer_name}</span>
                                                         <span className="text-[10px] text-slate-500 font-medium">{t.whatsapp}</span>
                                                     </td>
                                                     <td className="py-3.5 px-3">
-                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{t.device_brand_model}</span>
-                                                        <span className="text-[10px] text-slate-500 font-medium">{t.device_type}</span>
+                                                        <div className="max-w-[180px]">
+                                                            <span className="text-slate-800 dark:text-slate-200 block font-semibold truncate" title={t.device_brand_model}>{t.device_brand_model}</span>
+                                                            <span className="text-[10px] text-slate-500 font-medium">{t.device_type}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="py-3.5 px-3 max-w-xs truncate text-slate-600 dark:text-slate-400 font-medium">{t.problem_reported}</td>
-                                                    <td className="py-3.5 px-3">
+                                                    <td className="py-3.5 px-3 text-slate-600 dark:text-slate-400 font-medium">
+                                                        <div className="max-w-[200px] truncate" title={t.problem_reported}>
+                                                            {t.problem_reported}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 whitespace-nowrap">
                                                         {/* Pipeline Status Selector */}
                                                         <select
                                                             value={t.status}
                                                             onChange={(e) => handleUpdateTicketStatus(t.id, e.target.value)}
-                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-orange-500/40 text-orange-700 dark:text-orange-300 font-bold text-xs uppercase focus:outline-none"
+                                                            className="min-w-[11rem] px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-orange-500/40 text-orange-700 dark:text-orange-300 font-bold text-xs uppercase focus:outline-none"
                                                         >
                                                             <option value="received">Diterima & Diagnosa</option>
                                                             <option value="waiting_part">Menunggu Sparepart</option>
@@ -2529,42 +2809,36 @@ export default function AdminDashboard({
                                                             <option value="completed">Selesai / Diambil</option>
                                                         </select>
                                                     </td>
-                                                    <td className="py-3.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                                                    <td className="py-3.5 px-3 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                                                         {formatRupiah(t.final_cost || t.estimated_cost)}
                                                     </td>
-                                                    <td className="py-3.5 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedTicketDetail(t)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(t.updated_at || t.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingTicket({ ...t })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Nota Servis"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteTicket(t.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(t.created_at)} | Diperbarui: ${formatTimestamp(t.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(t)}</span>
-                                                        </div>
+                                                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Nota Servis"
+                                                            metaText={formatRelativeTime(t)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(t.created_at)} | Diperbarui: ${formatTimestamp(t.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedTicketDetail(t),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Nota Servis',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingTicket({ ...t }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteTicket(t.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             ))
@@ -2582,7 +2856,7 @@ export default function AdminDashboard({
                         <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Daftar Booking Sewa Alat</h3>
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2603,28 +2877,35 @@ export default function AdminDashboard({
                                                 </td>
                                             </tr>
                                         ) : (
-                                            rentalBookings.map((b, idx) => (
+                                            rentalBookings.map((b, idx) => {
+                                                const rentedSummary = (b.rented_items_json || []).map(i => `${i.name} (${i.qty}x)`).join(', ');
+                                                return (
                                                 <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                                     <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                                                    <td className="py-3 px-3 font-bold text-teal-600 dark:text-teal-400">{b.booking_code}</td>
-                                                    <td className="py-3 px-3">
+                                                    <td className="py-3 px-3 font-bold font-mono text-teal-600 dark:text-teal-400 whitespace-nowrap">{b.booking_code}</td>
+                                                    <td className="py-3 px-3 whitespace-nowrap">
                                                         <span className="font-bold text-slate-900 dark:text-white block">{b.customer_name}</span>
                                                         <span className="text-[10px] text-slate-500">{b.whatsapp} • {b.identity_card_type}</span>
                                                     </td>
-                                                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
-                                                        {b.total_days} Hari ({b.start_date} s/d {b.end_date})
+                                                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                                        <span className="font-bold text-slate-900 dark:text-white block">{b.total_days} Hari</span>
+                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                            {formatShortDate(b.start_date)} – {formatShortDate(b.end_date)}
+                                                        </span>
                                                     </td>
-                                                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400 max-w-xs truncate">
-                                                        {(b.rented_items_json || []).map(i => `${i.name} (${i.qty}x)`).join(', ')}
+                                                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                                        <div className="max-w-[220px] truncate" title={rentedSummary}>
+                                                            {rentedSummary || '-'}
+                                                        </div>
                                                     </td>
-                                                    <td className="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                                                    <td className="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                                                         {formatRupiah(b.total_price)}
                                                     </td>
-                                                    <td className="py-3 px-3">
+                                                    <td className="py-3 px-3 whitespace-nowrap">
                                                         <select
                                                             value={b.status}
                                                             onChange={(e) => handleUpdateRentalStatus(b.id, e.target.value)}
-                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-teal-500/40 text-teal-700 dark:text-teal-300 font-bold text-xs uppercase focus:outline-none"
+                                                            className="min-w-[11rem] px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-teal-500/40 text-teal-700 dark:text-teal-300 font-bold text-xs uppercase focus:outline-none"
                                                         >
                                                             <option value="pending">Pending Approval</option>
                                                             <option value="approved">Approved</option>
@@ -2633,42 +2914,37 @@ export default function AdminDashboard({
                                                             <option value="cancelled">Cancelled</option>
                                                         </select>
                                                     </td>
-                                                    <td className="py-3.5 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedRentalDetail(b)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(b.updated_at || b.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingRental({ ...b })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Pesanan Sewa"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteRental(b.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(b.created_at)} | Diperbarui: ${formatTimestamp(b.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(b)}</span>
-                                                        </div>
+                                                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Booking Sewa"
+                                                            metaText={formatRelativeTime(b)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(b.created_at)} | Diperbarui: ${formatTimestamp(b.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedRentalDetail(b),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Pesanan Sewa',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingRental({ ...b }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteRental(b.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
-                                            ))
+                                                );
+                                            })
                                         )}
                                     </tbody>
                                 </table>
@@ -2709,7 +2985,7 @@ export default function AdminDashboard({
                             </div>
 
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -2772,26 +3048,27 @@ export default function AdminDashboard({
                                                         </span>
                                                     </td>
                                                     <td className="py-3 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setEditingEquipment({ ...eq });
-                                                                    setEquipmentFilePhoto(null);
-                                                                }}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer"
-                                                                title="Edit Stok & Harga Alat"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteEquipment(eq.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors cursor-pointer"
-                                                                title="Hapus Alat"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Unit Alat"
+                                                            items={[
+                                                                {
+                                                                    label: 'Edit Stok & Harga',
+                                                                    icon: Edit3,
+                                                                    tone: 'primary',
+                                                                    onClick: () => {
+                                                                        setEditingEquipment({ ...eq });
+                                                                        setEquipmentFilePhoto(null);
+                                                                    },
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Alat',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteEquipment(eq.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             ))
@@ -3278,7 +3555,7 @@ export default function AdminDashboard({
                     <div className="space-y-6">
                         <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -3364,38 +3641,32 @@ export default function AdminDashboard({
                                                         </a>
                                                     </td>
                                                     <td className="py-3.5 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedInternshipDetail(app)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(app.updated_at || app.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingInternship({ ...app })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Data Pelamar Magang"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteInternship(app.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(app.created_at)} | Diperbarui: ${formatTimestamp(app.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(app)}</span>
-                                                        </div>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Pelamar Magang"
+                                                            metaText={formatRelativeTime(app)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(app.created_at)} | Diperbarui: ${formatTimestamp(app.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedInternshipDetail(app),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Data Pelamar',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingInternship({ ...app }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteInternship(app.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             ))
@@ -3413,7 +3684,7 @@ export default function AdminDashboard({
                         <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Seluruh Tiket Jadwal Konsultasi Klien</h3>
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -3437,27 +3708,29 @@ export default function AdminDashboard({
                                             recentConsultations.map((c, idx) => (
                                                 <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                                     <td className="py-3.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                                                    <td className="py-3.5 px-3 font-bold text-cyan-600 dark:text-cyan-400 tracking-wide">{c.ticket_code}</td>
-                                                    <td className="py-3.5 px-3">
+                                                    <td className="py-3.5 px-3 font-bold text-cyan-600 dark:text-cyan-400 tracking-wide whitespace-nowrap">{c.ticket_code}</td>
+                                                    <td className="py-3.5 px-3 whitespace-nowrap">
                                                         <span className="font-bold text-slate-900 dark:text-white block">{c.client_name}</span>
                                                         <span className="text-[10px] text-slate-500 font-medium">{c.company_or_institution} • {c.whatsapp}</span>
                                                     </td>
-                                                    <td className="py-3.5 px-3 max-w-xs">
-                                                        <span className="text-cyan-700 dark:text-cyan-300 font-semibold block">{c.service_topic}</span>
-                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium">{c.project_brief || '-'}</span>
-                                                    </td>
                                                     <td className="py-3.5 px-3">
-                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{c.preferred_date ? (c.preferred_date.includes('T') ? c.preferred_date.split('T')[0] : c.preferred_date) : '-'}</span>
+                                                        <div className="max-w-[220px]">
+                                                            <span className="text-cyan-700 dark:text-cyan-300 font-semibold block truncate" title={c.service_topic}>{c.service_topic}</span>
+                                                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium" title={c.project_brief || '-'}>{c.project_brief || '-'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3.5 px-3 whitespace-nowrap">
+                                                        <span className="text-slate-800 dark:text-slate-200 block font-semibold">{c.preferred_date ? formatShortDate(c.preferred_date) : '-'}</span>
                                                         <span className="text-[10px] text-slate-500 font-medium">{c.preferred_time} • {c.meeting_method}</span>
                                                     </td>
-                                                    <td className="py-3.5 px-3 text-amber-600 dark:text-amber-300 font-semibold">
+                                                    <td className="py-3.5 px-3 text-amber-600 dark:text-amber-300 font-semibold whitespace-nowrap">
                                                         {c.budget_estimation || '-'}
                                                     </td>
-                                                    <td className="py-3.5 px-3">
+                                                    <td className="py-3.5 px-3 whitespace-nowrap">
                                                         <select
                                                             value={c.status}
                                                             onChange={(e) => handleUpdateConsultationStatus(c.id, e.target.value)}
-                                                            className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs uppercase focus:outline-none"
+                                                            className="min-w-[9.5rem] px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs uppercase focus:outline-none"
                                                         >
                                                             <option value="scheduled">Scheduled</option>
                                                             <option value="completed">Completed</option>
@@ -3466,38 +3739,32 @@ export default function AdminDashboard({
                                                         </select>
                                                     </td>
                                                     <td className="py-3.5 px-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            <button
-                                                                onClick={() => setSelectedConsultationDetail(c)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                <span>Detail</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingConsultation({ ...c })}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                title="Edit Tiket Konsultasi"
-                                                            >
-                                                                <Edit3 className="w-3.5 h-3.5" />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteConsultation(c.id)}
-                                                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                title="Hapus Data"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                            className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                            title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
-                                                        >
-                                                            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                            <span>{formatRelativeTime(c)}</span>
-                                                        </div>
+                                                        <AdminActionMenu
+                                                            buttonTitle="Aksi Tiket Konsultasi"
+                                                            metaText={formatRelativeTime(c)}
+                                                            metaTitle={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                            items={[
+                                                                {
+                                                                    label: 'Lihat Detail',
+                                                                    icon: Eye,
+                                                                    tone: 'primary',
+                                                                    onClick: () => setSelectedConsultationDetail(c),
+                                                                },
+                                                                {
+                                                                    label: 'Edit Konsultasi',
+                                                                    icon: Edit3,
+                                                                    tone: 'amber',
+                                                                    onClick: () => setEditingConsultation({ ...c }),
+                                                                },
+                                                                {
+                                                                    label: 'Hapus Data',
+                                                                    icon: Trash2,
+                                                                    tone: 'danger',
+                                                                    dividerBefore: true,
+                                                                    onClick: () => handleDeleteConsultation(c.id),
+                                                                },
+                                                            ]}
+                                                        />
                                                     </td>
                                                 </tr>
                                             ))
@@ -3564,7 +3831,7 @@ export default function AdminDashboard({
                         {/* Collaborations Table */}
                         <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
-                                <table className="w-full min-w-[56rem] text-left text-xs font-sans [&_td]:max-w-xs">
+                                <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                                         <tr>
                                             <th className="py-3 px-3 w-12 text-center">No</th>
@@ -3652,38 +3919,32 @@ export default function AdminDashboard({
                                                             </select>
                                                         </td>
                                                         <td className="py-3.5 px-3 text-right">
-                                                            <div className="flex items-center justify-end gap-1.5">
-                                                                <button
-                                                                    onClick={() => setSelectedCollabDetail(c)}
-                                                                    className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                    title={`Lihat Detail Lengkap (Terakhir diperbarui: ${formatTimestamp(c.updated_at || c.created_at)})`}
-                                                                >
-                                                                    <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                                                                    <span>Detail</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => setEditingCollaboration({ ...c })}
-                                                                    className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1 text-[11px] transition-colors font-medium"
-                                                                    title="Edit Proposal Kerja Sama"
-                                                                >
-                                                                    <Edit3 className="w-3.5 h-3.5" />
-                                                                    <span>Edit</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteCollaboration(c.id)}
-                                                                    className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-colors"
-                                                                    title="Hapus Data"
-                                                                >
-                                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                                </button>
-                                                            </div>
-                                                            <div
-                                                                className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex items-center justify-end gap-1 whitespace-nowrap"
-                                                                title={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
-                                                            >
-                                                                <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400 shrink-0" />
-                                                                <span>{formatRelativeTime(c)}</span>
-                                                            </div>
+                                                            <AdminActionMenu
+                                                                buttonTitle="Aksi Proposal Kerja Sama"
+                                                                metaText={formatRelativeTime(c)}
+                                                                metaTitle={`Dibuat: ${formatTimestamp(c.created_at)} | Diperbarui: ${formatTimestamp(c.updated_at)}`}
+                                                                items={[
+                                                                    {
+                                                                        label: 'Lihat Detail',
+                                                                        icon: Eye,
+                                                                        tone: 'primary',
+                                                                        onClick: () => setSelectedCollabDetail(c),
+                                                                    },
+                                                                    {
+                                                                        label: 'Edit Proposal',
+                                                                        icon: Edit3,
+                                                                        tone: 'amber',
+                                                                        onClick: () => setEditingCollaboration({ ...c }),
+                                                                    },
+                                                                    {
+                                                                        label: 'Hapus Data',
+                                                                        icon: Trash2,
+                                                                        tone: 'danger',
+                                                                        dividerBefore: true,
+                                                                        onClick: () => handleDeleteCollaboration(c.id),
+                                                                    },
+                                                                ]}
+                                                            />
                                                         </td>
                                                     </tr>
                                                 );

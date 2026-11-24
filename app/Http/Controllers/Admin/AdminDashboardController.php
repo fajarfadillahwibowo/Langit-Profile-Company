@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiPhoto;
+use App\Models\AiPhotoFace;
+use App\Models\AiPhotoRequest;
 use App\Models\ClientDelivery;
 use App\Models\ClientPhoto;
 use App\Models\ClientRawPhoto;
@@ -54,6 +57,14 @@ class AdminDashboardController extends Controller
      */
     public function portalProps(): array
     {
+        $langitLensTotalPhotos = AiPhoto::count();
+        $langitLensIndexedFaces = AiPhotoFace::count();
+        $langitLensPendingRequests = AiPhotoRequest::where('status', 'WAITING_MANUAL_PAYMENT')->count();
+        $langitLensCompletedRequests = AiPhotoRequest::where('status', 'SENT_BY_ADMIN')->count();
+        $langitLensTotalRequests = AiPhotoRequest::count();
+        $langitLensTotalCustomers = User::where('role', 'customer')->count();
+        $langitLensTotalRevenue = (float) AiPhotoRequest::where('status', 'SENT_BY_ADMIN')->sum('total_final_price');
+
         $metrics = [
             'total_consultations' => Consultation::count(),
             'pending_service_tickets' => ComputerServiceTicket::whereIn('status', ['received', 'waiting_part', 'repairing', 'qc_testing'])->count(),
@@ -70,6 +81,13 @@ class AdminDashboardController extends Controller
             'pending_raw_selections' => ClientRawSelection::where('status', 'pending')->count(),
             'total_team_members' => TeamMember::count(),
             'active_team_members' => TeamMember::where('is_active', true)->count(),
+            'langitlens_total_photos' => $langitLensTotalPhotos,
+            'langitlens_indexed_faces' => $langitLensIndexedFaces,
+            'langitlens_pending_requests' => $langitLensPendingRequests,
+            'langitlens_completed_requests' => $langitLensCompletedRequests,
+            'langitlens_total_requests' => $langitLensTotalRequests,
+            'langitlens_total_customers' => $langitLensTotalCustomers,
+            'langitlens_total_revenue' => $langitLensTotalRevenue,
         ];
 
         $services = Service::all();
@@ -86,7 +104,8 @@ class AdminDashboardController extends Controller
 
             $p = ComputerServiceTicket::whereDate('created_at', $dateStr)->count()
                + RentalBooking::whereDate('created_at', $dateStr)->count()
-               + ClientDelivery::whereDate('created_at', $dateStr)->count();
+               + ClientDelivery::whereDate('created_at', $dateStr)->count()
+               + AiPhotoRequest::whereDate('created_at', $dateStr)->count();
 
             $s = Consultation::whereDate('created_at', $dateStr)->count()
                + Collaboration::whereDate('created_at', $dateStr)->count()
@@ -107,7 +126,8 @@ class AdminDashboardController extends Controller
 
             $p = ComputerServiceTicket::whereBetween('created_at', [$startWeek, $endWeek])->count()
                + RentalBooking::whereBetween('created_at', [$startWeek, $endWeek])->count()
-               + ClientDelivery::whereBetween('created_at', [$startWeek, $endWeek])->count();
+               + ClientDelivery::whereBetween('created_at', [$startWeek, $endWeek])->count()
+               + AiPhotoRequest::whereBetween('created_at', [$startWeek, $endWeek])->count();
 
             $s = Consultation::whereBetween('created_at', [$startWeek, $endWeek])->count()
                + Collaboration::whereBetween('created_at', [$startWeek, $endWeek])->count()
@@ -130,7 +150,8 @@ class AdminDashboardController extends Controller
 
             $p = ComputerServiceTicket::whereBetween('created_at', [$startMonth, $endMonth])->count()
                + RentalBooking::whereBetween('created_at', [$startMonth, $endMonth])->count()
-               + ClientDelivery::whereBetween('created_at', [$startMonth, $endMonth])->count();
+               + ClientDelivery::whereBetween('created_at', [$startMonth, $endMonth])->count()
+               + AiPhotoRequest::whereBetween('created_at', [$startMonth, $endMonth])->count();
 
             $s = Consultation::whereBetween('created_at', [$startMonth, $endMonth])->count()
                + Collaboration::whereBetween('created_at', [$startMonth, $endMonth])->count()
@@ -160,8 +181,9 @@ class AdminDashboardController extends Controller
         $divEduCount = EducationCourse::count() + Gallery::where('service_id', $eduService?->id)->count();
         $divInternCount = InternshipPosition::count() + InternshipApplication::count() + Gallery::where('service_id', $internService?->id)->count();
         $divCollabCount = Collaboration::count();
+        $divLangitLensCount = $langitLensTotalPhotos + $langitLensTotalRequests;
 
-        $totalActiveProjects = $divVisualCount + $divWebCount + $divCompCount + $divSewaCount + $divEduCount + $divInternCount + $divCollabCount;
+        $totalActiveProjects = $divVisualCount + $divWebCount + $divCompCount + $divSewaCount + $divEduCount + $divInternCount + $divCollabCount + $divLangitLensCount;
 
         $divisionsData = [
             [
@@ -241,6 +263,17 @@ class AdminDashboardController extends Controller
                 'gradTo' => '#e11d48',
                 'icon' => '🤝',
             ],
+            [
+                'id' => 'langitlens',
+                'name' => 'LangitLens AI',
+                'subtitle' => 'Pencari Foto Wajah & Order AI',
+                'count' => $divLangitLensCount,
+                'percentage' => $totalActiveProjects > 0 ? round(($divLangitLensCount / $totalActiveProjects) * 100) : 0,
+                'color' => '#0ea5e9',
+                'gradFrom' => '#0ea5e9',
+                'gradTo' => '#0284c7',
+                'icon' => '🔍',
+            ],
         ];
 
         // 3. Real Efficiency & Velocity KPI Meters
@@ -313,10 +346,38 @@ class AdminDashboardController extends Controller
             'pending_amount_estimate' => $pendingAmountEstimate,
         ];
 
+        $langitLensRecentRequests = AiPhotoRequest::with('customer:id,name,username,whatsapp_number')
+            ->latest('requested_at')
+            ->limit(5)
+            ->get()
+            ->map(fn (AiPhotoRequest $req) => [
+                'id' => $req->id,
+                'request_code' => $req->request_code,
+                'customer_name' => $req->customer?->name ?? $req->customer?->username ?? 'Pelanggan',
+                'customer_username' => $req->customer?->username,
+                'customer_whatsapp' => $req->customer?->whatsapp_number,
+                'total_selected_photos' => $req->total_selected_photos,
+                'total_final_price' => $req->total_final_price,
+                'status' => $req->status,
+                'requested_at' => $req->requested_at?->format('d M Y H:i'),
+            ]);
+
         return [
             'teamMembers' => TeamMember::orderBy('sort_order')->orderBy('id')->get(),
             'educationStudents' => $educationStudents,
             'educationFinancials' => $educationFinancials,
+            'langitLensOverview' => [
+                'stats' => [
+                    'total_photos' => $langitLensTotalPhotos,
+                    'indexed_faces' => $langitLensIndexedFaces,
+                    'pending_requests' => $langitLensPendingRequests,
+                    'completed_requests' => $langitLensCompletedRequests,
+                    'total_requests' => $langitLensTotalRequests,
+                    'total_customers' => $langitLensTotalCustomers,
+                    'total_revenue' => $langitLensTotalRevenue,
+                ],
+                'recent_requests' => $langitLensRecentRequests,
+            ],
             'metrics' => $metrics,
             'analytics' => $analytics,
             'recentConsultations' => Consultation::latest()->take(5)->get(),

@@ -591,8 +591,8 @@ export default function ClientRawPhotosGallery({ client, deliveries = [], rawSel
 
             {/* ── STICKY BOTTOM SELECTION SUMMARY BAR ── */}
             {selectedIds.length > 0 && (
-                <div className="fixed bottom-4 left-4 right-4 md:left-72 md:right-8 z-40">
-                    <div className="max-w-5xl mx-auto p-4 sm:p-5 rounded-3xl bg-slate-900/95 dark:bg-[#070b14]/95 text-white backdrop-blur-xl border border-cyan-500/40 shadow-2xl shadow-cyan-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="fixed bottom-22 md:bottom-4 left-3 right-3 md:left-72 md:right-8 z-40">
+                    <div className="max-w-5xl mx-auto p-4 sm:p-5 rounded-3xl bg-slate-900/95 dark:bg-[#070b14]/95 text-white backdrop-blur-md border border-cyan-500/40 shadow-2xl shadow-cyan-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-cyan-500 text-slate-950 font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/30">
                                 {pricingSummary.count}

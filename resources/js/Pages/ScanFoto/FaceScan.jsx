@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import ScanCustomerLayout from '@/Layouts/ScanCustomerLayout';
 import { cameraErrorMessage, requestScanCamera } from '@/Utils/scanCamera.mjs';
@@ -680,45 +681,76 @@ export default function FaceScan({
         <ScanCustomerLayout title="Scan Wajah">
             <Head title="Scan Wajah" />
 
-            <div className="max-w-3xl mx-auto space-y-4 animate-fade-in">
-                {/* Header Ringkas */}
-                <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-2">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <h2 className="text-base sm:text-lg font-bold text-white">
-                            Pindai 3 Arah Wajah Anda
+            <div className="max-w-3xl mx-auto space-y-5">
+                {/* Cinematic Hero Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45 }}
+                    className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-[#0D1A2F] via-[#0B1426] to-[#0E1025] border border-sky-400/25 shadow-2xl shadow-sky-950/30 space-y-3"
+                >
+                    <div className="absolute inset-0 animate-shimmer pointer-events-none" />
+                    <div
+                        aria-hidden="true"
+                        className="absolute -right-12 -top-12 w-48 h-48 rounded-full pointer-events-none"
+                        style={{
+                            background: 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, transparent 70%)',
+                        }}
+                    />
+
+                    <div className="relative z-10 flex items-center justify-between gap-3 flex-wrap">
+                        <h2 className="font-heading text-lg sm:text-xl font-black text-white">
+                            Scan 3 Arah Wajah
                         </h2>
-                        <span className="px-2.5 py-1 rounded-full bg-slate-800 text-xs font-semibold text-sky-300">
-                            {completedCount} dari 3 selesai
-                        </span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/15 text-xs font-bold text-cyan-300">
+                            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-hud-pulse" />
+                            <span>{completedCount} / 3 selesai</span>
+                        </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                        Pindai wajah dari depan, kiri, dan kanan agar sistem dapat menemukan semua foto Anda
-                        di antara {totalCatalogPhotos} foto yang tersedia.
+
+                    <p className="relative z-10 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Scan wajah depan, kiri, dan kanan untuk menemukan foto Anda ({totalCatalogPhotos} foto tersedia).
                     </p>
+
+                    {/* Animated Progress Rail */}
+                    <div className="relative z-10 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.round((completedCount / 3) * 100)}%` }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400"
+                        />
+                    </div>
+
                     {hasPreviousScan && (
-                        <div className="pt-1">
+                        <div className="relative z-10 pt-1">
                             <Link
                                 href="/scan-foto/hasil"
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300"
+                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs font-bold text-sky-300 transition-all"
                             >
                                 <span>Buka hasil scan sebelumnya ({lastMatchedCount} foto)</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
                             </Link>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* 3 Kartu Arah Scan (Berurutan: 1. Depan -> 2. Kiri -> 3. Kanan) */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {ANGLE_STEPS.map((step) => {
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+                    {ANGLE_STEPS.map((step, idx) => {
                         const data = capturedAngles[step.key];
                         const isActive = activeAngle === step.key;
                         const isLocked = !isAngleUnlocked(step.key);
                         return (
-                            <button
+                            <motion.button
                                 key={step.key}
                                 type="button"
                                 disabled={isLocked}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.06 }}
+                                whileHover={!isLocked ? { y: -2 } : undefined}
+                                whileTap={!isLocked ? { scale: 0.98 } : undefined}
                                 onClick={() => {
                                     if (isLocked) return;
                                     stopCamera();
@@ -736,17 +768,17 @@ export default function FaceScan({
                                             : 'Terkunci: Selesaikan scan 1. Depan & 2. Kiri terlebih dahulu'
                                         : step.title
                                 }
-                                className={`p-2.5 sm:p-3.5 rounded-2xl border text-center sm:text-left transition-colors flex flex-col sm:flex-row items-center gap-2 sm:gap-3 ${
+                                className={`relative p-3 sm:p-4 rounded-2xl border text-center sm:text-left transition-all flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 backdrop-blur-xl ${
                                     isLocked
-                                        ? 'bg-slate-900/40 border-slate-800/70 opacity-50 cursor-not-allowed'
+                                        ? 'bg-white/[0.02] border-white/5 opacity-50 cursor-not-allowed'
                                         : isActive
-                                          ? 'bg-sky-500/15 border-sky-400 active:scale-[0.98] cursor-pointer'
+                                          ? 'bg-gradient-to-br from-sky-500/20 to-cyan-500/10 border-cyan-400/60 shadow-lg shadow-sky-500/15 cursor-pointer'
                                           : data
-                                            ? 'bg-emerald-500/10 border-emerald-500/40 active:scale-[0.98] cursor-pointer'
-                                            : 'bg-[#111827] border-slate-800 hover:border-slate-700 active:scale-[0.98] cursor-pointer'
+                                            ? 'bg-emerald-500/12 border-emerald-400/45 shadow-md shadow-emerald-500/10 cursor-pointer'
+                                            : 'bg-white/[0.04] border-white/10 hover:border-white/20 cursor-pointer'
                                 }`}
                             >
-                                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center relative">
+                                <div className="w-12 h-12 rounded-2xl bg-[#070C17] border border-white/15 overflow-hidden shrink-0 flex items-center justify-center relative">
                                     {data?.thumb_url ? (
                                         <>
                                             <img
@@ -754,7 +786,7 @@ export default function FaceScan({
                                                 alt={step.title}
                                                 className="w-full h-full object-cover"
                                             />
-                                            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                                            <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center shadow-sm">
                                                 <Check className="w-3 h-3 stroke-[3]" />
                                             </span>
                                         </>
@@ -763,7 +795,7 @@ export default function FaceScan({
                                     ) : (
                                         <ScanFace
                                             className={`w-5 h-5 ${
-                                                isActive ? 'text-sky-400' : 'text-slate-500'
+                                                isActive ? 'text-cyan-300 animate-pulse' : 'text-slate-400'
                                             }`}
                                         />
                                     )}
@@ -773,55 +805,65 @@ export default function FaceScan({
                                         {step.shortTitle}
                                     </span>
                                     <span
-                                        className={`block text-[11px] font-medium mt-0.5 ${
+                                        className={`block text-[11px] font-semibold mt-0.5 ${
                                             data
                                                 ? 'text-emerald-400'
                                                 : isLocked
                                                   ? 'text-slate-500'
                                                   : isActive
-                                                    ? 'text-sky-400'
+                                                    ? 'text-cyan-300'
                                                     : 'text-slate-400'
                                         }`}
                                     >
-                                        {data ? 'Selesai' : isLocked ? 'Terkunci' : isActive ? 'Siap Scan' : 'Terbuka'}
+                                        {data ? '✓ Selesai' : isLocked ? 'Terkunci' : isActive ? '● Siap Scan' : 'Terbuka'}
                                     </span>
                                 </div>
-                            </button>
+                            </motion.button>
                         );
                     })}
                 </div>
 
                 {/* Tombol Cari Foto saat ke-3 arah selesai */}
-                {allAnglesComplete && !snapshotUrl && !cameraActive && (
-                    <div className="animate-fade-in bg-emerald-500/10 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="space-y-0.5">
-                            <p className="text-sm font-bold text-emerald-300">
-                                Semua 3 arah wajah sudah siap
-                            </p>
-                            <p className="text-xs text-slate-300">
-                                Tekan tombol di samping untuk menampilkan foto Anda.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleSearchPhotos}
-                            disabled={searching}
-                            className="min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold text-sm transition-all shrink-0 cursor-pointer disabled:opacity-60"
+                <AnimatePresence>
+                    {allAnglesComplete && !snapshotUrl && !cameraActive && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            className="relative overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/15 border border-emerald-400/45 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl shadow-emerald-950/30"
                         >
-                            {searching ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Mencari Foto...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="w-4 h-4" />
-                                    <span>Cari Foto Saya</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                )}
+                            <div className="space-y-0.5">
+                                <p className="text-sm font-bold text-emerald-300 flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                    3 arah wajah selesai
+                                </p>
+                                <p className="text-xs text-slate-300">
+                                    Klik tombol untuk menampilkan foto Anda.
+                                </p>
+                            </div>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                type="button"
+                                onClick={handleSearchPhotos}
+                                disabled={searching}
+                                className="min-h-12 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-black text-sm shadow-lg shadow-emerald-500/30 transition-all shrink-0 cursor-pointer disabled:opacity-60"
+                            >
+                                {searching ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Mencari...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        <span>Cari Foto Saya</span>
+                                    </>
+                                )}
+                            </motion.button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {!modelsReady && !modelError && (
                     <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 flex items-center justify-center gap-3 text-sm text-sky-300">
@@ -845,13 +887,19 @@ export default function FaceScan({
                 )}
 
                 {/* Area Scan Sudut Aktif */}
-                <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-                    <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="rounded-3xl bg-[#0B1222]/95 border border-white/10 p-5 sm:p-6 space-y-5 shadow-2xl shadow-black/40"
+                >
+                    <div className="flex items-center justify-between gap-2 pb-4 border-b border-white/10">
                         <div>
-                            <p className="text-[11px] font-semibold text-sky-400">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                                 Tahap {currentStepMeta.stepNumber} dari 3
-                            </p>
-                            <h3 className="text-base font-bold text-white mt-0.5">
+                            </span>
+                            <h3 className="font-heading text-lg font-black text-white mt-0.5">
                                 {currentStepMeta.title}
                             </h3>
                             <p className="text-xs text-slate-400 mt-0.5">{currentStepMeta.instruction}</p>
@@ -859,31 +907,37 @@ export default function FaceScan({
                     </div>
 
                     {!cameraActive && !snapshotUrl && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <motion.button
+                                whileHover={{ y: -2, scale: 1.01 }}
+                                whileTap={{ scale: 0.98 }}
                                 type="button"
                                 disabled={!modelsReady || analyzingUpload || cameraStarting}
                                 onClick={() => startAutoCamera(activeAngle)}
-                                className="min-h-24 flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-slate-950 text-left transition-all cursor-pointer disabled:opacity-50"
+                                className="relative overflow-hidden min-h-28 flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-sky-400 via-cyan-400 to-sky-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 text-left shadow-xl shadow-sky-500/25 transition-all cursor-pointer disabled:opacity-50"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-slate-950/15 flex items-center justify-center shrink-0">
+                                <div className="w-13 h-13 rounded-2xl bg-slate-950/15 flex items-center justify-center shrink-0">
                                     <Camera className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <span className="block text-sm font-bold">{cameraStarting ? 'Membuka Kamera...' : 'Scan Kamera'}</span>
-                                    <span className="block text-xs text-slate-900/80 mt-0.5">
-                                        Otomatis mendeteksi wajah ({currentStepMeta.title})
+                                    <span className="block text-sm font-black leading-tight">
+                                        {cameraStarting ? 'Membuka Kamera...' : 'Scan Kamera'}
+                                    </span>
+                                    <span className="block text-xs text-slate-950/80 font-medium mt-0.5">
+                                        Deteksi otomatis ({currentStepMeta.title})
                                     </span>
                                 </div>
-                            </button>
+                            </motion.button>
 
-                            <button
+                            <motion.button
+                                whileHover={{ y: -2, scale: 1.01 }}
+                                whileTap={{ scale: 0.98 }}
                                 type="button"
                                 disabled={!modelsReady || analyzingUpload || cameraStarting}
                                 onClick={() => fileInputRef.current?.click()}
-                                className="min-h-24 flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 active:scale-[0.98] border border-slate-700 text-left transition-all cursor-pointer disabled:opacity-50"
+                                className="min-h-28 flex items-center gap-4 p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/12 hover:border-cyan-400/40 text-left transition-all cursor-pointer disabled:opacity-50"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-slate-900 text-sky-400 flex items-center justify-center border border-slate-700 shrink-0">
+                                <div className="w-13 h-13 rounded-2xl bg-cyan-500/15 text-cyan-300 flex items-center justify-center border border-cyan-400/25 shrink-0">
                                     {analyzingUpload ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />
                                     ) : (
@@ -891,14 +945,14 @@ export default function FaceScan({
                                     )}
                                 </div>
                                 <div>
-                                    <span className="block text-sm font-bold text-white">
+                                    <span className="block text-sm font-bold text-white leading-tight">
                                         {analyzingUpload ? 'Membaca Foto...' : 'Upload Foto'}
                                     </span>
                                     <span className="block text-xs text-slate-400 mt-0.5">
-                                        Pilih foto dari galeri HP Anda
+                                        Pilih foto dari galeri
                                     </span>
                                 </div>
-                            </button>
+                            </motion.button>
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -911,8 +965,8 @@ export default function FaceScan({
 
                     {/* Kamera Auto-Capture + Ring Memutar + Indikator Merah/Kuning/Hijau */}
                     {cameraActive && (
-                        <div className="space-y-3.5 animate-fade-in">
-                            <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video max-h-[62vh] mx-auto flex items-center justify-center border border-slate-800">
+                        <div className="space-y-4 animate-fade-in">
+                            <div className="relative rounded-3xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video max-h-[62vh] mx-auto flex items-center justify-center border border-cyan-400/30 shadow-2xl shadow-cyan-950/40">
                                 <video
                                     ref={videoRef}
                                     autoPlay
@@ -923,7 +977,15 @@ export default function FaceScan({
                                     }`}
                                 />
 
-                                {/* Area Lingkaran Scan + Animasi Ring Memutar (Ringan, GPU-only) */}
+                                {/* HUD Corner Reticles */}
+                                <div aria-hidden="true" className="absolute inset-4 pointer-events-none">
+                                    <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-cyan-300/70 rounded-tl-lg" />
+                                    <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyan-300/70 rounded-tr-lg" />
+                                    <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyan-300/70 rounded-bl-lg" />
+                                    <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyan-300/70 rounded-br-lg" />
+                                </div>
+
+                                {/* Area Lingkaran Scan + Animasi Ring Memutar */}
                                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                                     <div className="relative w-52 h-52 sm:w-64 sm:h-64 flex items-center justify-center">
                                         <svg
@@ -952,7 +1014,7 @@ export default function FaceScan({
                                         </svg>
 
                                         {detectionColor === 'green' && (
-                                            <div className="absolute -bottom-3 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 text-xs font-bold">
+                                            <div className="absolute -bottom-3 px-3.5 py-1 rounded-full bg-emerald-400 text-slate-950 text-xs font-black shadow-lg shadow-emerald-500/40">
                                                 Menyimpan ({Math.min(2, greenStreak)}/2)...
                                             </div>
                                         )}
@@ -960,21 +1022,21 @@ export default function FaceScan({
                                 </div>
 
                                 {/* Pill Indikator Warna di Atas */}
-                                <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
+                                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none">
                                     <div
-                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${indicator.pill}`}
+                                        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border backdrop-blur-md text-xs font-bold transition-colors ${indicator.pill}`}
                                     >
-                                        <span className={`w-2.5 h-2.5 rounded-full ${indicator.dot}`} />
+                                        <span className={`w-2.5 h-2.5 rounded-full ${indicator.dot} animate-pulse`} />
                                         <span>{indicator.text}</span>
                                     </div>
                                 </div>
 
                                 {/* Panduan Singkat di Bawah */}
-                                <div className="absolute bottom-3 left-3 right-3 px-3.5 py-2.5 rounded-xl bg-black/80 text-center border border-white/10 pointer-events-none">
-                                    <p className="text-[11px] font-semibold text-sky-300">
+                                <div className="absolute bottom-3.5 left-3.5 right-3.5 px-4 py-3 rounded-2xl bg-black/75 backdrop-blur-md text-center border border-white/15 pointer-events-none">
+                                    <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-300">
                                         {currentStepMeta.title}
                                     </p>
-                                    <p className="text-xs sm:text-sm font-medium text-white mt-0.5">
+                                    <p className="text-xs sm:text-sm font-semibold text-white mt-0.5">
                                         {detectionMessage}
                                     </p>
                                 </div>
@@ -1003,8 +1065,8 @@ export default function FaceScan({
                                         onClick={toggleMirrorCamera}
                                         className={`flex-1 sm:flex-none min-h-11 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-colors active:scale-[0.98] cursor-pointer ${
                                             isMirrored
-                                                ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
-                                                : 'bg-slate-800 border-slate-700 text-slate-200'
+                                                ? 'bg-sky-500/15 border-sky-400/40 text-sky-300'
+                                                : 'bg-white/[0.06] border-white/12 text-slate-200'
                                         }`}
                                     >
                                         <FlipHorizontal2 className="w-4 h-4" />
@@ -1013,7 +1075,7 @@ export default function FaceScan({
                                     <button
                                         type="button"
                                         onClick={stopCamera}
-                                        className="min-h-11 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-semibold transition-colors active:scale-[0.98] cursor-pointer"
+                                        className="min-h-11 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition-colors active:scale-[0.98] cursor-pointer"
                                     >
                                         Tutup
                                     </button>
@@ -1041,14 +1103,14 @@ export default function FaceScan({
                                         setSelectedFaceIndex(null);
                                         setScanError(null);
                                     }}
-                                    className="min-h-9 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 cursor-pointer"
+                                    className="min-h-9 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs text-slate-200 cursor-pointer"
                                 >
                                     <RotateCcw className="w-3.5 h-3.5" />
                                     <span>Ganti Foto</span>
                                 </button>
                             </div>
 
-                            <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden bg-black border border-slate-700">
+                            <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden bg-black border border-white/15">
                                 <img
                                     src={snapshotUrl}
                                     alt="Pratinjau Wajah"
@@ -1093,7 +1155,7 @@ export default function FaceScan({
                                     type="button"
                                     disabled={selectedFaceIndex === null}
                                     onClick={confirmUploadedFace}
-                                    className="w-full min-h-12 py-3 px-5 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer"
+                                    className="w-full min-h-12 py-3 px-5 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 active:scale-[0.98] text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer shadow-lg shadow-sky-500/25"
                                 >
                                     <CheckCircle2 className="w-4 h-4" />
                                     <span>
@@ -1105,82 +1167,100 @@ export default function FaceScan({
                             )}
                         </div>
                     )}
-                </div>
+                </motion.div>
             </div>
 
-            {/* Pop-up Konfirmasi Berhasil dengan Ikon Centang (✓) */}
-            {successPopup && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                    <div className="animate-pop-in relative w-full max-w-xs sm:max-w-sm bg-[#111827] border border-emerald-500/40 rounded-3xl p-6 text-center space-y-4">
-                        <button
-                            type="button"
-                            onClick={() => setSuccessPopup(null)}
-                            className="absolute top-3.5 right-3.5 min-w-9 min-h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-                            aria-label="Tutup"
+            {/* Pop-up Konfirmasi Berhasil dengan Animasi Spring */}
+            <AnimatePresence>
+                {successPopup && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.88, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ type: 'spring', stiffness: 360, damping: 26 }}
+                            className="relative w-full max-w-xs sm:max-w-sm bg-[#0C1425] border border-emerald-400/40 rounded-3xl p-6 text-center space-y-4 shadow-2xl shadow-emerald-950/50"
                         >
-                            <X className="w-4 h-4" />
-                        </button>
-
-                        <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center">
-                            <Check className="w-8 h-8 text-emerald-400 stroke-[3]" />
-                        </div>
-
-                        <div className="space-y-1">
-                            <h3 className="text-base sm:text-lg font-bold text-white">
-                                {successPopup.allDone
-                                    ? 'Scan Wajah Selesai!'
-                                    : `${successPopup.completedStep.title} Berhasil!`}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-slate-300">
-                                {successPopup.allDone
-                                    ? 'Ketiga arah wajah sudah tersimpan. Silakan cari foto Anda sekarang.'
-                                    : 'Wajah berhasil dipindai. Lanjutkan ke arah berikutnya.'}
-                            </p>
-                        </div>
-
-                        {successPopup.thumbUrl && (
-                            <div className="flex justify-center">
-                                <img
-                                    src={successPopup.thumbUrl}
-                                    alt="Hasil Scan"
-                                    className="w-18 h-18 rounded-2xl object-cover border-2 border-emerald-400/60"
-                                />
-                            </div>
-                        )}
-
-                        <div className="pt-1 space-y-2">
-                            {successPopup.allDone ? (
-                                <button
-                                    type="button"
-                                    onClick={handleSearchPhotos}
-                                    disabled={searching}
-                                    className="w-full min-h-12 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                                >
-                                    <Sparkles className="w-4 h-4" />
-                                    <span>Cari Foto Saya</span>
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => startAutoCamera(successPopup.nextStep.key)}
-                                    className="w-full min-h-12 py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                                >
-                                    <Camera className="w-4 h-4" />
-                                    <span>Lanjut: {successPopup.nextStep.title}</span>
-                                </button>
-                            )}
-
                             <button
                                 type="button"
                                 onClick={() => setSuccessPopup(null)}
-                                className="w-full min-h-10 py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                                className="absolute top-3.5 right-3.5 min-w-9 min-h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
+                                aria-label="Tutup"
                             >
-                                Tutup
+                                <X className="w-4 h-4" />
                             </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 18, delay: 0.08 }}
+                                className="mx-auto w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30"
+                            >
+                                <Check className="w-8 h-8 text-emerald-400 stroke-[3]" />
+                            </motion.div>
+
+                            <div className="space-y-1">
+                                <h3 className="font-heading text-lg font-black text-white">
+                                    {successPopup.allDone
+                                        ? 'Scan Wajah Selesai!'
+                                        : `${successPopup.completedStep.title} Berhasil!`}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-slate-300">
+                                    {successPopup.allDone
+                                        ? 'Ketiga arah wajah sudah tersimpan. Silakan cari foto Anda sekarang.'
+                                        : 'Wajah berhasil dipindai. Lanjutkan ke arah berikutnya.'}
+                                </p>
+                            </div>
+
+                            {successPopup.thumbUrl && (
+                                <div className="flex justify-center">
+                                    <img
+                                        src={successPopup.thumbUrl}
+                                        alt="Hasil Scan"
+                                        className="w-18 h-18 rounded-2xl object-cover border-2 border-emerald-400/60 shadow-lg"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="pt-1 space-y-2">
+                                {successPopup.allDone ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleSearchPhotos}
+                                        disabled={searching}
+                                        className="w-full min-h-12 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 active:scale-[0.98] text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-500/25"
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        <span>Cari Foto Saya</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => startAutoCamera(successPopup.nextStep.key)}
+                                        className="w-full min-h-12 py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 active:scale-[0.98] text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-sky-500/25"
+                                    >
+                                        <Camera className="w-4 h-4" />
+                                        <span>Lanjut: {successPopup.nextStep.title}</span>
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSuccessPopup(null)}
+                                    className="w-full min-h-10 py-2 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </ScanCustomerLayout>
     );
 }

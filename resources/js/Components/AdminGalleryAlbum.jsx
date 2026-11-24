@@ -13,7 +13,7 @@ export function GalleryPhotoPreview({ file, url, label = 'Thumbnail / Cover' }) 
 export default function AdminGalleryAlbum({ existing = [], files, removed, onFiles, onRemoved, error }) {
     const [localError, setLocalError] = useState('');
     const count = existing.length - removed.length + files.length;
-    return <fieldset className="min-w-0 max-w-full space-y-3 p-3 sm:p-4 border border-amber-500/30 rounded-2xl [overflow-wrap:anywhere]">
+    return <fieldset className="min-w-0 max-w-full space-y-3 p-3 sm:p-4 border border-amber-500/30 rounded-2xl break-words">
         <legend className="max-w-full px-1 font-bold text-sm">Foto Album ({count}/10) — terpisah dari thumbnail</legend>
         <p className="text-xs text-slate-500">Upload 1–10 foto album. Thumbnail hanya tampil di kartu; popup menampilkan foto album ini. JPG, PNG, WebP, GIF, AVIF • Maks. 5 MiB/foto.</p>
         <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif" aria-label="Tambah foto album" onChange={e => {

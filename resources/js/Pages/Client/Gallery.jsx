@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Camera, Download, Clock, AlertTriangle, CheckCircle2, 
     LogOut, ExternalLink, Sparkles, FolderArchive, Image as ImageIcon,
     Eye, X, ChevronLeft, ChevronRight, Loader2, ZoomIn, Menu,
-    Layers, User, Phone, MessageSquare
+    Layers, User, Phone, MessageSquare, ShieldCheck, Crown
 } from 'lucide-react';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { getWhatsAppUrl } from '@/Utils/whatsapp';
 import ClientRawPhotosGallery from '@/Components/ClientRawPhotosGallery';
+import AnimatedAmbientBackdrop from '@/Components/AnimatedAmbientBackdrop';
 
 function PhotoThumbnailCard({ photo, index, onPreview }) {
     const [loaded, setLoaded] = useState(false);
@@ -21,7 +23,9 @@ function PhotoThumbnailCard({ photo, index, onPreview }) {
     };
 
     return (
-        <div className="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+        <div
+            className="group relative rounded-3xl overflow-hidden bg-white dark:bg-[#0B1222]/95 border border-slate-200/90 dark:border-white/10 hover:border-[#005792]/50 dark:hover:border-cyan-400/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col"
+        >
             <button
                 type="button"
                 aria-label={`Pratinjau ${photo.original_name}`}
@@ -41,39 +45,40 @@ function PhotoThumbnailCard({ photo, index, onPreview }) {
                     decoding="async"
                     onLoad={() => setLoaded(true)}
                     onError={handleError}
-                    className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                    className={`w-full h-full object-cover group-hover:scale-108 transition-all duration-500 ${
                         loaded ? 'opacity-100' : 'opacity-0'
                     }`}
                 />
 
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <span className="p-2.5 rounded-full bg-white/20 backdrop-blur-md text-white shadow-lg transform group-hover:scale-110 transition-transform">
-                        <Eye className="w-5 h-5" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="px-3.5 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold shadow-xl inline-flex items-center gap-1.5 transform scale-90 group-hover:scale-100 transition-transform">
+                        <Eye className="w-4 h-4 text-cyan-200" />
+                        <span>Lihat HD</span>
                     </span>
                 </div>
 
-                <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white text-[10px] font-mono font-bold shadow-xs">
+                <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-white text-[10px] font-mono font-bold shadow-xs">
                     #{index + 1}
                 </span>
 
-                <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-slate-200 text-[10px] font-mono font-semibold">
+                <span className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-slate-100 text-[10px] font-mono font-semibold">
                     {photo.formatted_size}
                 </span>
             </button>
 
-            <div className="p-3 bg-white dark:bg-[#0c1220] flex items-center justify-between gap-2 border-t border-slate-200/80 dark:border-white/5">
+            <div className="p-3.5 bg-white dark:bg-[#0B1222] flex items-center justify-between gap-2.5 border-t border-slate-200/80 dark:border-white/8">
                 <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate" title={photo.original_name}>
                         {photo.original_name}
                     </p>
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">
-                        Ukuran Asli: {photo.formatted_size}
+                        HD Asli • {photo.formatted_size}
                     </span>
                 </div>
 
                 <a
                     href={`/pelanggan/foto/${photo.id}/download`}
-                    className="min-w-11 min-h-11 flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-[#005792] hover:text-white dark:hover:bg-cyan-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-200 transition-colors shrink-0"
+                    className="min-w-10 min-h-10 flex items-center justify-center p-2 rounded-xl bg-slate-100 dark:bg-white/[0.07] hover:bg-gradient-to-r hover:from-[#005792] hover:to-cyan-500 hover:text-white text-slate-700 dark:text-slate-200 transition-all active:scale-95 shrink-0 shadow-2xs"
                     title={`Unduh file asli (${photo.formatted_size})`}
                 >
                     <Download className="w-4 h-4" />
@@ -201,11 +206,14 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
     }, [previewPhoto, handlePrev, handleNext]);
 
     return (
-        <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 font-sans transition-colors duration-200 flex flex-col">
+        <div className="min-h-screen bg-[#EDF9FC] text-slate-800 dark:bg-[#050811] dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col relative overflow-x-clip pb-24 md:pb-0">
             <Head title={`${activeSidebarMenu === 'raw' ? 'Foto Mentahan' : 'Foto Jadi'} — ${client?.name || 'Pelanggan'} | Studio Langit`} />
 
+            {/* Flowing Animated Background (Aurora + Light Ribbon + Drifting Bokeh Orbs) */}
+            <AnimatedAmbientBackdrop variant="adaptive" />
+
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#090D16]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/10 shadow-xs">
+            <header className="sticky top-0 z-40 bg-white/92 dark:bg-[#080D19]/92 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         {/* Mobile Hamburger Button */}
@@ -218,16 +226,16 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                             <Menu className="w-5 h-5" />
                         </button>
 
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005792] via-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20">
+                        <Link href="/" className="flex items-center gap-2.5 group">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005792] via-sky-500 to-cyan-400 text-white flex items-center justify-center shadow-lg shadow-sky-500/25 group-hover:scale-105 transition-transform">
                                 <Camera className="w-5 h-5" />
                             </div>
                             <div>
                                 <span className="font-heading font-black text-sm text-slate-900 dark:text-white leading-none block">
                                     Studio Langit
                                 </span>
-                                <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
-                                    Portal Pelanggan
+                                <span className="text-[10px] font-mono text-[#005792] dark:text-cyan-400 block mt-0.5">
+                                    Galeri Pelanggan
                                 </span>
                             </div>
                         </Link>
@@ -236,7 +244,7 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                     <div className="flex items-center gap-2 sm:gap-3">
                         <ThemeToggle theme={theme} setTheme={setTheme} />
 
-                        <div className="hidden sm:block text-right pr-2 border-r border-slate-200 dark:border-white/10">
+                        <div className="hidden sm:block text-right pr-2.5 border-r border-slate-200 dark:border-white/10">
                             <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight">
                                 {client?.name}
                             </span>
@@ -248,7 +256,7 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                         <button
                             type="button"
                             onClick={handleLogout}
-                            className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                             title="Keluar dari Akun Pelanggan"
                         >
                             <LogOut className="w-3.5 h-3.5" />
@@ -256,82 +264,56 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                         </button>
                     </div>
                 </div>
-
-                {/* Mobile Quick Switcher Tabs */}
-                <div className="md:hidden px-4 pb-2.5 pt-1 flex items-center gap-2 border-t border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-[#070b14]/60">
-                    <button
-                        type="button"
-                        onClick={() => setActiveSidebarMenu('final')}
-                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            activeSidebarMenu === 'final'
-                                ? 'bg-[#005792] text-white shadow-md shadow-[#005792]/30'
-                                : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10'
-                        }`}
-                    >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Foto Jadi ({totalFinalPhotos})</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveSidebarMenu('raw')}
-                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            activeSidebarMenu === 'raw'
-                                ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-black shadow-md shadow-cyan-500/30'
-                                : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10'
-                        }`}
-                    >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Foto Mentahan ({totalRawPhotos})</span>
-                    </button>
-                </div>
             </header>
 
             {/* ── MAIN BODY WITH SIDEBAR ── */}
-            <div className="flex-1 flex max-w-7xl w-full mx-auto">
+            <div className="relative z-10 flex-1 flex max-w-7xl w-full mx-auto">
                 {/* ── DESKTOP SIDEBAR ── */}
-                <aside className="hidden md:flex flex-col w-64 shrink-0 border-r border-slate-200/90 dark:border-white/10 p-5 space-y-6 sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto overscroll-contain">
-                    {/* Client Profile Card */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-xs">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#005792] to-cyan-500 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                <aside className="hidden md:flex flex-col w-68 shrink-0 border-r border-slate-200/80 dark:border-white/10 p-5 space-y-6 sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto overscroll-contain bg-white/85 dark:bg-[#070B15]/90">
+                    {/* VIP Client Profile Card */}
+                    <div className="relative overflow-hidden p-4 rounded-3xl bg-white/95 dark:bg-[#0B1222]/95 border border-slate-200/90 dark:border-white/12 shadow-lg shadow-[#005792]/5 dark:shadow-black/30">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#005792] via-cyan-400 to-emerald-400" />
+                        <div className="flex items-center gap-3 mb-3 pt-1">
+                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#005792] via-sky-500 to-cyan-400 text-white flex items-center justify-center font-black text-base shadow-md shadow-sky-500/25 shrink-0">
                                 {client?.name ? client.name.charAt(0).toUpperCase() : 'P'}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
+                                <span className="text-xs font-black text-slate-900 dark:text-white block truncate">
                                     {client?.name}
                                 </span>
-                                <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 block truncate">
+                                <span className="text-[10px] font-mono text-[#005792] dark:text-cyan-400 block truncate">
                                     @{client?.username || client?.email}
                                 </span>
                             </div>
                         </div>
-                        <span className="inline-block px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold">
-                            ● Klien Terverifikasi
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/12 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                            <ShieldCheck className="w-3 h-3" />
+                            Pelanggan Aktif
                         </span>
                     </div>
 
                     {/* Navigation Menu */}
-                    <div className="space-y-1.5 flex-1">
-                        <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                            Koleksi Foto Sesi
+                    <div className="space-y-2 flex-1">
+                        <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
+                            Koleksi Foto
                         </div>
 
                         {/* MENU 1: FOTO JADI */}
                         <button
                             type="button"
                             onClick={() => setActiveSidebarMenu('final')}
-                            className={`w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
+                            className={`relative w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
                                 activeSidebarMenu === 'final'
-                                    ? 'bg-[#005792] text-white shadow-lg shadow-[#005792]/25'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                                    ? 'bg-gradient-to-r from-[#005792] to-sky-600 text-white shadow-lg shadow-[#005792]/30'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <CheckCircle2 className={`w-4 h-4 ${activeSidebarMenu === 'final' ? 'text-white' : 'text-emerald-500'}`} />
+                                <CheckCircle2 className={`w-4 h-4 ${activeSidebarMenu === 'final' ? 'text-cyan-200' : 'text-emerald-500'}`} />
                                 <span>Foto Jadi</span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] ${
-                                activeSidebarMenu === 'final' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                            <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                                activeSidebarMenu === 'final' ? 'bg-white/20 text-white' : 'bg-slate-200/90 dark:bg-white/10 text-slate-600 dark:text-slate-300'
                             }`}>
                                 {totalFinalPhotos}
                             </span>
@@ -341,42 +323,35 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                         <button
                             type="button"
                             onClick={() => setActiveSidebarMenu('raw')}
-                            className={`w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
+                            className={`relative w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
                                 activeSidebarMenu === 'raw'
-                                    ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-black shadow-lg shadow-cyan-500/30'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                                    ? 'bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 font-black shadow-lg shadow-cyan-500/30'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Sparkles className={`w-4 h-4 ${activeSidebarMenu === 'raw' ? 'text-slate-950' : 'text-cyan-500'}`} />
-                                <div className="text-left">
-                                    <span className="block leading-tight">Foto Mentahan</span>
-                                    <span className={`text-[9px] font-normal block ${activeSidebarMenu === 'raw' ? 'text-slate-900' : 'text-slate-400'}`}>
-                                        Pilih & Diskon
-                                    </span>
-                                </div>
+                                <span>Foto Mentahan</span>
                             </div>
-                            <div className="text-right">
-                                <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] block ${
-                                    activeSidebarMenu === 'raw' ? 'bg-black/20 text-slate-950 font-bold' : 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
-                                }`}>
-                                    {totalRawPhotos}
-                                </span>
-                            </div>
+                            <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                                activeSidebarMenu === 'raw' ? 'bg-black/20 text-slate-950' : 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
+                            }`}>
+                                {totalRawPhotos}
+                            </span>
                         </button>
                     </div>
 
                     {/* Sidebar Footer Help */}
-                    <div className="pt-4 border-t border-slate-200/90 dark:border-white/10 space-y-2">
+                    <div className="pt-4 border-t border-slate-200/80 dark:border-white/10">
                         <a
                             href={getWhatsAppUrl('client-delivery', {
                                 clientName: client?.name || '',
                                 title: 'Portal Pengambilan Foto',
-                                details: 'Konsultasi atau bantuan akun portal'
+                                details: 'Bantuan akun portal foto'
                             })}
                             target="_blank"
                             rel="noreferrer"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all active:scale-95"
                         >
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span>Hubungi Admin</span>
@@ -486,36 +461,68 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                     {/* VIEW 1: FOTO JADI (CURRENT LOGIC PRESERVED STRICTLY) */}
                     {activeSidebarMenu === 'final' && (
                         <div className="space-y-8">
-                {/* Welcome Banner */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#005792]/10 via-sky-500/10 to-indigo-500/10 dark:from-[#005792]/20 dark:via-sky-500/15 dark:to-indigo-500/15 border border-[#005792]/20 dark:border-white/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#005792] dark:text-cyan-400 block mb-1">
-                            Layanan Pelanggan Aktif
-                        </span>
-                        <h1 className="font-heading break-words font-black text-2xl sm:text-3xl text-slate-900 dark:text-white">
-                            Selamat Datang, {client?.name}!
-                        </h1>
-                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-xl leading-relaxed">
-                            Berikut adalah daftar koleksi foto hasil sesi Anda. Setiap foto tersedia dalam ukuran asli beresolusi tinggi tanpa batasan kompresi. Harap unduh sebelum masa hitungan hari kedaluwarsa berakhir.
-                        </p>
+                {/* Clean Welcome Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="relative overflow-hidden p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-[#005792] via-[#063A66] to-[#0B1730] text-white border border-sky-400/25 shadow-xl shadow-[#005792]/15 space-y-5"
+                >
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="font-heading break-words font-black text-xl sm:text-2xl text-white">
+                                Halo, {client?.name}
+                            </h1>
+                            <p className="text-xs sm:text-sm text-sky-100/85 mt-1 max-w-xl">
+                                Unduh foto asli Anda sebelum masa aktif album berakhir.
+                            </p>
+                        </div>
+
+                        <div className="shrink-0">
+                            <motion.a
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                href={getWhatsAppUrl('client-delivery', {
+                                    clientName: client?.name || '',
+                                    title: 'Portal Pengambilan Foto',
+                                    details: 'Bantuan unduh album foto'
+                                })}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-4 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all"
+                            >
+                                <span>Hubungi Admin</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                            </motion.a>
+                        </div>
                     </div>
 
-                    <div className="shrink-0 flex items-center gap-2">
-                        <a
-                            href={getWhatsAppUrl('client-delivery', {
-                                clientName: client?.name || '',
-                                title: 'Portal Pengambilan Foto',
-                                details: 'Konsultasi atau bantuan unduh album foto'
-                            })}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all hover:scale-105 active:scale-95"
+                    {/* Ringkasan Singkat */}
+                    <div className="relative z-10 grid grid-cols-3 gap-2.5 sm:gap-3 pt-4 border-t border-white/15">
+                        <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                            <span className="text-[10px] font-mono uppercase text-sky-200 block">Album</span>
+                            <span className="font-heading text-base sm:text-xl font-black text-white mt-0.5 block">
+                                {deliveries.length}
+                            </span>
+                        </div>
+                        <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                            <span className="text-[10px] font-mono uppercase text-emerald-200 block">Foto Jadi</span>
+                            <span className="font-heading text-base sm:text-xl font-black text-emerald-300 mt-0.5 block">
+                                {totalFinalPhotos}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setActiveSidebarMenu('raw')}
+                            className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-left transition-colors cursor-pointer"
                         >
-                            <span>Hubungi Admin Studio</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+                            <span className="text-[10px] font-mono uppercase text-cyan-200 block">Mentahan</span>
+                            <span className="font-heading text-base sm:text-xl font-black text-cyan-300 mt-0.5 block">
+                                {totalRawPhotos}
+                            </span>
+                        </button>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Delivery Albums List */}
                 {deliveries.length === 0 ? (
@@ -538,10 +545,14 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                             const visiblePhotos = delivery.photos?.slice(0, currentVisible) || [];
 
                             return (
-                                <section 
-                                    key={delivery.id} 
-                                    className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#090D16]/90 border border-slate-200/90 dark:border-white/10 shadow-lg shadow-slate-200/40 dark:shadow-none space-y-6"
+                                <motion.section 
+                                    key={delivery.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35 }}
+                                    className="relative overflow-hidden p-5 sm:p-7 rounded-3xl bg-white/95 dark:bg-[#0B1222]/95 border border-slate-200/90 dark:border-white/10 shadow-lg shadow-slate-200/40 dark:shadow-black/30 space-y-6"
                                 >
+                                    <div className={`absolute inset-x-0 top-0 h-1 ${isExpired ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gradient-to-r from-[#005792] via-cyan-400 to-emerald-400'}`} />
                                     {/* Header & Status Section */}
                                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/10">
                                         <div>
@@ -572,13 +583,15 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                                         {/* Download All ZIP Button (Only if NOT expired) */}
                                         {!isExpired && delivery.photos?.length > 0 && (
                                             <div className="shrink-0 flex items-center gap-3">
-                                                <a
+                                                <motion.a
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.97 }}
                                                     href={`/pelanggan/album/${delivery.id}/download-all`}
-                                                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#005792] hover:bg-[#004270] active:bg-[#003357] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
+                                                    className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-[#005792] via-sky-600 to-cyan-600 hover:from-[#004677] hover:to-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#005792]/25 hover:shadow-cyan-500/30 transition-all cursor-pointer"
                                                 >
                                                     <FolderArchive className="w-4 h-4 shrink-0" />
                                                     <span>Unduh Semua Foto (ZIP • {delivery.total_size_formatted})</span>
-                                                </a>
+                                                </motion.a>
                                             </div>
                                         )}
                                     </div>
@@ -690,7 +703,7 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                                             </p>
                                         </div>
                                     )}
-                                </section>
+                                </motion.section>
                             );
                         })}
                     </div>
@@ -879,6 +892,66 @@ export default function ClientGallery({ client, deliveries = [], rawSelections =
                     </div>
                 </div>
             )}
+            {/* Floating Glass Mobile Bottom Navigation (Matching LangitLens) */}
+            <nav
+                aria-label="Navigasi Portal Pelanggan"
+                className="md:hidden fixed bottom-2.5 inset-x-3 z-30 bg-white/94 dark:bg-[#0B1222]/94 backdrop-blur-md border border-slate-200/90 dark:border-white/12 rounded-2xl shadow-2xl shadow-slate-900/15 dark:shadow-black/70 grid grid-cols-3 px-1.5 py-1.5"
+            >
+                <button
+                    type="button"
+                    onClick={() => {
+                        setActiveSidebarMenu('final');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`min-h-12 flex flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold relative transition-all active:scale-95 cursor-pointer ${
+                        activeSidebarMenu === 'final'
+                            ? 'text-[#005792] dark:text-cyan-300 bg-[#005792]/12 dark:bg-sky-500/20 border border-[#005792]/25 dark:border-sky-400/30'
+                            : 'text-slate-500 dark:text-slate-400 border border-transparent'
+                    }`}
+                >
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>Foto Jadi</span>
+                    {totalFinalPhotos > 0 && (
+                        <span className="absolute top-1 right-4 px-1.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black">
+                            {totalFinalPhotos}
+                        </span>
+                    )}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        setActiveSidebarMenu('raw');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`min-h-12 flex flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold relative transition-all active:scale-95 cursor-pointer ${
+                        activeSidebarMenu === 'raw'
+                            ? 'text-[#005792] dark:text-cyan-300 bg-[#005792]/12 dark:bg-sky-500/20 border border-[#005792]/25 dark:border-sky-400/30'
+                            : 'text-slate-500 dark:text-slate-400 border border-transparent'
+                    }`}
+                >
+                    <Sparkles className="w-5 h-5" />
+                    <span>Mentahan</span>
+                    {totalRawPhotos > 0 && (
+                        <span className="absolute top-1 right-4 px-1.5 rounded-full bg-cyan-400 text-slate-950 text-[9px] font-black">
+                            {totalRawPhotos}
+                        </span>
+                    )}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setMobileDrawerOpen(true)}
+                    className={`min-h-12 flex flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold transition-all active:scale-95 cursor-pointer ${
+                        mobileDrawerOpen
+                            ? 'text-[#005792] dark:text-cyan-300 bg-[#005792]/12 dark:bg-sky-500/20 border border-[#005792]/25 dark:border-sky-400/30'
+                            : 'text-slate-500 dark:text-slate-400 border border-transparent'
+                    }`}
+                >
+                    <User className="w-5 h-5" />
+                    <span>Akun</span>
+                </button>
+            </nav>
         </div>
     );
 }

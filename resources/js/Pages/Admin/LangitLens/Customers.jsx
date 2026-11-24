@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import LangitLensAdminLayout from '@/Layouts/LangitLensAdminLayout';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 import { Users, Phone, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function Customers({ customers }) {
@@ -32,8 +33,8 @@ export default function Customers({ customers }) {
                 {customers.length === 0 ? (
                     <p className="text-xs text-slate-400 py-4 text-center">Belum ada pelanggan terdaftar.</p>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+                        <table className="w-full min-w-[48rem] text-left text-xs [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                             <thead>
                                 <tr className="border-b border-slate-800 text-slate-400">
                                     <th className="pb-2.5 pr-4">Nama</th>
@@ -79,15 +80,28 @@ export default function Customers({ customers }) {
                                         </td>
                                         <td className="py-3 pr-4 text-slate-400">{c.created_at}</td>
                                         <td className="py-3 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => setTargetCustomer(c)}
-                                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer"
-                                                title={`Hapus akun ${c.name}`}
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                                <span>Hapus</span>
-                                            </button>
+                                            <AdminActionMenu
+                                                buttonTitle={`Aksi Pelanggan ${c.name}`}
+                                                items={[
+                                                    {
+                                                        label: 'Hubungi via WhatsApp',
+                                                        icon: Phone,
+                                                        tone: 'emerald',
+                                                        hidden: !c.whatsapp_number,
+                                                        external: true,
+                                                        href: c.whatsapp_number
+                                                            ? `https://wa.me/${c.whatsapp_number.replace(/[^0-9]/g, '')}`
+                                                            : undefined,
+                                                    },
+                                                    {
+                                                        label: 'Hapus Akun',
+                                                        icon: Trash2,
+                                                        tone: 'danger',
+                                                        dividerBefore: Boolean(c.whatsapp_number),
+                                                        onClick: () => setTargetCustomer(c),
+                                                    },
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))}

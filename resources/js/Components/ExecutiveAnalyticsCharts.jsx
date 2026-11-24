@@ -236,7 +236,7 @@ export default function ExecutiveAnalyticsCharts({
     return (
         <div className="space-y-6">
             {/* Header Telemetry Bar & Period Controls */}
-            <div className="min-w-0 p-4 sm:p-5 md:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors [overflow-wrap:anywhere]">
+            <div className="min-w-0 p-4 sm:p-5 md:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors break-words">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -249,7 +249,7 @@ export default function ExecutiveAnalyticsCharts({
                         </div>
                         <h2 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white flex items-center gap-2">
                             <Activity className="w-5 h-5 text-[#005792] dark:text-cyan-400" />
-                            <span>Analisis Tren & Performa Operasional 7 Divisi</span>
+                            <span>Analisis Tren & Performa Operasional {divisionsDistribution.length} Divisi</span>
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mt-0.5">
                             Visualisasi volume throughput layanan, distribusi permintaan proyek, dan status SLA Langit Ecosystem
@@ -528,7 +528,7 @@ export default function ExecutiveAnalyticsCharts({
                             </span>
                             <h3 className="font-heading font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2 mt-0.5">
                                 <PieChart className="w-4 h-4 text-cyan-500" />
-                                <span>Distribusi Porsi 7 Divisi</span>
+                                <span>Distribusi Porsi {divisionsDistribution.length} Divisi</span>
                             </h3>
                         </div>
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#005792]/10 text-[#005792] dark:bg-cyan-500/15 dark:text-cyan-300 border border-[#005792]/20 dark:border-cyan-500/30">

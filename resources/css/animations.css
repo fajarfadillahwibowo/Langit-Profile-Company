@@ -181,11 +181,46 @@
     mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
 }
 
+/* 5b. Lightweight Compositor-Only Ambient Ribbon & Bokeh Orbs (Zero Blur Filter, Zero JS) */
+@keyframes ambient-ribbon-sweep {
+    0% {
+        transform: translate3d(-35vw, 0, 0) rotate(-12deg);
+    }
+    100% {
+        transform: translate3d(135vw, 0, 0) rotate(-12deg);
+    }
+}
+
+@keyframes ambient-orb-float {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) scale(0.95);
+        opacity: 0.22;
+    }
+    50% {
+        transform: translate3d(var(--orb-dx, 24px), var(--orb-dy, -44px), 0) scale(1.18);
+        opacity: 0.62;
+    }
+}
+
+.animate-ambient-ribbon {
+    animation: ambient-ribbon-sweep 16s linear infinite;
+    will-change: transform;
+    contain: paint;
+}
+
+.animate-ambient-orb {
+    animation: ambient-orb-float var(--orb-dur, 14s) ease-in-out var(--orb-delay, 0s) infinite;
+    will-change: transform, opacity;
+    contain: paint;
+}
+
 /* 6. Reduced Motion Accessibility */
 @media (prefers-reduced-motion: reduce) {
     .animate-aurora-1,
     .animate-aurora-2,
     .animate-aurora-3,
+    .animate-ambient-ribbon,
+    .animate-ambient-orb,
     .animate-hud-pulse,
     .animate-marquee-left,
     .animate-marquee-right {
@@ -202,7 +237,9 @@
 /* 7. Lite Quality Mode Optimizations (SD Mode - Ultra Low CPU/GPU Usage) */
 [data-quality="sd"] .animate-aurora-1,
 [data-quality="sd"] .animate-aurora-2,
-[data-quality="sd"] .animate-aurora-3 {
+[data-quality="sd"] .animate-aurora-3,
+[data-quality="sd"] .animate-ambient-ribbon,
+[data-quality="sd"] .animate-ambient-orb {
     animation-play-state: paused;
 }
 

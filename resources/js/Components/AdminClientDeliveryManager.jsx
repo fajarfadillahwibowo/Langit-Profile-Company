@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import AdminRawPhotosManager from '@/Components/AdminRawPhotosManager';
 import AdminRawSelectionsManager from '@/Components/AdminRawSelectionsManager';
+import AdminActionMenu from '@/Components/AdminActionMenu';
 
 export default function AdminClientDeliveryManager({ clientDeliveries = [], clientRawSelections = [], initialSubTab = 'deliveries' }) {
     // Sub-tab state
@@ -231,7 +232,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
     };
 
     return (
-        <div className="min-w-0 space-y-6 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
+        <div className="min-w-0 space-y-6 break-words [&_table]:[overflow-wrap:normal] [&_table]:break-normal [&_th]:whitespace-nowrap [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Sub-Tab Navigation Switcher */}
             <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-xs overflow-x-auto">
                 <button
@@ -354,7 +355,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
             ) : (
                 <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel layanan foto pelanggan, geser untuk melihat semua kolom">
-                        <table className="w-full min-w-[64rem] text-left border-collapse [&_td]:max-w-xs">
+                        <table className="w-full min-w-[64rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-[11px] font-mono uppercase text-slate-500">
                                     <th className="px-5 py-3.5">Pelanggan</th>
@@ -509,49 +510,42 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
                                             {/* Actions */}
                                             <td className="px-5 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                                                    {/* Atur Expired Button */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setExpiryModalDelivery(delivery)}
-                                                        className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                                                        title="Atur/Perpanjang Hitungan Hari Expired"
-                                                    >
-                                                        <Clock className="w-3 h-3" />
-                                                        <span>Atur Hari Expired</span>
-                                                    </button>
-
-                                                    {/* Upload Foto Tambahan */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { if (!uploadState.current.additional || uploadState.current.additional.deliveryId === delivery.id) setAddPhotosDelivery(delivery); else alert('Selesaikan upload album sebelumnya dahulu.'); }}
-                                                        className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                                                        title="Upload Foto Tambahan"
-                                                    >
-                                                        <Upload className="w-3 h-3" />
-                                                        <span>+ Foto</span>
-                                                    </button>
-
-                                                    {/* Lihat Foto */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setViewPhotosDelivery(delivery)}
-                                                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[11px] transition-colors cursor-pointer"
-                                                        title="Lihat Daftar Foto & Hapus Per Foto"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-
-                                                    {/* Hapus Sesi */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteDelivery(delivery.id, delivery.title)}
-                                                        className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] transition-colors cursor-pointer"
-                                                        title="Hapus Sesi Pelanggan"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <AdminActionMenu
+                                                    buttonTitle="Aksi Sesi Pelanggan"
+                                                    items={[
+                                                        {
+                                                            label: 'Lihat Daftar Foto',
+                                                            icon: Eye,
+                                                            tone: 'primary',
+                                                            onClick: () => setViewPhotosDelivery(delivery),
+                                                        },
+                                                        {
+                                                            label: 'Upload Foto Tambahan',
+                                                            icon: Upload,
+                                                            tone: 'primary',
+                                                            onClick: () => {
+                                                                if (!uploadState.current.additional || uploadState.current.additional.deliveryId === delivery.id) {
+                                                                    setAddPhotosDelivery(delivery);
+                                                                } else {
+                                                                    alert('Selesaikan upload album sebelumnya dahulu.');
+                                                                }
+                                                            },
+                                                        },
+                                                        {
+                                                            label: 'Atur Hari Expired',
+                                                            icon: Clock,
+                                                            tone: 'amber',
+                                                            onClick: () => setExpiryModalDelivery(delivery),
+                                                        },
+                                                        {
+                                                            label: 'Hapus Sesi Pelanggan',
+                                                            icon: Trash2,
+                                                            tone: 'danger',
+                                                            dividerBefore: true,
+                                                            onClick: () => handleDeleteDelivery(delivery.id, delivery.title),
+                                                        },
+                                                    ]}
+                                                />
                                             </td>
                                         </tr>
                                     );

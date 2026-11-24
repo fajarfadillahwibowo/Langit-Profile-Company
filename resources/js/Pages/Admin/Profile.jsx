@@ -298,7 +298,7 @@ export default function Profile({ admin }) {
     }, [activeModal]);
 
     return (
-        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 [overflow-wrap:anywhere] [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
+        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title="Profil Administrator — Langit Back-Office" />
 
             {/* Hidden canvas for taking snapshot */}
