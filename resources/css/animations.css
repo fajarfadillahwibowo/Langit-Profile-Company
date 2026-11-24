@@ -214,6 +214,68 @@
     contain: paint;
 }
 
+/* 5c. Seamless Infinite Moving Grid + Track Light Pulses (Pure GPU Compositor) */
+@keyframes grid-drift {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(48px, 48px, 0);
+    }
+}
+
+@keyframes grid-beam-x {
+    0% {
+        transform: translate3d(-20vw, 0, 0);
+        opacity: 0;
+    }
+    12% {
+        opacity: 0.9;
+    }
+    88% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate3d(115vw, 0, 0);
+        opacity: 0;
+    }
+}
+
+@keyframes grid-beam-y {
+    0% {
+        transform: translate3d(0, -20vh, 0);
+        opacity: 0;
+    }
+    12% {
+        opacity: 0.85;
+    }
+    88% {
+        opacity: 0.85;
+    }
+    100% {
+        transform: translate3d(0, 115vh, 0);
+        opacity: 0;
+    }
+}
+
+.animate-grid-drift {
+    animation: grid-drift 6s linear infinite;
+    will-change: transform;
+    contain: paint;
+}
+
+.animate-grid-beam-x {
+    animation: grid-beam-x var(--beam-dur, 9s) linear var(--beam-delay, 0s) infinite;
+    will-change: transform, opacity;
+    contain: paint;
+}
+
+.animate-grid-beam-y {
+    animation: grid-beam-y var(--beam-dur, 10s) linear var(--beam-delay, 0s) infinite;
+    will-change: transform, opacity;
+    contain: paint;
+}
+
 /* 6. Reduced Motion Accessibility */
 @media (prefers-reduced-motion: reduce) {
     .animate-aurora-1,
@@ -221,6 +283,9 @@
     .animate-aurora-3,
     .animate-ambient-ribbon,
     .animate-ambient-orb,
+    .animate-grid-drift,
+    .animate-grid-beam-x,
+    .animate-grid-beam-y,
     .animate-hud-pulse,
     .animate-marquee-left,
     .animate-marquee-right {
@@ -239,7 +304,10 @@
 [data-quality="sd"] .animate-aurora-2,
 [data-quality="sd"] .animate-aurora-3,
 [data-quality="sd"] .animate-ambient-ribbon,
-[data-quality="sd"] .animate-ambient-orb {
+[data-quality="sd"] .animate-ambient-orb,
+[data-quality="sd"] .animate-grid-drift,
+[data-quality="sd"] .animate-grid-beam-x,
+[data-quality="sd"] .animate-grid-beam-y {
     animation-play-state: paused;
 }
 

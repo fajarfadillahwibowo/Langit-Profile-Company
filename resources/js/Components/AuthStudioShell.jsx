@@ -2,7 +2,94 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sun, Moon } from 'lucide-react';
-import AnimatedAmbientBackdrop from '@/Components/AnimatedAmbientBackdrop';
+
+function MovingGridBackdrop() {
+    return (
+        <div
+            aria-hidden="true"
+            className="fixed inset-0 overflow-hidden pointer-events-none z-0"
+            style={{ contain: 'strict' }}
+        >
+            {/* Subtle Center Radial Spotlight (Zero blur filter cost) */}
+            <div
+                className="absolute inset-0 opacity-75 dark:opacity-65"
+                style={{
+                    background:
+                        'radial-gradient(circle at 50% 45%, rgba(14,165,233,0.16) 0%, rgba(0,87,146,0.06) 42%, transparent 74%)',
+                }}
+            />
+
+            {/* Masked Container so Moving Grid Fades Smoothly at Screen Edges */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    WebkitMaskImage:
+                        'radial-gradient(ellipse 82% 78% at 50% 50%, rgba(0,0,0,1) 38%, rgba(0,0,0,0.45) 74%, transparent 100%)',
+                    maskImage:
+                        'radial-gradient(ellipse 82% 78% at 50% 50%, rgba(0,0,0,1) 38%, rgba(0,0,0,0.45) 74%, transparent 100%)',
+                }}
+            >
+                {/* Seamless Infinite Moving Grid (48px tile, GPU translate3d) — Light Mode */}
+                <div
+                    className="dark:hidden absolute -inset-12 animate-grid-drift"
+                    style={{
+                        backgroundSize: '48px 48px',
+                        backgroundImage:
+                            'linear-gradient(to right, rgba(0, 87, 146, 0.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 87, 146, 0.13) 1px, transparent 1px)',
+                    }}
+                />
+
+                {/* Seamless Infinite Moving Grid (48px tile, GPU translate3d) — Dark Mode */}
+                <div
+                    className="hidden dark:block absolute -inset-12 animate-grid-drift"
+                    style={{
+                        backgroundSize: '48px 48px',
+                        backgroundImage:
+                            'linear-gradient(to right, rgba(56, 189, 248, 0.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(56, 189, 248, 0.13) 1px, transparent 1px)',
+                    }}
+                />
+
+                {/* Light Pulses Gliding Along Grid Lines (Pure CSS Compositor) */}
+                <span
+                    className="absolute left-0 top-[24%] h-[1.5px] w-36 sm:w-52 animate-grid-beam-x"
+                    style={{
+                        '--beam-dur': '8s',
+                        '--beam-delay': '0s',
+                        background:
+                            'linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.75) 55%, rgba(56,189,248,0.95) 85%, transparent 100%)',
+                    }}
+                />
+                <span
+                    className="absolute left-0 top-[68%] h-[1.5px] w-32 sm:w-48 animate-grid-beam-x"
+                    style={{
+                        '--beam-dur': '11s',
+                        '--beam-delay': '3.5s',
+                        background:
+                            'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.7) 55%, rgba(34,211,238,0.9) 85%, transparent 100%)',
+                    }}
+                />
+                <span
+                    className="hidden sm:block absolute top-0 left-[26%] w-[1.5px] h-40 animate-grid-beam-y"
+                    style={{
+                        '--beam-dur': '9.5s',
+                        '--beam-delay': '1.5s',
+                        background:
+                            'linear-gradient(180deg, transparent 0%, rgba(14,165,233,0.7) 55%, rgba(56,189,248,0.95) 85%, transparent 100%)',
+                    }}
+                />
+                <span
+                    className="hidden sm:block absolute top-0 left-[74%] w-[1.5px] h-44 animate-grid-beam-y"
+                    style={{
+                        '--beam-dur': '12s',
+                        '--beam-delay': '5s',
+                        background:
+                            'linear-gradient(180deg, transparent 0%, rgba(6,182,212,0.7) 55%, rgba(129,140,248,0.9) 85%, transparent 100%)',
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
 
 export default function AuthStudioShell({
     mode = 'login', // 'login' | 'register'
@@ -16,15 +103,15 @@ export default function AuthStudioShell({
 
     return (
         <div className="min-h-dvh bg-[#EDF9FC] text-slate-800 dark:bg-[#050810] dark:text-slate-100 font-sans relative overflow-x-clip transition-colors duration-300 flex flex-col justify-center items-center px-4 py-6 sm:py-10">
-            {/* Flowing Animated Background (Aurora + Light Ribbon + Drifting Bokeh Orbs) */}
-            <AnimatedAmbientBackdrop variant="adaptive" />
+            {/* Moving Grid Lines Background (Ultra-Lightweight Pure CSS Compositor) */}
+            <MovingGridBackdrop />
 
             <div className="relative z-10 w-full max-w-md space-y-5">
                 {/* Minimal Top Bar */}
                 <div className="flex items-center justify-between gap-2">
                     <Link
                         href={backHref}
-                        className="min-h-10 px-3.5 py-2 rounded-full bg-white/80 hover:bg-white dark:bg-white/[0.06] dark:hover:bg-white/[0.12] border border-slate-200/90 dark:border-white/10 backdrop-blur-md text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-[#005792] dark:hover:text-cyan-300 inline-flex items-center gap-1.5 transition-all shadow-xs"
+                        className="min-h-10 px-3.5 py-2 rounded-full bg-white/85 hover:bg-white dark:bg-white/[0.06] dark:hover:bg-white/[0.12] border border-slate-200/90 dark:border-white/10 backdrop-blur-md text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-[#005792] dark:hover:text-cyan-300 inline-flex items-center gap-1.5 transition-all shadow-xs"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>{backLabel}</span>
