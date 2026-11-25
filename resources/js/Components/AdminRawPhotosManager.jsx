@@ -239,7 +239,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
     return (
         <div className="space-y-6">
             {/* Header Description & Metrics */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
@@ -263,26 +263,26 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Total Foto Mentahan</span>
                     <span className="font-heading font-black text-2xl text-cyan-600 dark:text-cyan-400 mt-1 block">
                         {totalRawPhotos} Foto
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Album Memiliki Mentahan</span>
                     <span className="font-heading font-black text-2xl text-emerald-600 dark:text-emerald-400 mt-1 block">
                         {deliveriesWithRaw} dari {clientDeliveries.length}
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Aturan Diskon Min 5</span>
                     <span className="font-heading font-black text-2xl text-amber-500 mt-1 block">
                         Diskon 10%
                     </span>
                     <span className="text-[10px] text-slate-400 block font-mono mt-0.5">Dapat diubah per album</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Aturan Diskon Min 10</span>
                     <span className="font-heading font-black text-2xl text-indigo-500 mt-1 block">
                         Diskon 20%
@@ -293,7 +293,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
 
             {/* Deliveries Table for Raw Photos */}
             {clientDeliveries.length === 0 ? (
-                <div className="text-center py-16 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 p-8">
+                <div className="text-center py-16 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 p-8">
                     <Camera className="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" />
                     <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white">
                         Belum Ada Pelanggan Terdaftar
@@ -303,7 +303,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
                     </p>
                 </div>
             ) : (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel foto mentahan pelanggan">
                         <table className="w-full min-w-[62rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                             <thead>
@@ -425,7 +425,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
             {/* ── MODAL: UPLOAD FOTO MENTAHAN ── */}
             {uploadModalDelivery && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
                     onClick={() => !isUploading && setUploadModalDelivery(null)}
                 >
                     <div 
@@ -632,7 +632,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
             {/* ── MODAL: ATUR HARGA & DISKON ── */}
             {settingsModalDelivery && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
                     onClick={() => !isSavingSettings && setSettingsModalDelivery(null)}
                 >
                     <div 
@@ -771,7 +771,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
             {/* ── MODAL: LIHAT GALERI FOTO MENTAHAN ── */}
             {viewPhotosDelivery && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
                     onClick={() => setViewPhotosDelivery(null)}
                 >
                     <div 
@@ -976,7 +976,7 @@ export default function AdminRawPhotosManager({ clientDeliveries = [] }) {
             {/* ── MODAL: KONFIRMASI HAPUS SEMUA FOTO MENTAHAN ── */}
             {clearModalDelivery && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
                     onClick={() => !isClearing && setClearModalDelivery(null)}
                 >
                     <div 

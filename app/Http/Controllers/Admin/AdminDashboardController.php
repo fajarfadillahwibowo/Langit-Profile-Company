@@ -29,6 +29,7 @@ use App\Models\WebEstimatorComponent;
 use App\Models\WebPortfolio;
 use App\Rules\DeliveryNonPhotoSizeLimit;
 use App\Rules\PhotoSizeLimit;
+use App\Support\ClientDeliveryStorageCleanup;
 use App\Support\ClientPhotoThumbnail;
 use App\Support\ClientRawPhotoThumbnail;
 use App\Support\GalleryAlbum;
@@ -1886,18 +1887,15 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Hapus Seluruh Sesi Layanan Pelanggan beserta Folder Foto Fisiknya
+     * Hapus Seluruh Sesi Layanan Pelanggan beserta Folder Foto Jadi, Foto Mentahan,
+     * Thumbnail, Sisa Chunk Upload, dan Akun Pelanggan Yatim.
      */
     public function deleteClientDelivery($id)
     {
-        $delivery = ClientDelivery::with('photos')->findOrFail($id);
-        foreach ($delivery->photos as $photo) {
-            ClientPhotoThumbnail::deleteThumbnail($photo);
-        }
-        Storage::disk('public')->deleteDirectory("client_photos/{$delivery->id}");
-        $delivery->delete();
+        $delivery = ClientDelivery::with(['photos', 'rawPhotos'])->findOrFail($id);
+        ClientDeliveryStorageCleanup::deleteDelivery($delivery);
 
-        return back()->with('success', 'Layanan foto pelanggan berhasil dihapus.');
+        return back()->with('success', 'Layanan foto pelanggan beserta seluruh file fisik di server berhasil dihapus tuntas.');
     }
 
     /**

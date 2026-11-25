@@ -82,7 +82,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
     return (
         <div className="space-y-6">
             {/* Header & Filter Bar */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
@@ -123,7 +123,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
 
             {/* Table of Submissions */}
             {filteredSelections.length === 0 ? (
-                <div className="text-center py-16 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 p-8">
+                <div className="text-center py-16 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 p-8">
                     <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" />
                     <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white">
                         Belum Ada Pilihan Foto Masuk
@@ -133,7 +133,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
                     </p>
                 </div>
             ) : (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel pilihan foto mentahan pelanggan">
                         <table className="w-full min-w-[64rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap text-xs">
                             <thead>
@@ -259,7 +259,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
             {/* ── MODAL: RINCIAN FOTO TERPILIH & UBAH STATUS ── */}
             {detailSelection && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
                     onClick={() => setDetailSelection(null)}
                 >
                     <div 
@@ -353,7 +353,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="p-2 rounded-full bg-white/20 backdrop-blur-md text-white">
+                                                    <span className="p-2 rounded-full bg-white/20 backdrop-blur-xs text-white">
                                                         <Eye className="w-4 h-4" />
                                                     </span>
                                                 </div>
@@ -441,7 +441,7 @@ export default function AdminRawSelectionsManager({ clientRawSelections = [] }) 
             {/* ── MODAL: PERBESAR PRATINJAU FOTO TERPILIH ── */}
             {inspectPhoto && (
                 <div 
-                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-[80] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4"
+                    className="fixed inset-0 h-dvh overflow-y-auto overscroll-contain z-[80] bg-black/95 backdrop-blur-xs flex flex-col items-center justify-between p-4"
                     onClick={() => setInspectPhoto(null)}
                 >
                     <div 

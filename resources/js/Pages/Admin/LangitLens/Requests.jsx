@@ -87,17 +87,17 @@ export default function Requests({ requests, statusFilter }) {
         <>
             <Head title="Permintaan Foto" />
 
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
                     {tabs.map((t) => (
                         <button
                             key={t.key}
                             type="button"
                             onClick={() => router.get('/admin/langitlens/requests', { status: t.key }, { preserveState: true })}
-                            className={`min-h-10 px-4 py-2 rounded-xl text-xs font-semibold transition-colors active:scale-[0.98] cursor-pointer ${
+                            className={`min-h-10 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
                                 statusFilter === t.key
-                                    ? 'bg-sky-500 text-slate-950'
-                                    : 'bg-[#111827] border border-slate-800 text-slate-300 hover:border-slate-700'
+                                    ? 'bg-sky-500 text-slate-950 shadow-sm shadow-sky-500/25'
+                                    : 'bg-[#0B1222]/90 border border-white/10 text-slate-300 hover:border-sky-400/35'
                             }`}
                         >
                             {t.label}
@@ -106,7 +106,7 @@ export default function Requests({ requests, statusFilter }) {
                 </div>
 
                 {requests.length === 0 ? (
-                    <div className="bg-[#111827] border border-slate-800 rounded-2xl p-8 text-center text-xs text-slate-400">
+                    <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-8 text-center text-xs text-slate-400">
                         Belum ada permintaan pada status ini.
                     </div>
                 ) : (
@@ -118,7 +118,7 @@ export default function Requests({ requests, statusFilter }) {
                             return (
                                 <div
                                     key={req.id}
-                                    className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4"
+                                    className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 transition-colors duration-200 hover:border-sky-400/25"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
                                         <div>

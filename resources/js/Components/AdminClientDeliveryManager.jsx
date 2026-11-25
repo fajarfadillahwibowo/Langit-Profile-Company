@@ -234,7 +234,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
     return (
         <div className="min-w-0 space-y-6 break-words [&_table]:[overflow-wrap:normal] [&_table]:break-normal [&_th]:whitespace-nowrap [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Sub-Tab Navigation Switcher */}
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-xs overflow-x-auto">
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-xs overflow-x-auto">
                 <button
                     type="button"
                     onClick={() => setActiveSubTab('deliveries')}
@@ -286,7 +286,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
             {activeSubTab === 'deliveries' && (
                 <>
             {/* Header & Primary Action */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
@@ -315,25 +315,25 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* 4 Metrics Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Total Pelanggan Dilayani</span>
                     <span className="font-heading font-black text-2xl text-slate-900 dark:text-white mt-1 block">
                         {totalDeliveries}
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Total Foto Asli Tersimpan</span>
                     <span className="font-heading font-black text-2xl text-cyan-600 dark:text-cyan-400 mt-1 block">
                         {totalPhotosCount} Foto
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Sesi Masih Aktif</span>
                     <span className="font-heading font-black text-2xl text-emerald-600 dark:text-emerald-400 mt-1 block">
                         {activeDeliveries} Sesi
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <div className="p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/80 dark:border-white/10 shadow-xs">
                     <span className="text-[11px] font-mono text-slate-500 block">Sesi Kedaluwarsa (Hidden)</span>
                     <span className="font-heading font-black text-2xl text-rose-600 dark:text-rose-400 mt-1 block">
                         {expiredDeliveries} Sesi
@@ -343,7 +343,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* Deliveries Table / Cards */}
             {clientDeliveries.length === 0 ? (
-                <div className="text-center py-16 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 p-8">
+                <div className="text-center py-16 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 p-8">
                     <Camera className="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" />
                     <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white">
                         Belum Ada Layanan Foto Pelanggan
@@ -353,7 +353,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
                     </p>
                 </div>
             ) : (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm">
                     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel layanan foto pelanggan, geser untuk melihat semua kolom">
                         <table className="w-full min-w-[64rem] text-left border-collapse [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                             <thead>
@@ -570,7 +570,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* ── MODAL 1: TAMBAH PELANGGAN & UPLOAD FOTO ── */}
             {createModalOpen && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-8 w-full max-w-2xl shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10 mb-5">
                             <div>
@@ -813,7 +813,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* ── MODAL 2: ATUR MENU EXPIRED HITUNGAN HARI MUNDUR ── */}
             {expiryModalDelivery && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-md shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
@@ -901,7 +901,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* ── MODAL 2.5: UBAH USERNAME & PASSWORD PELANGGAN ── */}
             {credentialsModalDelivery && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-md shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>
@@ -971,7 +971,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* ── MODAL 3: LIHAT FOTO & HAPUS PER FOTO ── */}
             {viewPhotosDelivery && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-4xl shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-5">
                             <div>
@@ -1013,7 +1013,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
-                                        <div className="p-2 bg-white dark:bg-[#090D16] text-[11px] border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
+                                        <div className="p-2 bg-white/92 dark:bg-[#0B1222]/90 text-[11px] border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
                                             <span className="min-w-0 break-words" title={photo.original_name}>
                                                 {photo.original_name}
                                             </span>
@@ -1041,7 +1041,7 @@ export default function AdminClientDeliveryManager({ clientDeliveries = [], clie
 
             {/* ── MODAL 4: TAMBAH FOTO TAMBAHAN KE SESI YANG ADA ── */}
             {addPhotosDelivery && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-7 w-full max-w-lg shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                             <div>

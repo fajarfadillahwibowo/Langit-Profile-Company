@@ -315,7 +315,7 @@ export default function Photos({
         <>
             <Head title="Upload & Galeri" />
 
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-4">
                 <div
                     className={`rounded-2xl p-3.5 sm:p-4 border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         insightFaceReady
@@ -352,7 +352,7 @@ export default function Photos({
                 </div>
 
                 {/* Panel Ringkas Buka-Tutup: Pengaturan Diskon, Harga Dasar & Info Pembayaran */}
-                <div className="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+                <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/15">
                     <button
                         type="button"
                         onClick={() => setDiscountOpen((prev) => !prev)}
@@ -495,7 +495,7 @@ export default function Photos({
                 </div>
 
                 {/* Area Upload Massal Tanpa Batas */}
-                <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
+                <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h2 className="text-base font-bold text-white">Unggah Foto Massal (Tanpa Batas)</h2>
@@ -663,7 +663,7 @@ export default function Photos({
                     </div>
 
                     {photos.length === 0 ? (
-                        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-8 text-center text-xs text-slate-400">
+                        <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-8 text-center text-xs text-slate-400">
                             Belum ada foto diunggah.
                         </div>
                     ) : (
@@ -671,13 +671,13 @@ export default function Photos({
                             {photos.map((photo) => (
                                 <div
                                     key={photo.id}
-                                    className="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden flex flex-col"
+                                    className="group bg-[#0B1222]/90 border border-white/10 rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-400/35"
                                 >
                                     <div className="relative aspect-[4/3] bg-slate-900 overflow-hidden">
                                         <img
                                             src={photo.preview_url}
                                             alt={photo.title}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                                             loading="lazy"
                                         />
                                         <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/75 text-[10px] font-semibold text-sky-300 flex items-center gap-1">

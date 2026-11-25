@@ -1,7 +1,9 @@
 import { guardPhotoSelection, photoLimitMiB, photoUploadError } from '@/Utils/photoUploadPolicy.mjs';
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '@/Components/ThemeToggle';
+import AnimatedAmbientBackdrop from '@/Components/AnimatedAmbientBackdrop';
 import ExecutiveAnalyticsCharts from '@/Components/ExecutiveAnalyticsCharts';
 import AdminServiceCardsManager from '@/Components/AdminServiceCardsManager';
 import AdminClientDeliveryManager from '@/Components/AdminClientDeliveryManager';
@@ -1062,20 +1064,39 @@ export default function AdminDashboard({
     };
 
     return (
-        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_table]:[overflow-wrap:normal] [&_table]:break-normal [&_th]:whitespace-nowrap [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
+        <div className="relative h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#050811] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_table]:[overflow-wrap:normal] [&_table]:break-normal [&_th]:whitespace-nowrap [&_div]:min-w-0 [&_fieldset]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_textarea]:min-w-0 [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title={activeTab === 'langitlens' ? `${portalTitle} — LangitLens` : 'Admin CMS Executive Dashboard — Langit'} />
 
-            {/* Mobile Sidebar Overlay & Slide-Over Drawer */}
+            {/* Lightweight Flowing Ambient Backdrop (Zero blur shader, pure GPU compositor) */}
+            <AnimatedAmbientBackdrop variant="adaptive" />
+
+            {/* Mobile Sidebar Overlay & Animated Slide-Over Drawer */}
+            <AnimatePresence>
             {mobileSidebarOpen && (
                 <div className="fixed inset-0 z-50 md:hidden flex">
                     {/* Backdrop */}
-                    <div 
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black/65 backdrop-blur-xs"
                         onClick={() => setMobileSidebarOpen(false)}
                     />
                     
                     {/* Drawer Content */}
-                    <aside ref={mobileDrawerRef} id="admin-mobile-navigation" role="dialog" aria-modal="true" aria-label="Navigasi administrator" className="relative w-72 max-w-[90vw] h-full max-h-[100dvh] bg-[#005792] flex flex-col justify-between p-3 sm:p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+                    <motion.aside
+                        ref={mobileDrawerRef}
+                        id="admin-mobile-navigation"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Navigasi administrator"
+                        initial={{ x: '-100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '-100%' }}
+                        transition={{ type: 'spring', stiffness: 360, damping: 34 }}
+                        className="relative w-72 max-w-[90vw] h-full max-h-[100dvh] bg-gradient-to-b from-[#005792] via-[#004E85] to-[#003E6B] flex flex-col justify-between p-3 sm:p-4 shadow-2xl z-10"
+                    >
                         <div className="flex-1 min-h-0 flex flex-col space-y-4">
                             {/* Drawer Header: Logo + Close Button */}
                             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/20">
@@ -1459,12 +1480,13 @@ export default function AdminDashboard({
                                 <span>Keluar / Logout</span>
                             </Link>
                         </div>
-                    </aside>
+                    </motion.aside>
                 </div>
             )}
+            </AnimatePresence>
 
             {/* Sidebar Navigation - Fixed height in viewport, only content scrolls */}
-            <aside className="w-72 h-full border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
+            <aside className="relative w-72 h-full border-r border-white/15 bg-gradient-to-b from-[#005792] via-[#004E85] to-[#003E6B] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/30 select-none z-20 overflow-hidden">
                 <div className="flex-1 min-h-0 flex flex-col space-y-5">
                     {/* Header Logo — Brand Logo Identik Halaman Publik */}
                     <Link href="/" className="block px-2 group shrink-0">
@@ -1866,8 +1888,8 @@ export default function AdminDashboard({
                 </div>
             </aside>
 
-            {/* Main Content Dashboard - Scrolls independently */}
-            <main inert={mobileSidebarOpen ? true : undefined} className="flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-[#EDF9FC] dark:bg-[#07090E]">
+            {/* Main Content Dashboard - Scrolls independently over Animated Ambient Backdrop */}
+            <main inert={mobileSidebarOpen ? true : undefined} className="relative z-10 flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-transparent">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-[#005792]/15 dark:border-white/10">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1986,6 +2008,13 @@ export default function AdminDashboard({
                     })}
                 </div>
 
+                {/* Animated Tab Content Transition */}
+                <motion.div
+                    key={activeTab === 'langitlens' ? `langitlens-${url}` : activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
                 {activeTab === 'langitlens' && (
                     <div className="space-y-4" data-admin-module="langitlens">
                         {flash?.success && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-3.5 text-xs text-emerald-700 dark:text-emerald-300">{flash.success}</div>}
@@ -2002,7 +2031,7 @@ export default function AdminDashboard({
                             {/* 1. Foto Pelanggan */}
                             <div 
                                 onClick={() => setActiveTab('client_deliveries')} 
-                                className="p-4 rounded-2xl bg-pink-50 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/30 cursor-pointer hover:border-pink-400 dark:hover:border-pink-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                                className="p-4 rounded-2xl bg-pink-50 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/30 cursor-pointer hover:border-pink-400 dark:hover:border-pink-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between"
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-pink-700 dark:text-pink-400 uppercase block font-semibold tracking-wider">Foto Pelanggan</span>
@@ -2031,7 +2060,7 @@ export default function AdminDashboard({
                                     setActiveTab('langitlens');
                                     router.visit('/admin/langitlens');
                                 }}
-                                className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 cursor-pointer hover:border-sky-400 dark:hover:border-sky-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                                className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 cursor-pointer hover:border-sky-400 dark:hover:border-sky-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between"
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-sky-700 dark:text-sky-400 uppercase block font-semibold tracking-wider">LangitLens AI</span>
@@ -2056,7 +2085,7 @@ export default function AdminDashboard({
                             {/* 2. Our Team */}
                             <div 
                                 onClick={() => setActiveTab('our_team')} 
-                                className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between"
+                                className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between"
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-indigo-700 dark:text-indigo-400 uppercase block font-semibold tracking-wider">Our Team</span>
@@ -2071,7 +2100,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 3. Leads Konsultasi */}
-                            <div onClick={() => setActiveTab('consultations')} className="p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 cursor-pointer hover:border-cyan-400 dark:hover:border-cyan-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('consultations')} className="p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 cursor-pointer hover:border-cyan-400 dark:hover:border-cyan-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-cyan-700 dark:text-cyan-400 uppercase block font-semibold tracking-wider">Leads Konsultasi</span>
                                     <Ticket className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
@@ -2081,7 +2110,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 4. Tiket Servis */}
-                            <div onClick={() => setActiveTab('tickets')} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('tickets')} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-orange-700 dark:text-orange-400 uppercase block font-semibold tracking-wider">Tiket Servis Lab</span>
                                     <Cpu className="w-3.5 h-3.5 text-orange-500 shrink-0" />
@@ -2091,7 +2120,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 5. Sewa Alat */}
-                            <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 cursor-pointer hover:border-teal-400 dark:hover:border-teal-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('rentals')} className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 cursor-pointer hover:border-teal-400 dark:hover:border-teal-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-teal-700 dark:text-teal-400 uppercase block font-semibold tracking-wider">Alat Sedang Disewa</span>
                                     <PackageCheck className="w-3.5 h-3.5 text-teal-500 shrink-0" />
@@ -2101,7 +2130,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 6. Pelamar Magang */}
-                            <div onClick={() => setActiveTab('internships')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('internships')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-purple-700 dark:text-purple-400 uppercase block font-semibold tracking-wider">Pelamar Magang</span>
                                     <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
@@ -2111,7 +2140,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 7. Kerja Sama B2B */}
-                            <div onClick={() => setActiveTab('collaborations')} className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 cursor-pointer hover:border-rose-400 dark:hover:border-rose-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('collaborations')} className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 cursor-pointer hover:border-rose-400 dark:hover:border-rose-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="text-[11px] text-rose-700 dark:text-rose-400 uppercase block font-semibold tracking-wider">Kerja Sama & B2B</span>
                                     <Handshake className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
@@ -2121,7 +2150,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 8. Langit Education */}
-                            <div onClick={() => setActiveTab('education_attendance')} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('education_attendance')} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-emerald-700 dark:text-emerald-400 uppercase block font-semibold tracking-wider">Langit Education</span>
                                     <CalendarCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -2131,7 +2160,7 @@ export default function AdminDashboard({
                             </div>
 
                             {/* 9. Koleksi Galeri */}
-                            <div onClick={() => setActiveTab('galleries')} className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 cursor-pointer hover:border-amber-400 dark:hover:border-amber-500/60 transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between">
+                            <div onClick={() => setActiveTab('galleries')} className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 cursor-pointer hover:border-amber-400 dark:hover:border-amber-500/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md shadow-sm flex flex-col justify-between">
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-[11px] text-amber-700 dark:text-amber-400 uppercase block font-semibold tracking-wider">Koleksi Galeri</span>
                                     <Camera className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -2158,7 +2187,7 @@ export default function AdminDashboard({
                         />
 
                         {/* Recent Consultations Table */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                     <Ticket className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
@@ -2262,7 +2291,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Recent Collaborations Table */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                     <Handshake className="w-5 h-5 text-rose-500 dark:text-rose-400" />
@@ -2387,7 +2416,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Recent Client Deliveries & Raw Photos Overview Table */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -2509,7 +2538,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* LangitLens AI Overview Panel */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -2670,7 +2699,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Our Team Creative Personnel Bento Panel */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -2732,7 +2761,7 @@ export default function AdminDashboard({
                 {/* TAB 2: COMPUTER SERVICE TICKETS (PRD 6.5) */}
                 {activeTab === 'tickets' && (
                     <div className="space-y-6">
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             {/* Card Header with Action Button */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-100 dark:border-white/10">
                                 <div>
@@ -2853,7 +2882,7 @@ export default function AdminDashboard({
                 {/* TAB 3: RENTAL GEAR & BOOKINGS (PRD 6.4) */}
                 {activeTab === 'rentals' && (
                     <div className="space-y-6">
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Daftar Booking Sewa Alat</h3>
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
                                 <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
@@ -2952,7 +2981,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Equipment Inventory Manager */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -3084,7 +3113,7 @@ export default function AdminDashboard({
                 {activeTab === 'galleries' && (
                     <div className="space-y-6">
                         {/* Service Cockpit Header */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-center gap-3.5">
                                     <div
@@ -3553,7 +3582,7 @@ export default function AdminDashboard({
                 {/* TAB 5: INTERNSHIP APPLICANTS (PRD 6.6) */}
                 {activeTab === 'internships' && (
                     <div className="space-y-6">
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
                                 <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
@@ -3681,7 +3710,7 @@ export default function AdminDashboard({
                 {/* TAB 6: CONSULTATIONS & PROPOSALS (PRD 6.7) */}
                 {activeTab === 'consultations' && (
                     <div className="space-y-6">
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-4">Seluruh Tiket Jadwal Konsultasi Klien</h3>
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
                                 <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
@@ -3829,7 +3858,7 @@ export default function AdminDashboard({
                         </div>
 
                         {/* Collaborations Table */}
-                        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
+                        <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl">
                             <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Tabel admin, geser untuk melihat semua kolom">
                                 <table className="w-full min-w-[60rem] text-left text-xs font-sans [overflow-wrap:normal] break-normal [&_th]:whitespace-nowrap">
                                     <thead className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
@@ -3956,11 +3985,12 @@ export default function AdminDashboard({
                         </div>
                     </div>
                 )}
+                </motion.div>
             </main>
 
             {/* Modal: New Service Ticket */}
             {ticketModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain relative max-w-lg w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
                         <button onClick={() => setTicketModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
                             <X className="w-5 h-5" />
@@ -4030,7 +4060,7 @@ export default function AdminDashboard({
 
             {/* Modal: Tambah Foto Baru Layanan Langit */}
             {galleryModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <button
                             onClick={() => setGalleryModalOpen(false)}
@@ -4258,7 +4288,7 @@ export default function AdminDashboard({
 
             {/* Modal: Ganti Foto & Edit Metadata EXIF */}
             {editPhotoModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-amber-500/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <button
                             onClick={() => setEditPhotoModalOpen(false)}
@@ -4574,7 +4604,7 @@ export default function AdminDashboard({
 
             {/* Modal: Collaboration Detail */}
             {selectedCollabDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-rose-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedCollabDetail(null)}
@@ -4722,7 +4752,7 @@ export default function AdminDashboard({
 
             {/* Modal: Computer Service Ticket Detail */}
             {selectedTicketDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-orange-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedTicketDetail(null)}
@@ -4837,7 +4867,7 @@ export default function AdminDashboard({
 
             {/* Modal: Rental Booking Detail */}
             {selectedRentalDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-teal-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedRentalDetail(null)}
@@ -4968,7 +4998,7 @@ export default function AdminDashboard({
 
             {/* Modal: Internship Application Detail */}
             {selectedInternshipDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-purple-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedInternshipDetail(null)}
@@ -5120,7 +5150,7 @@ export default function AdminDashboard({
 
             {/* Modal: Consultation Ticket Detail */}
             {selectedConsultationDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-2xl w-full bg-white dark:bg-[#090D16] border border-cyan-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             onClick={() => setSelectedConsultationDetail(null)}
@@ -5245,7 +5275,7 @@ export default function AdminDashboard({
 
             {/* Modal: Kelola Foto Before / After Color Grading */}
             {beforeAfterModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-4xl w-full bg-white dark:bg-[#090D16] border border-indigo-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             type="button"
@@ -5502,7 +5532,7 @@ export default function AdminDashboard({
 
             {/* Modal: Upload Video Showreel Cinema & Poster */}
             {showreelModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="relative max-w-3xl w-full bg-white dark:bg-[#090D16] border border-amber-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto text-slate-900 dark:text-slate-100">
                         <button
                             type="button"
@@ -5735,7 +5765,7 @@ export default function AdminDashboard({
             )}
             {/* Modal: Edit Computer Service Ticket */}
             {editingTicket && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
@@ -5895,7 +5925,7 @@ export default function AdminDashboard({
 
             {/* Modal: Edit Rental Equipment Booking */}
             {editingRental && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
@@ -6072,7 +6102,7 @@ export default function AdminDashboard({
 
             {/* Modal: Edit Internship Application */}
             {editingInternship && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
@@ -6206,7 +6236,7 @@ export default function AdminDashboard({
 
             {/* Modal: Edit Consultation Ticket */}
             {editingConsultation && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">
@@ -6390,7 +6420,7 @@ export default function AdminDashboard({
 
             {/* Modal: Edit Collaboration Proposal */}
             {editingCollaboration && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-xl animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
                     <div className="w-full max-w-2xl bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-4 sm:p-6 md:p-8 space-y-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
                             <div className="flex items-center gap-3">

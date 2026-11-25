@@ -68,14 +68,14 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
         <>
             <Head title="Ringkasan Admin" />
 
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                     {cards.map((card) => {
                         const Icon = card.icon;
                         return (
                             <div
                                 key={card.label}
-                                className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5 flex items-start justify-between gap-2"
+                                className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-5 flex items-start justify-between gap-2 transition-all duration-200 hover:-translate-y-1 hover:border-sky-400/35 hover:shadow-lg hover:shadow-sky-500/5"
                             >
                                 <div className="min-w-0">
                                     <p className="text-xs font-medium text-slate-400 truncate">{card.label}</p>
@@ -91,7 +91,7 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-5 space-y-3 transition-colors duration-200 hover:border-white/15">
                         <div className="flex items-center gap-2 text-sm font-bold text-white">
                             <HardDrive className="w-4 h-4 text-sky-400" />
                             <span>Ukuran File & Kompresi</span>
@@ -112,7 +112,7 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-5 space-y-3 transition-colors duration-200 hover:border-white/15">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-sm font-bold text-white">
                                 <Percent className="w-4 h-4 text-amber-400" />
@@ -141,7 +141,7 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 flex flex-col justify-between gap-4">
+                    <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-colors duration-200 hover:border-white/15">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-sm font-bold text-white">
                                 <Users className="w-4 h-4 text-sky-400" />
@@ -170,7 +170,7 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                 </div>
 
                 {/* Permintaan Terbaru */}
-                <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-5 space-y-3">
                     <div className="flex items-center justify-between">
                         <h2 className="text-sm font-bold text-white">Permintaan Terbaru</h2>
                         <Link href="/admin/langitlens/requests" className="text-xs font-semibold text-sky-400 hover:underline">
@@ -194,7 +194,7 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
                                     {recentRequests.map((req) => (
-                                        <tr key={req.id}>
+                                        <tr key={req.id} className="hover:bg-white/[0.03] transition-colors">
                                             <td className="py-3 pr-4 font-mono font-semibold text-white">{req.request_code}</td>
                                             <td className="py-3 pr-4 text-slate-300">{req.customer_name}</td>
                                             <td className="py-3 pr-4 text-slate-300">{req.total_selected_photos} foto</td>

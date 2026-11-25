@@ -554,7 +554,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                 {/* 4 Cards Pemasukan Uang Langit Education */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
                     {/* Card 1: Total Pemasukan All-Time */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:border-emerald-500/40 transition-all">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs hover:border-emerald-500/40 transition-all">
                         <div className="flex items-center justify-between text-xs font-mono text-emerald-400 mb-2">
                             <span>TOTAL PEMASUKAN (LUNAS)</span>
                             <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
@@ -571,7 +571,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     {/* Card 2: Pemasukan Bulan Ini */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:border-cyan-500/40 transition-all">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs hover:border-cyan-500/40 transition-all">
                         <div className="flex items-center justify-between text-xs font-mono text-cyan-400 mb-2">
                             <span>PEMASUKAN BULAN INI</span>
                             <span className="p-2 rounded-xl bg-cyan-500/20 text-cyan-300">
@@ -587,7 +587,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     {/* Card 3: Tagihan Berjalan (8 Sesi Selesai) */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:border-amber-500/40 transition-all">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs hover:border-amber-500/40 transition-all">
                         <div className="flex items-center justify-between text-xs font-mono text-amber-400 mb-2">
                             <span>TAGIHAN SIKLUS (PENDING)</span>
                             <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
@@ -603,7 +603,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
                     </div>
 
                     {/* Card 4: Siswa & Sesi */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:border-purple-500/40 transition-all">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs hover:border-purple-500/40 transition-all">
                         <div className="flex items-center justify-between text-xs font-mono text-purple-400 mb-2">
                             <span>SISWA AKTIF & TOTAL SESI</span>
                             <span className="p-2 rounded-xl bg-purple-500/20 text-purple-300">
@@ -621,7 +621,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
             </div>
 
             {/* ── 2. SUB-VIEW SELECTOR & SEARCH / FILTER BAR ── */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm">
                 {/* View Tabs */}
                 <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-white/5 text-xs font-bold">
                     <button
@@ -729,7 +729,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
             {subTab === 'punch_cards' && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {filteredStudents.length === 0 ? (
-                        <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10">
+                        <div className="col-span-full p-12 text-center rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10">
                             <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-50" />
                             <h4 className="font-heading font-bold text-base text-slate-900 dark:text-white">Tidak ada data anak les</h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau tambah anak les baru.</p>
@@ -1067,7 +1067,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
             {/* ── 4. VIEW 2: RIWAYAT LENGKAP SEMUA SIKLUS (MATRIX 1, 2, 3...) ── */}
             {subTab === 'all_cycles' && (
                 <div className="space-y-6 [overflow-wrap:normal] break-normal">
-                    <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div className="p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                 <Layers className="w-5 h-5 text-cyan-500" />
@@ -1238,7 +1238,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 5. VIEW 3: TABEL DAFTAR SISWA (DATA MANAGEMENT) ── */}
             {subTab === 'students_table' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Daftar Seluruh Anak Les</h3>
@@ -1354,7 +1354,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 6. VIEW 4: LOG RIWAYAT SELURUH PRESENSI ── */}
             {subTab === 'attendances_log' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Log Riwayat Presensi Masuk</h3>
@@ -1430,7 +1430,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 7. VIEW 5: BUKU KAS & PEMBAYARAN LANGIT EDUCATION ── */}
             {subTab === 'payments_log' && (
-                <div className="rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
+                <div className="rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm overflow-hidden [overflow-wrap:normal] break-normal">
                     <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 className="font-heading font-black text-lg text-slate-900 dark:text-white">Buku Kas & Riwayat Pembayaran</h3>
@@ -1501,7 +1501,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 8. MODAL DETAIL SEMUA SIKLUS (MODAL DETAIL LENGKAP BENTO / TABEL RAPI) ── */}
             {detailCycleStudent && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto [overflow-wrap:normal] break-normal">
+                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-5 sm:p-7 w-full max-w-4xl shadow-2xl my-6 space-y-6 max-h-[92vh] overflow-y-auto animate-scaleUp">
                         {/* Modal Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
@@ -1827,7 +1827,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 9. MODAL INPUT ABSENSI (ADMIN INPUT) ── */}
             {attendanceModal.open && attendanceModal.student && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>
@@ -1998,7 +1998,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 10. MODAL CATAT PEMBAYARAN KAS ── */}
             {paymentModal.open && paymentModal.student && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-md shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>
@@ -2165,7 +2165,7 @@ export default function AdminEducationAttendance({ students = [], financials = {
 
             {/* ── 11. MODAL TAMBAH / EDIT ANAK LES ── */}
             {studentModal.open && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto [overflow-wrap:normal] break-normal">
                     <div className="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 w-full max-w-lg shadow-2xl my-8 space-y-5 animate-scaleUp">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
                             <div>

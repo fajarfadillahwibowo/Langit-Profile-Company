@@ -11,6 +11,7 @@ use App\Models\AiPhotoRequest;
 use App\Models\User;
 use App\Services\LangitLens\AiImageProcessingService;
 use App\Services\LangitLens\InsightFaceClient;
+use App\Support\ClientDeliveryStorageCleanup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -332,11 +333,23 @@ class LangitLensAdminController extends Controller
 
     public function destroyPhoto(AiPhoto $photo): RedirectResponse
     {
-        Storage::disk('local')->delete($photo->original_file_path);
-        Storage::disk('public')->delete($photo->preview_watermarked_path);
-        $photo->delete();
+        $originalPath = $photo->original_file_path;
+        $previewPath = $photo->preview_watermarked_path;
 
-        return back()->with('success', 'Foto berhasil dihapus dari sistem.');
+        DB::transaction(function () use ($photo, $originalPath, $previewPath) {
+            $photo->delete();
+
+            DB::afterCommit(function () use ($originalPath, $previewPath) {
+                if (! empty($originalPath)) {
+                    Storage::disk('local')->delete($originalPath);
+                }
+                if (! empty($previewPath)) {
+                    Storage::disk('public')->delete($previewPath);
+                }
+            });
+        });
+
+        return back()->with('success', 'Foto berhasil dihapus tuntas dari database dan penyimpanan server.');
     }
 
     public function updateDiscount(Request $request): RedirectResponse
@@ -482,30 +495,18 @@ class LangitLensAdminController extends Controller
 
     public function destroyCustomer(Request $request, User $customer): RedirectResponse
     {
-        if ($customer->role !== 'customer' || $customer->is_admin || $customer->id === $request->user()?->id) {
+        if (
+            $customer->role !== 'customer'
+            || in_array($customer->role, ['admin', 'superadmin'], true)
+            || $customer->id === $request->user()?->id
+        ) {
             return back()->with('error', 'Akun admin tidak dapat dihapus melalui menu Pelanggan Scan.');
         }
 
         $label = $customer->name ?: ($customer->username ?: $customer->email);
 
-        DB::transaction(function () use ($customer) {
-            $scans = AiFaceScan::where('customer_id', $customer->id)->get();
-            foreach ($scans as $scan) {
-                if (! empty($scan->scan_image_path) && Storage::disk('local')->exists($scan->scan_image_path)) {
-                    Storage::disk('local')->delete($scan->scan_image_path);
-                }
-            }
-            AiFaceScan::where('customer_id', $customer->id)->delete();
+        ClientDeliveryStorageCleanup::deleteCustomer($customer);
 
-            $requests = AiPhotoRequest::where('customer_id', $customer->id)->get();
-            foreach ($requests as $photoRequest) {
-                $photoRequest->items()->delete();
-                $photoRequest->delete();
-            }
-
-            $customer->delete();
-        });
-
-        return back()->with('success', "Akun pelanggan \"{$label}\" berhasil dihapus.");
+        return back()->with('success', "Akun pelanggan \"{$label}\" beserta seluruh data & file terkait berhasil dihapus tuntas.");
     }
 }

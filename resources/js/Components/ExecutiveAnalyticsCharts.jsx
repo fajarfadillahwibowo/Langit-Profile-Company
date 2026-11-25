@@ -236,7 +236,7 @@ export default function ExecutiveAnalyticsCharts({
     return (
         <div className="space-y-6">
             {/* Header Telemetry Bar & Period Controls */}
-            <div className="min-w-0 p-4 sm:p-5 md:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors break-words">
+            <div className="min-w-0 p-4 sm:p-5 md:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl transition-colors break-words">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -286,7 +286,7 @@ export default function ExecutiveAnalyticsCharts({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* 1. AREA SPLINE WAVE CHART (7 COLS ON LARGE) */}
-                <div className="min-w-0 lg:col-span-7 p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
+                <div className="min-w-0 lg:col-span-7 p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
                     <div className="flex flex-col items-start justify-between gap-3 mb-4">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
@@ -520,7 +520,7 @@ export default function ExecutiveAnalyticsCharts({
                 </div>
 
                 {/* 2. DONUT / RADIAL 7 DIVISIONS COMPOSITION (5 COLS ON LARGE) */}
-                <div className="min-w-0 lg:col-span-5 p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
+                <div className="min-w-0 lg:col-span-5 p-4 sm:p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-xl flex flex-col justify-between transition-colors">
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">

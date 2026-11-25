@@ -24,7 +24,7 @@ export default function Customers({ customers }) {
         <>
             <Head title="Pelanggan" />
 
-            <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 animate-fade-in">
+            <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4">
                 <div className="flex items-center gap-2.5">
                     <Users className="w-5 h-5 text-sky-400" />
                     <h2 className="text-base font-bold text-white">Pelanggan Terdaftar ({customers.length})</h2>
@@ -118,7 +118,7 @@ export default function Customers({ customers }) {
                     onClick={() => !deleting && setTargetCustomer(null)}
                 >
                     <div
-                        className="w-full max-w-md rounded-2xl bg-[#111827] border border-slate-700 p-5 sm:p-6 shadow-2xl space-y-4"
+                        className="w-full max-w-md rounded-2xl bg-[#0B1222] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-4"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-start gap-3">

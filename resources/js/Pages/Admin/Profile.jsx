@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import ThemeToggle from '@/Components/ThemeToggle';
+import AnimatedAmbientBackdrop from '@/Components/AnimatedAmbientBackdrop';
 import { 
     User, Camera, Upload, Trash2, Mail, Phone, Lock, Eye, EyeOff,
     Shield, Check, X, ArrowLeft, RefreshCw, Sparkles, AlertCircle,
@@ -298,14 +300,16 @@ export default function Profile({ admin }) {
     }, [activeModal]);
 
     return (
-        <div className="h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#07090E] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
+        <div className="relative h-screen h-[100dvh] min-w-0 overflow-hidden bg-[#EDF9FC] text-slate-800 dark:bg-[#050811] dark:text-slate-100 flex font-sans transition-colors duration-200 break-words [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_select]:min-w-0 [&_select]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0 max-sm:[&_input]:text-base max-sm:[&_select]:text-base max-sm:[&_textarea]:text-base">
             <Head title="Profil Administrator — Langit Back-Office" />
+
+            <AnimatedAmbientBackdrop variant="adaptive" />
 
             {/* Hidden canvas for taking snapshot */}
             <canvas ref={canvasRef} className="hidden" />
 
             {/* Sidebar Navigation matching Dashboard - Fixed in viewport */}
-            <aside className="w-64 h-full border-r border-[#004270]/70 bg-[#005792] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
+            <aside className="w-64 h-full border-r border-[#004270]/70 bg-gradient-to-b from-[#005792] via-[#004E85] to-[#003E6B] flex flex-col justify-between p-4 shrink-0 hidden md:flex transition-colors duration-200 shadow-2xl shadow-[#005792]/25 select-none z-20">
                 <div className="flex-1 min-h-0 flex flex-col space-y-5">
                     {/* Header Logo */}
                     <Link href="/" className="block px-2 group shrink-0">
@@ -358,7 +362,7 @@ export default function Profile({ admin }) {
             </aside>
 
             {/* Main Content Area - Scrolls independently */}
-            <main className="flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-[#EDF9FC] dark:bg-[#07090E]">
+            <main className="relative z-10 flex-1 h-full min-w-0 p-3 sm:p-6 md:p-8 overflow-y-auto overscroll-contain bg-transparent">
                 {/* Topbar Info */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#005792]/15 dark:border-white/10">
                     <div className="flex items-center gap-3">
@@ -414,13 +418,15 @@ export default function Profile({ admin }) {
                 )}
 
                 {/* Profile Grid: Left (Avatar & Quick Controls), Right (Data Forms) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+                >
                     {/* LEFT COLUMN: Foto Profil & Kamera Card */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden text-center">
-                            {/* Decorative background glow */}
-                            <div className="absolute -top-16 -left-16 w-44 h-44 rounded-full bg-[#005792]/15 blur-3xl pointer-events-none" />
-                            <div className="absolute -bottom-16 -right-16 w-44 h-44 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+                        <div className="p-6 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden text-center transition-colors duration-200">
 
                             {/* Avatar Display Frame */}
                             <div className="relative mx-auto w-36 h-36 sm:w-40 sm:h-40 rounded-full p-1.5 bg-gradient-to-tr from-[#005792] via-cyan-500 to-sky-400 shadow-xl group">
@@ -511,7 +517,7 @@ export default function Profile({ admin }) {
                     {/* RIGHT COLUMN: Edit Info & Password Forms */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* FORM 1: Informasi Administrator */}
-                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
+                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 shadow-sm transition-colors duration-200">
                             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -632,7 +638,7 @@ export default function Profile({ admin }) {
                         </div>
 
                         {/* FORM 2: Keamanan Akun & Ubah Password */}
-                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-sm">
+                        <div className="p-4 sm:p-6 md:p-8 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 shadow-sm transition-colors duration-200">
                             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100 dark:border-white/10">
                                 <div>
                                     <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -741,14 +747,14 @@ export default function Profile({ admin }) {
                             </form>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </main>
 
             {/* ======================================================== */}
             {/* MODAL 1: AMBIL FOTO KAMERA LANGSUNG (LIVE WEBCAM)        */}
             {/* ======================================================== */}
             {activeModal === 'camera' && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
                     <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain flex flex-col shrink-0">
                         {/* Modal Header */}
                         <div className="p-4 sm:px-6 shrink-0 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
@@ -905,7 +911,7 @@ export default function Profile({ admin }) {
             {/* MODAL 2: UNGGAH BERKAS FOTO DARI FILE (FILE PICKER)      */}
             {/* ======================================================== */}
             {activeModal === 'upload' && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
                     <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain flex flex-col shrink-0">
                         {/* Modal Header */}
                         <div className="p-4 sm:px-6 shrink-0 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">

@@ -180,7 +180,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
     return (
         <div className="min-w-0 space-y-6 break-words [&_div]:min-w-0 [&_input]:min-w-0 [&_input]:max-w-full [&_button]:min-h-10 [&_svg]:shrink-0">
             {/* Header info bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200/90 dark:border-white/10 shadow-sm dark:shadow-md">
                 <div>
                     <div className="flex items-center gap-2 text-[#005792] dark:text-[#38BDF8] font-mono text-xs uppercase tracking-widest font-bold mb-1">
                         <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -239,7 +239,7 @@ export default function AdminServiceCardsManager({ services = [] }) {
                     return (
                         <div
                             key={service.id || idx}
-                            className="group relative rounded-3xl bg-white dark:bg-[#090D16] border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                            className="group relative rounded-3xl bg-white/92 dark:bg-[#0B1222]/90 border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between"
                         >
                             {/* Card Top: Photo Thumbnail */}
                             <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
@@ -266,13 +266,13 @@ export default function AdminServiceCardsManager({ services = [] }) {
                                 </div>
 
                                 {/* Division badge top-left */}
-                                <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] font-mono font-semibold">
+                                <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs border border-white/20 text-white text-[10px] font-mono font-semibold">
                                     <ServiceIcon className="w-3 h-3" style={{ color: service.accent_color || '#38BDF8' }} />
                                     <span>Divisi {String(idx + 1).padStart(2, '0')}</span>
                                 </div>
 
                                 {/* Color swatch pill bottom-left */}
-                                <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-slate-200 border border-white/10">
+                                <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-xs text-[10px] font-mono text-slate-200 border border-white/10">
                                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: service.accent_color || '#0EA5E9' }} />
                                     <span>{service.accent_color || '#0EA5E9'}</span>
                                 </div>

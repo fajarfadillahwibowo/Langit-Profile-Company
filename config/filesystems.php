@@ -77,4 +77,18 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Masa Tenggang Auto-Hapus Album Pelanggan Setelah Expired (Hari)
+    |--------------------------------------------------------------------------
+    |
+    | Setelah tanggal expired_at lewat, album dikunci/disembunyikan dulu agar
+    | admin masih bisa memperpanjang jika pelanggan meminta. Jika tetap tidak
+    | diperpanjang melewati jumlah hari di bawah (default 90 hari / 3 bulan),
+    | scheduler akan menghapus data database beserta seluruh file fisiknya.
+    |
+    */
+
+    'client_delivery_purge_grace_days' => (int) env('CLIENT_DELIVERY_PURGE_GRACE_DAYS', 90),
+
 ];
