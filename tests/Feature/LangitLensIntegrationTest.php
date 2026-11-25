@@ -124,27 +124,90 @@ class LangitLensIntegrationTest extends TestCase
             ->post("/scan-foto/hasil/{$photoIds[1]}/claim-free")
             ->assertSessionHas('error');
 
-        // 6. Pelanggan pilih foto ke-2 ke keranjang & kirim pesanan
+        // 6. Admin atur QRIS & rekening bank
+        $this->actingAs($admin)->post('/admin/langitlens/discount', [
+            'is_active' => true,
+            'min_photos_selected' => 5,
+            'discount_percentage' => 20,
+            'default_photo_price' => 25000,
+            'admin_whatsapp' => '6281234567890',
+            'bank_name' => 'BCA',
+            'bank_account_number' => '8877665544',
+            'bank_account_holder' => 'Langit Creative Studio',
+            'qris_image' => UploadedFile::fake()->image('qris_langit.png', 500, 500),
+        ])->assertRedirect();
+
+        // 7. Pelanggan pilih foto ke-2 ke keranjang & uji validasi bukti pembayaran (wajib & maks 5 MB)
         $this->actingAs($customer)
             ->post('/scan-foto/keranjang/toggle', ['photo_id' => $photoIds[1]])
             ->assertRedirect();
 
-        $this->actingAs($customer)->get('/scan-foto/keranjang')->assertOk();
+        $this->actingAs($customer)->get('/scan-foto/keranjang')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/Cart')
+                ->where('discountRule.bank_name', 'BCA')
+                ->where('discountRule.bank_account_number', '8877665544')
+                ->whereNot('discountRule.qris_image_url', null)
+            );
+
+        // Tanpa bukti foto -> ditolak
         $this->actingAs($customer)
-            ->post('/scan-foto/pesanan', ['customer_notes' => 'Transfer BCA'])
+            ->post('/scan-foto/pesanan', [
+                'payment_method' => 'qris',
+                'customer_notes' => 'Sudah bayar via QRIS',
+            ])
+            ->assertSessionHasErrors('payment_proof');
+
+        // File > 5 MB -> ditolak
+        $this->actingAs($customer)
+            ->post('/scan-foto/pesanan', [
+                'payment_method' => 'qris',
+                'customer_notes' => 'Sudah bayar via QRIS',
+                'payment_proof' => UploadedFile::fake()->create('bukti_besar.png', 5200, 'image/png'),
+            ])
+            ->assertSessionHasErrors('payment_proof');
+
+        // Kirim dengan bukti foto valid (bebas format foto <= 5 MB) -> sukses
+        $this->actingAs($customer)
+            ->post('/scan-foto/pesanan', [
+                'payment_method' => 'qris',
+                'customer_notes' => 'Sudah bayar via QRIS atas nama Pelanggan Scan',
+                'payment_proof' => UploadedFile::fake()->image('bukti_qris.webp', 800, 1200),
+            ])
             ->assertRedirect('/scan-foto/unduhan');
 
         $paidReq = AiPhotoRequest::where('customer_id', $customer->id)
             ->where('status', 'WAITING_MANUAL_PAYMENT')
             ->firstOrFail();
 
-        // 7. Admin kirim foto asli
+        $this->assertEquals('qris', $paidReq->payment_method);
+        $this->assertNotNull($paidReq->payment_proof_path);
+        Storage::disk('local')->assertExists($paidReq->payment_proof_path);
+
+        // Pelanggan pemilik boleh lihat buktinya sendiri; pelanggan lain ditolak (403)
+        $this->actingAs($customer)
+            ->get("/scan-foto/unduhan/{$paidReq->id}/bukti-bayar")
+            ->assertOk();
+
+        $otherCustomer = User::factory()->create(['role' => 'customer']);
+        $this->actingAs($otherCustomer)
+            ->get("/scan-foto/unduhan/{$paidReq->id}/bukti-bayar")
+            ->assertForbidden();
+
+        // 8. Admin melihat bukti bayar pelanggan lalu konfirmasi & kirim foto asli tanpa watermark
+        $this->actingAs($admin)
+            ->get("/admin/langitlens/requests/{$paidReq->id}/payment-proof")
+            ->assertOk();
+
         $this->actingAs($admin)
             ->post("/admin/langitlens/requests/{$paidReq->id}/send-originals")
             ->assertRedirect();
 
         $paidReq->refresh();
         $this->assertEquals('SENT_BY_ADMIN', $paidReq->status);
+        $this->assertNotNull($paidReq->payment_confirmed_at);
+        $this->assertTrue((bool) $paidReq->items()->first()->is_original_unlocked);
     }
 
     public function test_customer_can_register_and_login_with_google_socialite(): void

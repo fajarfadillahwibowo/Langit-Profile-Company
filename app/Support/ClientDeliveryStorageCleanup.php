@@ -200,6 +200,16 @@ class ClientDeliveryStorageCleanup
             }
         }
 
+        $paymentProofs = AiPhotoRequest::where('customer_id', $customer->id)
+            ->whereNotNull('payment_proof_path')
+            ->pluck('payment_proof_path')
+            ->all();
+        foreach ($paymentProofs as $proofPath) {
+            if (is_string($proofPath) && $proofPath !== '') {
+                $localFiles[] = $proofPath;
+            }
+        }
+
         $webFiles = [];
         if (! empty($customer->avatar) && str_starts_with($customer->avatar, '/uploads/avatars/')) {
             $webFiles[] = $customer->avatar;

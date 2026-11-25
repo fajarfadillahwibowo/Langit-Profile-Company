@@ -52,17 +52,21 @@ export default function Photos({
     const [discountOpen, setDiscountOpen] = useState(false);
 
     const discountForm = useForm({
+        name: discountRule?.name ?? 'Diskon Paket Foto',
         is_active: Boolean(discountRule?.is_active ?? true),
         min_photos_selected: discountRule?.min_photos_selected ?? 5,
         discount_percentage: discountRule?.discount_percentage ?? 20,
         default_photo_price: discountRule?.default_photo_price ?? 25000,
         admin_whatsapp: discountRule?.admin_whatsapp ?? '6281234567890',
+        bank_name: discountRule?.bank_name ?? '',
+        bank_account_number: discountRule?.bank_account_number ?? '',
+        bank_account_holder: discountRule?.bank_account_holder ?? '',
         manual_payment_info: discountRule?.manual_payment_info ?? '',
     });
 
     const handleSaveDiscount = (e) => {
         e.preventDefault();
-        discountForm.put('/admin/langitlens/discount', {
+        discountForm.post('/admin/langitlens/discount', {
             preserveScroll: true,
             onSuccess: () => {
                 setUploadPrice(discountForm.data.default_photo_price);

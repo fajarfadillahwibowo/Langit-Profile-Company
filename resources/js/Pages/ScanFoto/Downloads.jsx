@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ScanCustomerLayout from '@/Layouts/ScanCustomerLayout';
@@ -12,6 +12,8 @@ import {
     Download,
     Lock,
     Sparkles,
+    Receipt,
+    X,
 } from 'lucide-react';
 
 function formatRupiah(num) {
@@ -30,6 +32,7 @@ function formatBytes(bytes) {
 }
 
 export default function Downloads({ requests, discountRule }) {
+    const [viewingProof, setViewingProof] = useState(null);
     const adminWaClean = (discountRule?.admin_whatsapp || '').replace(/\D/g, '');
     const adminWa = adminWaClean.startsWith('0') ? `62${adminWaClean.slice(1)}` : adminWaClean;
 
@@ -148,24 +151,38 @@ export default function Downloads({ requests, discountRule }) {
                                         adminWa && (
                                             <a
                                                 href={`https://wa.me/${adminWa}?text=${encodeURIComponent(
-                                                    `Halo Admin LangitLens, saya ingin konfirmasi pembayaran untuk pesanan ${req.request_code} (${req.total_selected_photos} foto, Total ${formatRupiah(req.total_final_price)}).`
+                                                    `Halo Admin LangitCreative, saya ingin bertanya tentang pesanan ${req.request_code} (${req.total_selected_photos} foto, Total ${formatRupiah(req.total_final_price)}).`
                                                 )}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 text-emerald-300 font-bold text-xs transition-all shrink-0"
                                             >
                                                 <Phone className="w-4 h-4" />
-                                                <span>Konfirmasi via WhatsApp</span>
+                                                <span>Tanya Admin LangitCreative</span>
                                             </a>
                                         )
                                     )}
                                 </div>
 
-                                {req.status === 'WAITING_MANUAL_PAYMENT' && discountRule?.manual_payment_info && (
-                                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/25 text-xs text-amber-100 whitespace-pre-line leading-relaxed">
-                                        <strong className="text-amber-300">Info Pembayaran:</strong>
-                                        {'\n'}
-                                        {discountRule.manual_payment_info}
+                                {req.payment_proof_url && (
+                                    <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-sky-500/10 border border-sky-400/25 text-xs">
+                                        <div className="space-y-0.5">
+                                            <p className="font-bold text-sky-200">
+                                                Bukti Bayar ({req.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'})
+                                            </p>
+                                            <p className="text-[11px] text-slate-300">
+                                                {req.payment_proof_uploaded_at ? `Dikirim ${req.payment_proof_uploaded_at}` : 'Sudah diunggah'}
+                                                {req.customer_notes ? ` • "${req.customer_notes}"` : ''}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setViewingProof(req)}
+                                            className="px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/35 text-sky-200 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            <Receipt className="w-3.5 h-3.5" />
+                                            <span>Lihat Bukti</span>
+                                        </button>
                                     </div>
                                 )}
 
@@ -216,6 +233,42 @@ export default function Downloads({ requests, discountRule }) {
                     })
                 )}
             </div>
+
+            {viewingProof && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+                    onClick={() => setViewingProof(null)}
+                >
+                    <div
+                        className="w-full max-w-lg rounded-3xl bg-[#0B1222] border border-white/15 p-5 space-y-3 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between gap-2">
+                            <div>
+                                <p className="text-sm font-bold text-white">Bukti Pembayaran • {viewingProof.request_code}</p>
+                                <p className="text-[11px] text-slate-400">
+                                    {viewingProof.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'}
+                                    {viewingProof.payment_proof_name ? ` • ${viewingProof.payment_proof_name}` : ''}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setViewingProof(null)}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="rounded-2xl bg-black/50 border border-white/10 overflow-hidden flex items-center justify-center min-h-48">
+                            <img
+                                src={viewingProof.payment_proof_url}
+                                alt="Bukti Pembayaran"
+                                className="max-h-[70vh] w-auto object-contain"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </ScanCustomerLayout>
     );
 }

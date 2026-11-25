@@ -355,19 +355,62 @@ class LangitLensAdminController extends Controller
     public function updateDiscount(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
+            'name' => ['nullable', 'string', 'max:150'],
             'min_photos_selected' => ['required', 'integer', 'min:1', 'max:100'],
             'discount_percentage' => ['required', 'numeric', 'min:0', 'max:95'],
             'default_photo_price' => ['required', 'numeric', 'min:0'],
             'admin_whatsapp' => ['required', 'string', 'max:30'],
+            'bank_name' => ['nullable', 'string', 'max:100'],
+            'bank_account_number' => ['nullable', 'string', 'max:80'],
+            'bank_account_holder' => ['nullable', 'string', 'max:150'],
             'manual_payment_info' => ['nullable', 'string', 'max:2000'],
+            'qris_image' => ['nullable', 'image', 'max:5120'],
+            'remove_qris' => ['nullable', 'boolean'],
             'is_active' => ['required', 'boolean'],
+        ], [
+            'qris_image.image' => 'File QRIS harus berupa gambar.',
+            'qris_image.max' => 'Ukuran gambar QRIS maksimal 5 MB.',
         ]);
 
         $rule = AiDiscountRule::current();
-        $rule->update($validated);
 
-        return back()->with('success', 'Pengaturan diskon, harga dasar, dan info pembayaran berhasil disimpan.');
+        $updates = [
+            'name' => ! empty($validated['name']) ? $validated['name'] : ($rule->name ?: 'Diskon Paket Foto'),
+            'min_photos_selected' => $validated['min_photos_selected'],
+            'discount_percentage' => $validated['discount_percentage'],
+            'default_photo_price' => $validated['default_photo_price'],
+            'admin_whatsapp' => $validated['admin_whatsapp'],
+            'bank_name' => $validated['bank_name'] ?? null,
+            'bank_account_number' => $validated['bank_account_number'] ?? null,
+            'bank_account_holder' => $validated['bank_account_holder'] ?? null,
+            'manual_payment_info' => $validated['manual_payment_info'] ?? null,
+            'is_active' => $validated['is_active'],
+        ];
+
+        $oldQrisPath = $rule->qris_image_path;
+
+        if ($request->boolean('remove_qris')) {
+            $updates['qris_image_path'] = null;
+            if (! empty($oldQrisPath)) {
+                Storage::disk('public')->delete($oldQrisPath);
+            }
+        } elseif ($request->hasFile('qris_image')) {
+            $file = $request->file('qris_image');
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+            $newPath = Storage::disk('public')->putFileAs(
+                'langitlens_payment',
+                $file,
+                'qris_'.time().'_'.\Illuminate\Support\Str::random(6).'.'.$ext
+            );
+            $updates['qris_image_path'] = $newPath;
+            if (! empty($oldQrisPath) && $oldQrisPath !== $newPath) {
+                Storage::disk('public')->delete($oldQrisPath);
+            }
+        }
+
+        $rule->update($updates);
+
+        return back()->with('success', 'Pengaturan diskon, QRIS, dan rekening bank berhasil disimpan.');
     }
 
     public function requests(Request $request): Response
@@ -388,6 +431,16 @@ class LangitLensAdminController extends Controller
                 'id' => $req->id,
                 'request_code' => $req->request_code,
                 'status' => $req->status,
+                'payment_method' => $req->payment_method,
+                'payment_proof_url' => $req->payment_proof_path
+                    ? route('admin.langitlens.requests.payment-proof', ['photoRequest' => $req->id])
+                    : null,
+                'payment_proof_download_url' => $req->payment_proof_path
+                    ? route('admin.langitlens.requests.payment-proof', ['photoRequest' => $req->id, 'download' => 1])
+                    : null,
+                'payment_proof_name' => $req->payment_proof_original_name,
+                'payment_proof_uploaded_at' => $req->payment_proof_uploaded_at?->format('d M Y H:i'),
+                'payment_confirmed_at' => $req->payment_confirmed_at?->format('d M Y H:i'),
                 'total_selected_photos' => $req->total_selected_photos,
                 'subtotal_price' => $req->subtotal_price,
                 'discount_percentage_applied' => $req->discount_percentage_applied,
@@ -418,7 +471,31 @@ class LangitLensAdminController extends Controller
         return Inertia::render('Admin/LangitLens/Requests', [
             'requests' => $requests,
             'statusFilter' => $statusFilter,
+            'discountRule' => AiDiscountRule::current(),
         ])->with('adminPortal', app(AdminDashboardController::class)->portalProps());
+    }
+
+    public function paymentProof(Request $request, AiPhotoRequest $photoRequest): BinaryFileResponse
+    {
+        $path = $photoRequest->payment_proof_path;
+        if (empty($path) || ! Storage::disk('local')->exists($path)) {
+            abort(404, 'Bukti pembayaran tidak ditemukan.');
+        }
+
+        $fullPath = Storage::disk('local')->path($path);
+        $downloadName = $photoRequest->payment_proof_original_name ?: basename($fullPath);
+
+        if ($request->boolean('download')) {
+            return response()->download($fullPath, $downloadName);
+        }
+
+        $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function sendOriginals(Request $request, AiPhotoRequest $photoRequest): RedirectResponse
@@ -441,12 +518,15 @@ class LangitLensAdminController extends Controller
 
             $photoRequest->update([
                 'status' => 'SENT_BY_ADMIN',
-                'admin_notes' => $validated['admin_notes'] ?? 'Pembayaran manual diterima. Foto asli resolusi penuh tanpa watermark telah dikirim ke portal pelanggan.',
+                'payment_confirmed_at' => now(),
+                'admin_notes' => ! empty($validated['admin_notes'])
+                    ? $validated['admin_notes']
+                    : 'Pembayaran dikonfirmasi. Foto asli tanpa watermark sudah tersedia di menu Unduh.',
                 'sent_at' => now(),
             ]);
         });
 
-        return back()->with('success', "Foto asli resolusi penuh tanpa watermark untuk pesanan {$photoRequest->request_code} berhasil dikirim ke pelanggan!");
+        return back()->with('success', "Pembayaran {$photoRequest->request_code} dikonfirmasi dan foto asli tanpa watermark sudah dikirim ke pelanggan.");
     }
 
     public function cancelRequest(Request $request, AiPhotoRequest $photoRequest): RedirectResponse

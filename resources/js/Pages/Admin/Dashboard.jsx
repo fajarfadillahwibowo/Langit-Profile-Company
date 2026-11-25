@@ -22,7 +22,7 @@ import {
 const langitLensNavItems = [
     { label: 'Ringkasan AI', href: '/admin/langitlens', icon: LayoutDashboard, color: 'text-cyan-200', background: 'bg-cyan-300/15' },
     { label: 'Upload & Galeri', href: '/admin/langitlens/photos', icon: ImageIcon, color: 'text-amber-200', background: 'bg-amber-300/15' },
-    { label: 'Permintaan Foto', href: '/admin/langitlens/requests', icon: FileText, color: 'text-violet-200', background: 'bg-violet-300/15' },
+    { label: 'Bukti Bayar & Pesanan', href: '/admin/langitlens/requests', icon: FileText, color: 'text-violet-200', background: 'bg-violet-300/15' },
     { label: 'Pelanggan Scan', href: '/admin/langitlens/customers', icon: Users, color: 'text-emerald-200', background: 'bg-emerald-300/15' },
 ];
 

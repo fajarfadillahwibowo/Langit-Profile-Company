@@ -90,6 +90,7 @@ Route::prefix('scan-foto')
         Route::post('/pesanan', [ScanFotoController::class, 'submitRequest'])->name('requests.store');
 
         Route::get('/unduhan', [ScanFotoController::class, 'downloads'])->name('downloads');
+        Route::get('/unduhan/{photoRequest}/bukti-bayar', [ScanFotoController::class, 'paymentProof'])->name('downloads.payment-proof');
         Route::get('/unduhan/{photoRequest}/item/{item}', [ScanFotoController::class, 'downloadOriginal'])->name('downloads.file');
         Route::get('/unduhan/{photoRequest}/zip', [ScanFotoController::class, 'downloadZip'])->name('downloads.zip');
 
@@ -237,8 +238,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::patch('/photos/{photo}', [LangitLensAdminController::class, 'updatePrice'])->name('photos.update');
             Route::post('/photos/{photo}/reindex-faces', [LangitLensAdminController::class, 'reindexFaces'])->name('photos.reindex');
             Route::delete('/photos/{photo}', [LangitLensAdminController::class, 'destroyPhoto'])->name('photos.destroy');
-            Route::put('/discount', [LangitLensAdminController::class, 'updateDiscount'])->name('discount.update');
+            Route::match(['put', 'post'], '/discount', [LangitLensAdminController::class, 'updateDiscount'])->name('discount.update');
             Route::get('/requests', [LangitLensAdminController::class, 'requests'])->name('requests');
+            Route::get('/requests/{photoRequest}/payment-proof', [LangitLensAdminController::class, 'paymentProof'])->name('requests.payment-proof');
             Route::post('/requests/{photoRequest}/send-originals', [LangitLensAdminController::class, 'sendOriginals'])->name('requests.send');
             Route::post('/requests/{photoRequest}/cancel', [LangitLensAdminController::class, 'cancelRequest'])->name('requests.cancel');
             Route::get('/customers', [LangitLensAdminController::class, 'customers'])->name('customers');

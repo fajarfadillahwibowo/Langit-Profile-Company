@@ -317,11 +317,44 @@ class ScanFotoController extends Controller
         ]);
     }
 
+    private const ALLOWED_PROOF_EXTENSIONS = [
+        'jpg', 'jpeg', 'jpe', 'jfif', 'pjpeg', 'pjp', 'png', 'apng', 'webp', 'gif',
+        'bmp', 'dib', 'avif', 'avifs', 'heic', 'heif', 'hif', 'ico', 'tif', 'tiff',
+        'jxl', 'jp2', 'j2k', 'tga', 'raw', 'dng', 'cr2', 'cr3', 'nef', 'arw', 'orf',
+        'rw2', 'raf', 'pef', 'srw', 'wbmp',
+    ];
+
     public function submitRequest(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'customer_notes' => ['nullable', 'string', 'max:1000'],
+            'payment_method' => ['required', 'string', 'in:qris,bank_transfer'],
+            'customer_notes' => ['required', 'string', 'max:1000'],
             'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'payment_proof' => [
+                'required',
+                'file',
+                'max:5120',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! $value instanceof \Illuminate\Http\UploadedFile) {
+                        $fail('Bukti foto pembayaran wajib diunggah.');
+
+                        return;
+                    }
+                    $ext = strtolower((string) $value->getClientOriginalExtension());
+                    $mime = strtolower((string) ($value->getMimeType() ?: $value->getClientMimeType()));
+                    $isImageMime = str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml';
+                    $isAllowedExt = in_array($ext, self::ALLOWED_PROOF_EXTENSIONS, true);
+                    if (! $isImageMime && ! $isAllowedExt) {
+                        $fail('Bukti pembayaran harus berupa file foto (JPG, PNG, WebP, HEIC, GIF, BMP, TIFF, AVIF, dll.).');
+                    }
+                },
+            ],
+        ], [
+            'payment_method.required' => 'Pilih metode pembayaran (QRIS atau Rekening Bank).',
+            'payment_method.in' => 'Metode pembayaran tidak valid.',
+            'customer_notes.required' => 'Tulis pesan konfirmasi pembayaran untuk Admin.',
+            'payment_proof.required' => 'Bukti foto pembayaran wajib diunggah.',
+            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 5 MB.',
         ]);
 
         $matchedIds = array_map('intval', $request->session()->get('matched_photo_ids', []));
@@ -336,11 +369,18 @@ class ScanFotoController extends Controller
             $request->user()->update(['whatsapp_number' => $validated['whatsapp_number']]);
         }
 
+        $proofFile = $request->file('payment_proof');
+        $rawExt = strtolower((string) $proofFile->getClientOriginalExtension());
+        $safeExt = in_array($rawExt, self::ALLOWED_PROOF_EXTENSIONS, true) ? $rawExt : 'jpg';
+        $subDir = 'ai_payment_proofs/'.date('Y/m');
+        $proofFileName = (string) Str::uuid().'.'.$safeExt;
+        $storedProofPath = Storage::disk('local')->putFileAs($subDir, $proofFile, $proofFileName);
+
         $photos = AiPhoto::whereIn('id', $validIds)->get();
         $rule = AiDiscountRule::current();
         $pricing = $this->calculatePricing($photos->pluck('price')->all(), $rule);
 
-        $photoRequest = DB::transaction(function () use ($request, $photos, $pricing, $validated) {
+        $photoRequest = DB::transaction(function () use ($request, $photos, $pricing, $validated, $storedProofPath, $proofFile) {
             $code = 'REQ-'.date('Ymd').'-'.strtoupper(Str::random(5));
 
             $req = AiPhotoRequest::create([
@@ -352,7 +392,11 @@ class ScanFotoController extends Controller
                 'discount_amount' => $pricing['discountAmount'],
                 'total_final_price' => $pricing['finalTotal'],
                 'status' => 'WAITING_MANUAL_PAYMENT',
-                'customer_notes' => $validated['customer_notes'] ?? null,
+                'payment_method' => $validated['payment_method'],
+                'payment_proof_path' => $storedProofPath,
+                'payment_proof_original_name' => $proofFile->getClientOriginalName(),
+                'payment_proof_uploaded_at' => now(),
+                'customer_notes' => trim($validated['customer_notes']),
                 'requested_at' => now(),
             ]);
 
@@ -371,7 +415,28 @@ class ScanFotoController extends Controller
         $request->session()->forget('customer_cart_ids');
 
         return redirect()->route('scan.downloads')
-            ->with('success', "Permintaan foto {$photoRequest->request_code} berhasil dikirim ke Admin! Silakan lakukan pembayaran manual agar Admin segera mengirimkan foto asli resolusi penuh Anda.");
+            ->with('success', "Konfirmasi pembayaran {$photoRequest->request_code} berhasil dikirim. Menunggu verifikasi Admin untuk membuka foto asli.");
+    }
+
+    public function paymentProof(Request $request, AiPhotoRequest $photoRequest): BinaryFileResponse
+    {
+        if ($photoRequest->customer_id !== $request->user()->id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $path = $photoRequest->payment_proof_path;
+        if (empty($path) || ! Storage::disk('local')->exists($path)) {
+            abort(404, 'Bukti pembayaran tidak ditemukan.');
+        }
+
+        $fullPath = Storage::disk('local')->path($path);
+        $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function downloads(Request $request): Response
@@ -392,6 +457,13 @@ class ScanFotoController extends Controller
                     'total_final_price' => $req->total_final_price,
                     'customer_notes' => $req->customer_notes,
                     'admin_notes' => $req->admin_notes,
+                    'payment_method' => $req->payment_method,
+                    'payment_proof_url' => $req->payment_proof_path
+                        ? route('scan.downloads.payment-proof', ['photoRequest' => $req->id])
+                        : null,
+                    'payment_proof_name' => $req->payment_proof_original_name,
+                    'payment_proof_uploaded_at' => $req->payment_proof_uploaded_at?->format('d M Y H:i'),
+                    'payment_confirmed_at' => $req->payment_confirmed_at?->format('d M Y H:i'),
                     'requested_at' => $req->requested_at?->format('d M Y H:i'),
                     'sent_at' => $req->sent_at?->format('d M Y H:i'),
                     'items' => $req->items->map(fn (AiRequestItem $item) => [

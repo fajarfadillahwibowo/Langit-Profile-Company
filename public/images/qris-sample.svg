@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 440" width="360" height="440">
+  <rect width="360" height="440" rx="20" fill="#ffffff"/>
+  <rect x="8" y="8" width="344" height="424" rx="16" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Top Accent Bar -->
+  <path d="M8 24 C8 15 15 8 24 8 L336 8 C345 8 352 15 352 24 L352 68 L8 68 Z" fill="#005792"/>
+  <text x="28" y="46" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="900" fill="#ffffff" letter-spacing="2">QRIS</text>
+  <text x="108" y="44" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#bae6fd">QR Code Standar Pembayaran Nasional</text>
+
+  <!-- Merchant Name -->
+  <text x="180" y="96" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#0f172a">LANGIT CREATIVE STUDIO</text>
+  <text x="180" y="114" text-anchor="middle" font-family="monospace" font-size="11" fill="#64748b">NMID : ID1026001234567</text>
+
+  <!-- QR Matrix Container -->
+  <rect x="60" y="128" width="240" height="240" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Deterministic Sample QR Pattern (21x21 grid, 10px modules, offset 75,143) -->
+  <g fill="#0f172a">
+    <!-- Top-left Finder -->
+    <rect x="75" y="143" width="70" height="70"/>
+    <rect x="85" y="153" width="50" height="50" fill="#ffffff"/>
+    <rect x="95" y="163" width="30" height="30"/>
+
+    <!-- Top-right Finder -->
+    <rect x="215" y="143" width="70" height="70"/>
+    <rect x="225" y="153" width="50" height="50" fill="#ffffff"/>
+    <rect x="235" y="163" width="30" height="30"/>
+
+    <!-- Bottom-left Finder -->
+    <rect x="75" y="283" width="70" height="70"/>
+    <rect x="85" y="293" width="50" height="50" fill="#ffffff"/>
+    <rect x="95" y="303" width="30" height="30"/>
+
+    <!-- Timing & Data Modules -->
+    <rect x="155" y="143" width="10" height="10"/>
+    <rect x="175" y="143" width="10" height="10"/>
+    <rect x="195" y="143" width="10" height="10"/>
+    <rect x="165" y="153" width="20" height="10"/>
+    <rect x="195" y="153" width="10" height="20"/>
+    <rect x="155" y="163" width="10" height="20"/>
+    <rect x="175" y="173" width="10" height="10"/>
+    <rect x="155" y="193" width="20" height="10"/>
+    <rect x="185" y="193" width="20" height="10"/>
+
+    <rect x="75" y="223" width="20" height="10"/>
+    <rect x="105" y="223" width="10" height="10"/>
+    <rect x="125" y="223" width="30" height="10"/>
+    <rect x="165" y="223" width="10" height="20"/>
+    <rect x="185" y="223" width="20" height="10"/>
+    <rect x="215" y="223" width="10" height="20"/>
+    <rect x="235" y="223" width="20" height="10"/>
+    <rect x="265" y="223" width="20" height="10"/>
+
+    <rect x="85" y="233" width="10" height="20"/>
+    <rect x="115" y="233" width="10" height="20"/>
+    <rect x="145" y="233" width="10" height="10"/>
+    <rect x="195" y="233" width="10" height="20"/>
+    <rect x="245" y="233" width="20" height="10"/>
+    <rect x="275" y="233" width="10" height="20"/>
+
+    <rect x="75" y="253" width="10" height="20"/>
+    <rect x="95" y="253" width="20" height="10"/>
+    <rect x="125" y="253" width="20" height="10"/>
+    <rect x="155" y="253" width="20" height="20"/>
+    <rect x="185" y="253" width="10" height="10"/>
+    <rect x="205" y="253" width="30" height="10"/>
+    <rect x="245" y="253" width="10" height="20"/>
+    <rect x="265" y="253" width="20" height="10"/>
+
+    <rect x="95" y="263" width="10" height="10"/>
+    <rect x="115" y="263" width="10" height="10"/>
+    <rect x="135" y="263" width="10" height="10"/>
+    <rect x="185" y="263" width="20" height="10"/>
+    <rect x="215" y="263" width="20" height="20"/>
+    <rect x="255" y="263" width="20" height="10"/>
+
+    <rect x="155" y="283" width="10" height="20"/>
+    <rect x="175" y="283" width="20" height="10"/>
+    <rect x="205" y="283" width="10" height="10"/>
+    <rect x="245" y="283" width="20" height="10"/>
+    <rect x="275" y="283" width="10" height="20"/>
+
+    <rect x="165" y="303" width="20" height="10"/>
+    <rect x="195" y="303" width="20" height="20"/>
+    <rect x="225" y="303" width="20" height="10"/>
+    <rect x="255" y="303" width="20" height="10"/>
+
+    <rect x="155" y="313" width="10" height="20"/>
+    <rect x="175" y="323" width="10" height="20"/>
+    <rect x="215" y="323" width="10" height="20"/>
+    <rect x="235" y="323" width="20" height="20"/>
+    <rect x="265" y="323" width="20" height="10"/>
+
+    <rect x="155" y="343" width="20" height="10"/>
+    <rect x="195" y="343" width="20" height="10"/>
+    <rect x="225" y="343" width="10" height="10"/>
+    <rect x="255" y="343" width="30" height="10"/>
+  </g>
+
+  <!-- Center Badge -->
+  <rect x="156" y="224" width="48" height="48" rx="10" fill="#ffffff" stroke="#005792" stroke-width="2.5"/>
+  <text x="180" y="253" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="900" fill="#005792">langit</text>
+
+  <!-- Footer Label -->
+  <rect x="96" y="382" width="168" height="26" rx="13" fill="#e0f2fe"/>
+  <text x="180" y="399" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="800" fill="#0369a1">CONTOH QRIS PEMBAYARAN</text>
+</svg>
