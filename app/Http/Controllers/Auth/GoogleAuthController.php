@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\LangitLens\CustomerFaceProfileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,7 +113,11 @@ class GoogleAuthController extends Controller
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            return redirect()->intended(route('scan.index'));
+            $target = app(CustomerFaceProfileService::class)->hasPermanentScan($user)
+                ? route('scan.photos')
+                : route('scan.index');
+
+            return redirect()->intended($target);
         }
 
         // ATURAN KETAT HALAMAN DAFTAR (/register): hanya untuk akun baru, lalu otomatis masuk ke portal

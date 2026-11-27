@@ -1,56 +1,29 @@
 #!/bin/bash
-# ==========================================================
-# Automated Production VPS Deployment Script for Langit
-# ==========================================================
+set -euo pipefail
 
-set -e
+cd "$(dirname "$0")"
 
-echo "=========================================================="
-echo "  🚀 Memulai Deployment Langit Profile Company di VPS...  "
-echo "=========================================================="
-
-# 1. Periksa ketersediaan Docker & Docker Compose
-if ! command -v docker &> /dev/null; then
-    echo "❌ Error: Docker belum terinstal di server ini."
-    echo "Jalankan perintah ini di Ubuntu/Debian untuk install Docker:"
-    echo "curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh"
+# A reviewed release supplies immutable images, existing runtime configuration,
+# persistent mounts, and a verified backup. Never initialize production here.
+OVERRIDE="${SAFE_DEPLOY_OVERRIDE:-docker-compose.production-safe.yml}"
+BACKUP="${VERIFIED_BACKUP_DIRECTORY:-}"
+if [ ! -f .env ] || [ ! -f "$OVERRIDE" ] || [ -z "$BACKUP" ]; then
+    echo "Deployment refused: existing .env, safe Compose override, and VERIFIED_BACKUP_DIRECTORY are required."
     exit 1
 fi
-
-# 2. Periksa file .env
-if [ ! -f .env ]; then
-    echo "⚙️  File .env tidak ditemukan. Menyalin dari .env.docker.example..."
-    cp .env.docker.example .env
-    echo "⚠️  Catatan: Pastikan periksa dan sesuaikan APP_URL dan password database di .env"
+if [ ! -s "$BACKUP/database.sql.gz" ] || [ ! -s "$BACKUP/media.tar.gz" ] || [ ! -f "$BACKUP/database-restore-verified" ]; then
+    echo "Deployment refused: database/media backups and a successful isolated restore check are required."
+    exit 1
 fi
+(cd "$BACKUP" && sha256sum --check backups.sha256)
 
-# 3. Build & Run Docker Containers
-echo "📦 Membangun Docker Image dan Menjalankan Service (Nginx, PHP 8.4, DB, Redis, Queue)..."
-docker compose down || true
-docker compose up -d --build
+# Update only Langit application processes. Do not stop/recreate databases,
+# Redis, shared networks, web servers, or containers belonging to other sites.
+docker compose -p langitcreativepro -f docker-compose.yml -f "$OVERRIDE" \
+    up -d --no-deps --no-build app queue cron
 
-# 4. Tunggu container siap
-echo "⏳ Menunggu container database dan service siap..."
-sleep 10
-
-# 4b. Sinkronkan aset Vite dari image ke folder public yang di-mount nginx.
-# Bind-mount ./public tidak otomatis mengikuti hasil build di dalam image,
-# sehingga tanpa langkah ini aset ber-hash baru akan 404.
-echo "🎨 Sinkronisasi aset build (Vite) ke ./public/build..."
+# Merge compiled assets without deleting old hashes still used by open pages.
+mkdir -p public/build
 docker cp langit_app:/var/www/html/public/build/. public/build/
-docker compose exec -T app php artisan optimize
-
-# 5. Tampilkan Status Container
-echo "=========================================================="
-echo "  ✅ Status Container Docker:                             "
-echo "=========================================================="
-docker compose ps
-
-echo "=========================================================="
-echo "  🎉 Deployment Berhasil Selesai!                         "
-echo "=========================================================="
-echo "🌐 Akses Website:   http://$(curl -s ifconfig.me || echo 'IP_SERVER_ANDA')"
-echo "🔐 Portal Admin:    http://$(curl -s ifconfig.me || echo 'IP_SERVER_ANDA')/admin/login"
-echo "👤 Akun Superadmin: admin@langit.id"
-echo "🔑 Password Default: admin123"
-echo "=========================================================="
+docker compose -p langitcreativepro -f docker-compose.yml -f "$OVERRIDE" ps
+echo "Code release activated. No migrations, seeders, key rotation, or data cleanup were executed."

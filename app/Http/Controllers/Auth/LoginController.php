@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\LangitLens\CustomerFaceProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +25,11 @@ class LoginController extends Controller
                 return redirect()->route('client.gallery');
             }
             if ($user->role === 'customer') {
-                return redirect()->route('scan.index');
+                $target = app(CustomerFaceProfileService::class)->hasPermanentScan($user)
+                    ? route('scan.photos')
+                    : route('scan.index');
+
+                return redirect($target);
             }
 
             return redirect()->route('admin.dashboard');
@@ -78,7 +83,11 @@ class LoginController extends Controller
             }
 
             if ($user->role === 'customer') {
-                return redirect()->intended(route('scan.index'));
+                $target = app(CustomerFaceProfileService::class)->hasPermanentScan($user)
+                    ? route('scan.photos')
+                    : route('scan.index');
+
+                return redirect()->intended($target);
             }
 
             return redirect()->intended(route('admin.dashboard'));

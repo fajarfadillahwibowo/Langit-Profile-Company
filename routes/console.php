@@ -1,22 +1,27 @@
 <?php
 
+use App\Support\ClientDeliveryStorageCleanup;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
 Artisan::command('delivery-uploads:prune', function () {
-    $disk = \Illuminate\Support\Facades\Storage::disk('local');
-    \Illuminate\Support\Facades\DB::table('delivery_uploads')->whereNull('client_photo_id')->where('expires_at', '<', now())
+    $disk = Storage::disk('local');
+    DB::table('delivery_uploads')->whereNull('client_photo_id')->where('expires_at', '<', now())
         ->orderBy('id')->chunkById(100, function ($rows) use ($disk) {
             foreach ($rows as $row) {
-                \Illuminate\Support\Facades\DB::transaction(function () use ($row, $disk) {
-                    $current = \Illuminate\Support\Facades\DB::table('delivery_uploads')->where('id', $row->id)->lockForUpdate()->first();
+                DB::transaction(function () use ($row, $disk) {
+                    $current = DB::table('delivery_uploads')->where('id', $row->id)->lockForUpdate()->first();
                     if ($current && ! $current->client_photo_id && now()->greaterThan($current->expires_at)) {
                         $disk->deleteDirectory('delivery_uploads/'.$current->id);
-                        \Illuminate\Support\Facades\DB::table('delivery_uploads')->where('id', $current->id)->delete();
+                        DB::table('delivery_uploads')->where('id', $current->id)->delete();
                     }
                 });
             }
@@ -24,21 +29,26 @@ Artisan::command('delivery-uploads:prune', function () {
     // Also remove abandoned directories left by deleted albums, never arbitrary paths.
     foreach ($disk->directories('delivery_uploads') as $dir) {
         $uuid = basename($dir);
-        if (! \Illuminate\Support\Str::isUuid($uuid) || is_link($disk->path($dir))) { continue; }
-        if (! \Illuminate\Support\Facades\DB::table('delivery_uploads')->where('id', $uuid)->exists()
-            && filemtime($disk->path($dir)) < now()->subDays(7)->timestamp) { $disk->deleteDirectory($dir); }
+        if (! Str::isUuid($uuid) || is_link($disk->path($dir))) {
+            continue;
+        }
+        if (! DB::table('delivery_uploads')->where('id', $uuid)->exists()
+            && filemtime($disk->path($dir)) < now()->subDays(7)->timestamp) {
+            $disk->deleteDirectory($dir);
+        }
     }
     $this->info('Expired private delivery chunks pruned.');
 })->purpose('Remove expired private delivery upload chunks safely');
 
-\Illuminate\Support\Facades\Schedule::command('delivery-uploads:prune')->daily()->withoutOverlapping();
+Schedule::command('delivery-uploads:prune')->daily()->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('filesystems.automatic_cleanup_enabled', false));
 
 Artisan::command('deliveries:purge-expired {--days= : Jumlah hari masa tenggang setelah expired (default config/env 90 hari)} {--dry-run : Cek album yang akan dihapus tanpa menghapus data}', function () {
     $daysOption = $this->option('days');
     $graceDays = ($daysOption !== null && $daysOption !== '') ? (int) $daysOption : null;
     $dryRun = (bool) $this->option('dry-run');
 
-    $stats = \App\Support\ClientDeliveryStorageCleanup::purgeExpiredDeliveries($graceDays, $dryRun);
+    $stats = ClientDeliveryStorageCleanup::purgeExpiredDeliveries($graceDays, $dryRun);
     $mb = number_format($stats['bytes_freed'] / 1048576, 2);
     $mode = $dryRun ? '[DRY RUN]' : '[BERSIH]';
 
@@ -49,11 +59,12 @@ Artisan::command('deliveries:purge-expired {--days= : Jumlah hari masa tenggang 
     $this->info("Estimasi ruang dibebaskan: {$mb} MB");
 })->purpose('Hapus otomatis album pelanggan beserta file fisiknya setelah melewati masa tenggang pasca-expired');
 
-\Illuminate\Support\Facades\Schedule::command('deliveries:purge-expired')->daily()->withoutOverlapping();
+Schedule::command('deliveries:purge-expired')->daily()->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('filesystems.client_delivery_auto_purge_enabled', false));
 
 Artisan::command('storage:cleanup-orphans {--dry-run : Tampilkan daftar sampah tanpa menghapus file}', function () {
     $dryRun = (bool) $this->option('dry-run');
-    $stats = \App\Support\ClientDeliveryStorageCleanup::purgeOrphanStorage($dryRun);
+    $stats = ClientDeliveryStorageCleanup::purgeOrphanStorage($dryRun);
     $mb = number_format($stats['bytes_freed'] / 1048576, 2);
     $mode = $dryRun ? '[DRY RUN]' : '[BERSIH]';
 
@@ -68,4 +79,5 @@ Artisan::command('storage:cleanup-orphans {--dry-run : Tampilkan daftar sampah t
     $this->info("Total ruang dibebaskan: {$mb} MB");
 })->purpose('Bersihkan file foto, thumbnail, dan ZIP yatim yang sudah tidak ada di database');
 
-\Illuminate\Support\Facades\Schedule::command('storage:cleanup-orphans')->daily()->withoutOverlapping();
+Schedule::command('storage:cleanup-orphans')->daily()->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('filesystems.automatic_cleanup_enabled', false));

@@ -8,6 +8,7 @@ use App\Models\AiPhoto;
 use App\Models\AiPhotoRequest;
 use App\Models\AiRequestItem;
 use App\Models\User;
+use App\Services\LangitLens\CustomerFaceProfileService;
 use App\Services\LangitLens\FaceMatchingService;
 use App\Services\LangitLens\InsightFaceClient;
 use Illuminate\Http\JsonResponse;
@@ -24,15 +25,20 @@ use ZipArchive;
 
 class ScanFotoController extends Controller
 {
-    public function scanPage(Request $request, InsightFaceClient $insightFace): Response
-    {
-        $lastScan = AiFaceScan::where('customer_id', $request->user()->id)
-            ->latest('scanned_at')
-            ->first();
+    public function scanPage(
+        Request $request,
+        InsightFaceClient $insightFace,
+        CustomerFaceProfileService $faceProfile
+    ): Response {
+        $user = $request->user();
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $user);
+        $savedScan = $hydrated['scan'] ?? null;
+        $matchedCount = isset($hydrated['matched_ids']) ? count($hydrated['matched_ids']) : 0;
 
         return Inertia::render('ScanFoto/FaceScan', [
-            'hasPreviousScan' => (bool) $lastScan || is_array($request->session()->get('matched_photo_ids')),
-            'lastMatchedCount' => count($request->session()->get('matched_photo_ids', [])),
+            'hasPreviousScan' => (bool) $savedScan,
+            'lastMatchedCount' => $matchedCount,
+            'savedScan' => $faceProfile->summary($savedScan, $matchedCount),
             'totalCatalogPhotos' => AiPhoto::count(),
             'insightFaceReady' => $insightFace->isHealthy(),
         ]);
@@ -71,8 +77,26 @@ class ScanFotoController extends Controller
         }
     }
 
-    public function submitFaceScan(Request $request, FaceMatchingService $matcher): JsonResponse
-    {
+    public function submitFaceScan(
+        Request $request,
+        FaceMatchingService $matcher,
+        CustomerFaceProfileService $faceProfile
+    ): JsonResponse {
+        $user = $request->user();
+
+        // Scan 3 wajah cukup dilakukan 1 kali dan tersimpan permanen per akun
+        if ($faceProfile->hasPermanentScan($user)) {
+            $hydrated = $faceProfile->ensureSessionHydrated($request, $user, true);
+
+            return response()->json([
+                'success' => true,
+                'alreadyScanned' => true,
+                'matchedCount' => count($hydrated['matched_ids'] ?? []),
+                'redirectUrl' => route('scan.photos'),
+                'message' => 'Data scan 3 wajah Anda sudah tersimpan permanen di akun ini.',
+            ]);
+        }
+
         $validated = $request->validate([
             'face_embeddings' => ['nullable', 'array'],
             'face_embeddings.front' => ['required_with:face_embeddings', 'array', 'min:64'],
@@ -102,8 +126,8 @@ class ScanFotoController extends Controller
             $matchedScores[$m['photo_id']] = $m['similarity_percent'];
         }
 
-        AiFaceScan::create([
-            'customer_id' => $request->user()->id,
+        $scan = AiFaceScan::create([
+            'customer_id' => $user->id,
             'selected_face_embedding' => $embeddingsPayload,
             'selected_box' => $validated['selected_boxes'] ?? ($validated['selected_box'] ?? null),
             'matched_photo_ids' => $matchedIds,
@@ -112,6 +136,8 @@ class ScanFotoController extends Controller
 
         $request->session()->put('matched_photo_ids', $matchedIds);
         $request->session()->put('matched_photo_scores', $matchedScores);
+        $request->session()->put('matched_catalog_signature', $faceProfile->catalogSignature());
+        $request->session()->put('matched_scan_id', $scan->id);
 
         return response()->json([
             'success' => true,
@@ -120,17 +146,32 @@ class ScanFotoController extends Controller
         ]);
     }
 
-    public function photos(Request $request): Response|RedirectResponse
+    public function refreshMatches(Request $request, CustomerFaceProfileService $faceProfile): RedirectResponse
     {
-        $matchedIds = $request->session()->get('matched_photo_ids');
-        if (! is_array($matchedIds)) {
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $request->user(), true);
+        if (! $hydrated) {
             return redirect()->route('scan.index')
-                ->with('error', 'Langkah 1 wajib: Silakan scan wajah Anda terlebih dahulu untuk menemukan foto Anda.');
+                ->with('error', 'Silakan lakukan scan 3 arah wajah terlebih dahulu.');
         }
 
-        $matchedScores = $request->session()->get('matched_photo_scores', []);
-        $cartIds = array_map('intval', $request->session()->get('customer_cart_ids', []));
+        $count = count($hydrated['matched_ids']);
+
+        return redirect()->route('scan.photos')
+            ->with('success', "Daftar foto diperbarui dari data wajah permanen Anda ({$count} foto ditemukan).");
+    }
+
+    public function photos(Request $request, CustomerFaceProfileService $faceProfile): Response|RedirectResponse
+    {
         $user = $request->user();
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $user);
+        if (! $hydrated) {
+            return redirect()->route('scan.index')
+                ->with('error', 'Langkah 1 wajib: Silakan scan 3 arah wajah Anda satu kali untuk menemukan foto Anda.');
+        }
+
+        $matchedIds = $hydrated['matched_ids'];
+        $matchedScores = $hydrated['matched_scores'];
+        $cartIds = array_map('intval', $request->session()->get('customer_cart_ids', []));
 
         $unlockedPhotoIds = AiRequestItem::whereHas('photoRequest', fn ($q) => $q->where('customer_id', $user->id))
             ->where('is_original_unlocked', true)
@@ -165,12 +206,14 @@ class ScanFotoController extends Controller
             'discountRule' => AiDiscountRule::current(),
             'freePhotoQuota' => $remainingFreeQuota,
             'freePhotoUsedAt' => $user->free_photo_used_at?->format('d M Y H:i'),
+            'savedScan' => $faceProfile->summary($hydrated['scan'], count($matchedIds)),
         ]);
     }
 
-    public function claimFreePhoto(Request $request, AiPhoto $photo): RedirectResponse
+    public function claimFreePhoto(Request $request, AiPhoto $photo, CustomerFaceProfileService $faceProfile): RedirectResponse
     {
-        $matchedIds = array_map('intval', $request->session()->get('matched_photo_ids', []));
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $request->user());
+        $matchedIds = $hydrated['matched_ids'] ?? [];
         if (! in_array($photo->id, $matchedIds, true)) {
             return back()->with('error', 'Foto tersebut tidak ada di hasil scan wajah Anda.');
         }
@@ -263,13 +306,14 @@ class ScanFotoController extends Controller
             ->with('success', 'Selamat! 1 foto gratis pilihan Anda berhasil diklaim dan langsung siap diunduh tanpa watermark.');
     }
 
-    public function toggleCart(Request $request): RedirectResponse
+    public function toggleCart(Request $request, CustomerFaceProfileService $faceProfile): RedirectResponse
     {
         $validated = $request->validate([
             'photo_id' => ['required', 'integer', 'exists:ai_photos,id'],
         ]);
 
-        $matchedIds = array_map('intval', $request->session()->get('matched_photo_ids', []));
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $request->user());
+        $matchedIds = $hydrated['matched_ids'] ?? [];
         $photoId = (int) $validated['photo_id'];
 
         if (! in_array($photoId, $matchedIds, true)) {
@@ -288,14 +332,15 @@ class ScanFotoController extends Controller
         return back();
     }
 
-    public function cart(Request $request): Response|RedirectResponse
+    public function cart(Request $request, CustomerFaceProfileService $faceProfile): Response|RedirectResponse
     {
-        $matchedIds = $request->session()->get('matched_photo_ids');
-        if (! is_array($matchedIds)) {
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $request->user());
+        if (! $hydrated) {
             return redirect()->route('scan.index')
-                ->with('error', 'Silakan scan wajah Anda terlebih dahulu.');
+                ->with('error', 'Silakan scan 3 arah wajah Anda terlebih dahulu.');
         }
 
+        $matchedIds = $hydrated['matched_ids'];
         $cartIds = array_map('intval', $request->session()->get('customer_cart_ids', []));
         $selectedPhotos = AiPhoto::whereIn('id', $cartIds ?: [0])
             ->whereIn('id', $matchedIds ?: [0])
@@ -324,7 +369,7 @@ class ScanFotoController extends Controller
         'rw2', 'raf', 'pef', 'srw', 'wbmp',
     ];
 
-    public function submitRequest(Request $request): RedirectResponse
+    public function submitRequest(Request $request, CustomerFaceProfileService $faceProfile): RedirectResponse
     {
         $validated = $request->validate([
             'payment_method' => ['required', 'string', 'in:qris,bank_transfer'],
@@ -357,7 +402,8 @@ class ScanFotoController extends Controller
             'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 5 MB.',
         ]);
 
-        $matchedIds = array_map('intval', $request->session()->get('matched_photo_ids', []));
+        $hydrated = $faceProfile->ensureSessionHydrated($request, $request->user());
+        $matchedIds = $hydrated['matched_ids'] ?? [];
         $cartIds = array_map('intval', $request->session()->get('customer_cart_ids', []));
 
         $validIds = array_values(array_intersect($cartIds, $matchedIds));

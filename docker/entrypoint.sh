@@ -12,23 +12,19 @@ mkdir -p /var/www/html/storage/framework/sessions \
          /var/www/html/public/uploads/profiles \
          /var/www/html/public/uploads/galleries
 
-chown -R www-data:www-data /var/www/html/storage \
-                           /var/www/html/bootstrap/cache \
-                           /var/www/html/public/uploads
-chmod -R 775 /var/www/html/storage \
-             /var/www/html/bootstrap/cache \
-             /var/www/html/public/uploads
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/bootstrap/cache
 
 # 2. Check environment file
 if [ ! -f /var/www/html/.env ]; then
-    echo "==> [Langit CMS] .env not found. Creating from .env.example..."
-    cp /var/www/html/.env.example /var/www/html/.env
+    echo "==> [ERROR] Production .env is required. Refusing to initialize or replace configuration."
+    exit 1
 fi
 
 # 3. Generate APP_KEY if empty
-if ! grep -q "APP_KEY=base64:" /var/www/html/.env; then
-    echo "==> [Langit CMS] Generating application encryption key..."
-    php artisan key:generate --force
+if [ -z "${APP_KEY:-}" ] && ! grep -q '^APP_KEY=base64:' /var/www/html/.env; then
+    echo "==> [ERROR] Existing APP_KEY is required. Refusing to rotate the encryption key."
+    exit 1
 fi
 
 # 4. Storage symlink
@@ -60,22 +56,17 @@ if [ "$DB_CONN" = "mysql" ]; then
 elif [ "$DB_CONN" = "sqlite" ]; then
     SQLITE_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
     if [ ! -f "$SQLITE_PATH" ]; then
-        echo "==> [Langit CMS] Creating SQLite database file at $SQLITE_PATH..."
-        mkdir -p "$(dirname "$SQLITE_PATH")"
-        touch "$SQLITE_PATH"
-        chown www-data:www-data "$SQLITE_PATH"
-        chmod 664 "$SQLITE_PATH"
+        echo "==> [ERROR] Existing SQLite database is required. Refusing to initialize a new database."
+        exit 1
     fi
 fi
 
-# Run Database Migrations
-echo "==> [Langit CMS] Running database migrations..."
-php artisan migrate --force
+# Database changes must be reviewed, backed up, and executed separately.
+echo "==> [Langit CMS] Existing database preserved; automatic migrations are disabled."
 
-# Seed database if SEED_ON_DEPLOY=true
 if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then
-    echo "==> [Langit CMS] Seeding initial database records & superadmin..."
-    php artisan db:seed --force
+    echo "==> [ERROR] SEED_ON_DEPLOY is forbidden during production updates."
+    exit 1
 fi
 
 # 6. Optimize Laravel production caches

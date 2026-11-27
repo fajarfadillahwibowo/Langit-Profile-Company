@@ -438,4 +438,118 @@ class LangitLensIntegrationTest extends TestCase
             ->assertSessionHas('success');
         $this->assertNull(User::find($customer->id));
     }
+
+    public function test_customer_face_scan_persists_permanently_across_logout_login_and_new_uploads(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $admin = User::factory()->create([
+            'username' => 'admin_persist',
+            'role' => 'admin',
+        ]);
+
+        $customer = User::create([
+            'name' => 'Pelanggan Permanen',
+            'username' => 'pelanggan_permanen',
+            'email' => 'permanen@example.com',
+            'password' => bcrypt('Password123'),
+            'role' => 'customer',
+        ]);
+
+        $emb = array_fill(0, 128, 0.08);
+
+        // 1. Admin unggah 1 foto awal
+        $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('event_1.jpg', 1200, 900),
+            'price' => 25000,
+            'faces' => json_encode([
+                [
+                    'face_embedding' => $emb,
+                    'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3],
+                    'confidence_score' => 0.99,
+                ],
+            ]),
+        ])->assertOk();
+
+        // 2. Pelanggan login pertama kali -> diarahkan ke /scan-foto karena belum pernah scan
+        $this->post('/logout');
+        $this->post('/login', [
+            'login' => 'pelanggan_permanen',
+            'password' => 'Password123',
+        ])->assertRedirect('/scan-foto');
+
+        // 3. Pelanggan melakukan scan 3 arah wajah 1 kali saja
+        $this->postJson('/scan-foto/search', [
+            'face_embeddings' => [
+                'front' => $emb,
+                'left' => $emb,
+                'right' => $emb,
+            ],
+        ])->assertOk()->assertJsonPath('matchedCount', 1);
+
+        $this->assertEquals(1, \App\Models\AiFaceScan::where('customer_id', $customer->id)->count());
+
+        // 4. Pelanggan LOGOUT (session terhapus total) lalu LOGIN kembali
+        $this->post('/logout')->assertRedirect('/login');
+        $this->assertGuest();
+
+        // Setelah login ulang, langsung diarahkan ke /scan-foto/hasil (tidak perlu scan lagi)
+        $this->post('/login', [
+            'login' => 'pelanggan_permanen',
+            'password' => 'Password123',
+        ])->assertRedirect('/scan-foto/hasil');
+
+        // Halaman Foto Saya & Keranjang langsung terbuka dengan data permanen dari database
+        $this->get('/scan-foto/hasil')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/MatchedPhotos')
+                ->has('photos', 1)
+                ->where('sidebarBadges.hasScanned', true)
+                ->where('sidebarBadges.matchedCount', 1)
+                ->where('savedScan.angles_count', 3)
+            );
+
+        // Halaman Scan Wajah menampilkan status tersimpan permanen
+        $this->get('/scan-foto')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/FaceScan')
+                ->where('hasPreviousScan', true)
+                ->where('lastMatchedCount', 1)
+                ->where('savedScan.angles_count', 3)
+            );
+
+        // Mencoba kirim /scan-foto/search lagi tidak membuat duplikat scan
+        $this->postJson('/scan-foto/search', [
+            'face_embeddings' => [
+                'front' => $emb,
+                'left' => $emb,
+                'right' => $emb,
+            ],
+        ])->assertOk()->assertJsonPath('alreadyScanned', true);
+        $this->assertEquals(1, \App\Models\AiFaceScan::where('customer_id', $customer->id)->count());
+
+        // 5. Admin mengunggah foto ke-2 di kemudian hari -> otomatis muncul di Foto Saya tanpa scan ulang
+        $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('event_2.jpg', 1200, 900),
+            'price' => 25000,
+            'faces' => json_encode([
+                [
+                    'face_embedding' => $emb,
+                    'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3],
+                    'confidence_score' => 0.99,
+                ],
+            ]),
+        ])->assertOk();
+
+        $this->actingAs($customer)->get('/scan-foto/hasil')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/MatchedPhotos')
+                ->has('photos', 2)
+                ->where('sidebarBadges.matchedCount', 2)
+            );
+    }
 }

@@ -18,6 +18,9 @@ import {
     Check,
     X,
     Lock,
+    RefreshCw,
+    ShieldCheck,
+    Images,
 } from 'lucide-react';
 
 const ANGLE_STEPS = [
@@ -105,9 +108,11 @@ function computeClientFrameBrightness(video) {
 export default function FaceScan({
     hasPreviousScan,
     lastMatchedCount,
+    savedScan = null,
     totalCatalogPhotos,
     insightFaceReady,
 }) {
+    const [refreshingMatches, setRefreshingMatches] = useState(false);
     const [modelsReady, setModelsReady] = useState(Boolean(insightFaceReady));
     const [modelError, setModelError] = useState(null);
 
@@ -171,7 +176,7 @@ export default function FaceScan({
     }, []);
 
     useEffect(() => {
-        if (!insightFaceReady) {
+        if (!hasPreviousScan && !insightFaceReady) {
             getClientFaceApi()
                 .then((mod) => mod.loadFaceModels())
                 .then(() => setModelsReady(true))
@@ -181,7 +186,7 @@ export default function FaceScan({
         }
 
         return () => stopCamera();
-    }, [insightFaceReady, getClientFaceApi]);
+    }, [hasPreviousScan, insightFaceReady, getClientFaceApi]);
 
     const currentStepMeta = ANGLE_STEPS.find((s) => s.key === activeAngle) || ANGLE_STEPS[0];
     const completedCount = Object.values(capturedAngles).filter(Boolean).length;
@@ -677,6 +682,110 @@ export default function FaceScan({
         },
     }[detectionColor];
 
+    const handleRefreshFromSaved = () => {
+        setRefreshingMatches(true);
+        router.post(
+            '/scan-foto/refresh',
+            {},
+            {
+                onFinish: () => setRefreshingMatches(false),
+            }
+        );
+    };
+
+    if (hasPreviousScan) {
+        return (
+            <ScanCustomerLayout title="Scan Wajah">
+                <Head title="Scan Wajah" />
+
+                <div className="max-w-2xl mx-auto space-y-5">
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="relative overflow-hidden rounded-3xl p-6 sm:p-7 bg-[#0B1222]/95 border border-emerald-400/35 shadow-2xl shadow-emerald-950/20 space-y-5"
+                    >
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" />
+
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 shrink-0">
+                                    <ShieldCheck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-[11px] font-bold text-emerald-300">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Tersimpan Permanen
+                                    </span>
+                                    <h2 className="font-heading text-lg sm:text-xl font-black text-white mt-1">
+                                        Scan 3 Wajah Sudah Selesai
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Data scan 3 arah wajah sudah tersimpan permanen di akun Anda. Anda tidak perlu scan wajah lagi walau keluar dan masuk kembali.
+                        </p>
+
+                        {/* 3 Sudut Tersimpan */}
+                        <div className="grid grid-cols-3 gap-2.5">
+                            {ANGLE_STEPS.map((step) => (
+                                <div
+                                    key={step.key}
+                                    className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-center space-y-1"
+                                >
+                                    <div className="w-7 h-7 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center mx-auto">
+                                        <Check className="w-4 h-4 stroke-[3]" />
+                                    </div>
+                                    <p className="text-xs font-bold text-white">{step.shortTitle}</p>
+                                    <p className="text-[11px] text-emerald-300 font-semibold">Tersimpan</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Riwayat Scan */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                                <p className="text-[11px] text-slate-400">Riwayat Scan</p>
+                                <p className="font-bold text-white mt-0.5">{savedScan?.scanned_at || 'Tersimpan'}</p>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                                <p className="text-[11px] text-slate-400">Foto Anda</p>
+                                <p className="font-bold text-cyan-300 mt-0.5">{lastMatchedCount} foto ditemukan</p>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                                <p className="text-[11px] text-slate-400">Total Galeri</p>
+                                <p className="font-bold text-white mt-0.5">{totalCatalogPhotos} foto</p>
+                            </div>
+                        </div>
+
+                        {/* Tombol Aksi */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
+                            <Link
+                                href="/scan-foto/hasil"
+                                className="flex-1 min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 transition-all"
+                            >
+                                <Images className="w-4 h-4" />
+                                <span>Lihat Foto Saya ({lastMatchedCount})</span>
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={handleRefreshFromSaved}
+                                disabled={refreshingMatches}
+                                className="min-h-12 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-xs font-bold text-cyan-200 transition-all cursor-pointer disabled:opacity-60"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${refreshingMatches ? 'animate-spin' : ''}`} />
+                                <span>{refreshingMatches ? 'Memeriksa...' : 'Cek Foto Terbaru'}</span>
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            </ScanCustomerLayout>
+        );
+    }
+
     return (
         <ScanCustomerLayout title="Scan Wajah">
             <Head title="Scan Wajah" />
@@ -709,7 +818,7 @@ export default function FaceScan({
                     </div>
 
                     <p className="relative z-10 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                        Scan wajah depan, kiri, dan kanan untuk menemukan foto Anda ({totalCatalogPhotos} foto tersedia).
+                        Scan wajah depan, kiri, dan kanan cukup 1 kali — data tersimpan permanen di akun Anda ({totalCatalogPhotos} foto tersedia).
                     </p>
 
                     {/* Animated Progress Rail */}
@@ -721,18 +830,6 @@ export default function FaceScan({
                             className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400"
                         />
                     </div>
-
-                    {hasPreviousScan && (
-                        <div className="relative z-10 pt-1">
-                            <Link
-                                href="/scan-foto/hasil"
-                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs font-bold text-sky-300 transition-all"
-                            >
-                                <span>Buka hasil scan sebelumnya ({lastMatchedCount} foto)</span>
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </div>
-                    )}
                 </motion.div>
 
                 {/* 3 Kartu Arah Scan (Berurutan: 1. Depan -> 2. Kiri -> 3. Kanan) */}

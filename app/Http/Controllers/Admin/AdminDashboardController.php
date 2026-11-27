@@ -92,7 +92,6 @@ class AdminDashboardController extends Controller
         ];
 
         $services = Service::all();
-        $this->ensureServiceGalleriesExist($services);
 
         // 1. Real Activity Time Series ('7d', '30d', 'year')
         $sevenDaysData = [];
@@ -997,16 +996,17 @@ class AdminDashboardController extends Controller
                 ->delete();
         }
 
-        // Delete physical file if uploaded in public/uploads/galleries
-        if ($gallery->file_webp_path && preg_match('~\A/uploads/galleries/[a-zA-Z0-9_-]+\.(?:jpe?g|png|webp|gif|avif|heic|heif|jfif)\z~i', $gallery->file_webp_path)) {
-            $fullPath = public_path(ltrim($gallery->file_webp_path, '/'));
-            if (file_exists($fullPath)) {
-                @unlink($fullPath);
+        foreach ([$gallery->file_webp_path, $gallery->before_file_path] as $imagePath) {
+            if ($imagePath && preg_match('~\A/uploads/galleries/[a-zA-Z0-9_-]+\.(?:jpe?g|png|webp|gif|avif|heic|heif|jfif)\z~i', $imagePath)) {
+                $fullPath = public_path(ltrim($imagePath, '/'));
+                if (is_file($fullPath) && ! is_link($fullPath)) {
+                    unlink($fullPath);
+                }
             }
         }
 
         GalleryAlbum::deleteFiles($gallery->exif_metadata_json['sub_photos'] ?? []);
-        GalleryAlbum::deleteFiles([$gallery->file_webp_path], 'covers');
+        GalleryAlbum::deleteFiles([$gallery->file_webp_path, $gallery->before_file_path], 'covers');
 
         // Showreel/video: bersihkan konfigurasi hero layanan & berkas videonya agar tidak tampil basi.
         if ($gallery->category === 'showreel' || $gallery->media_type === 'video') {

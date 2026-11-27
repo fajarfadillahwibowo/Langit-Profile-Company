@@ -1,4 +1,17 @@
 # Autonomous Coding Rules
+# Aturan Wajib Pembaruan VPS: Lindungi Data Produksi
+- Deployment pembaruan hanya boleh memperbarui kode aplikasi dan aset tampilan. Database dan seluruh data produksi VPS adalah sumber kebenaran; jangan menggantinya dengan data lokal.
+- Jangan menghapus, menimpa, mereset, menginisialisasi ulang, atau mengubah data produksi, termasuk data pelanggan, layanan, absensi Education, akun, transaksi, album, foto, video, dan seluruh unggahan.
+- Lindungi `.env`, APP_KEY, database, `storage`, `public/uploads`, direktori media lainnya, serta seluruh persistent volume. Jangan unggah database, storage, unggahan, atau `.env` lokal ke produksi.
+- Sebelum deployment, verifikasi target VPS, direktori aplikasi, persistent mount, dan cadangan database serta seluruh media yang dapat dipulihkan. Siapkan rollback kode yang tidak memulihkan atau menimpa data produksi.
+- Jangan menjalankan migrasi (termasuk migrasi otomatis entrypoint), seeder, `migrate:fresh`, `migrate:refresh`, `db:wipe`, `key:generate`, restore database, sinkronisasi `--delete`, `git clean`, penghapusan volume, atau prune data dalam deployment ini.
+- Periksa entrypoint, Composer scripts, scheduler, worker, dan kode startup sebelum aktivasi. Jangan mengaktifkan pekerjaan pembersihan/penghapusan otomatis yang dapat mengubah atau menghapus data lama.
+- Jika fitur baru memerlukan perubahan skema database, hentikan aktivasi fitur tersebut dan minta izin terpisah; jangan menyimpulkan izin migrasi dari permintaan publish kode.
+- Izin khusus pembaruan ini: pengguna telah menyetujui penambahan skema untuk empat migrasi fitur LangitLens, Google ID, last login, dan bukti pembayaran tanggal 22–25 November 2026, hanya setelah backup terverifikasi. Izin ini tidak mencakup seeder, penghapusan, perubahan nilai kolom lama, migrasi lain, atau migrasi otomatis saat startup.
+- Target aktif yang telah diverifikasi: `/srv/apps/langitcreative.pro`, proyek Compose `langitcreativepro`, container berawalan `langit_`. Folder `/home/langitdev/langitcreative.pro` adalah salinan lama, bukan target deployment aktif. Website/proyek lain pada VPS tidak boleh diubah atau direstart.
+- Izin lanjutan pengguna: aktifkan hanya penghapusan album pelanggan yang telah melewati 90 hari setelah `expired_at`, menggunakan `CLIENT_DELIVERY_AUTO_PURGE_ENABLED=true` dan masa tenggang 90 hari. Perbaiki juga penghapusan file before–after saat admin sengaja menghapus galeri. Pembersihan file yatim dan unggahan sementara tetap nonaktif (`AUTOMATIC_STORAGE_CLEANUP_ENABLED=false`); tidak ada izin menghapus data aktif atau backup.
+- Setelah deployment, verifikasi kesehatan aplikasi dan ketersediaan data/media tanpa membuat, mengubah, atau menghapus data uji di produksi. Jangan menyatakan data aman tanpa hasil verifikasi.
+
 - Kerjakan seluruh instruksi secara tuntas dari awal hingga selesai tanpa menunggu konfirmasi di setiap langkah kecil.
 - Jika ada error, langsung analisa dan perbaiki secara otomatis.
 - Berjalan terus secara otonom hingga seluruh fitur, implementasi, dan pengujian selesai secara menyeluruh tanpa berhenti di tengah pengerjaan.

@@ -89,6 +89,10 @@ return [
     |
     */
 
+    'automatic_cleanup_enabled' => (bool) env('AUTOMATIC_STORAGE_CLEANUP_ENABLED', false),
+
+    'client_delivery_auto_purge_enabled' => (bool) env('CLIENT_DELIVERY_AUTO_PURGE_ENABLED', false),
+
     'client_delivery_purge_grace_days' => (int) env('CLIENT_DELIVERY_PURGE_GRACE_DAYS', 90),
 
 ];

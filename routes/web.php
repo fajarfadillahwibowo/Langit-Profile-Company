@@ -81,6 +81,7 @@ Route::prefix('scan-foto')
         Route::get('/', [ScanFotoController::class, 'scanPage'])->name('index');
         Route::post('/detect', [ScanFotoController::class, 'detectScanFaces'])->name('detect');
         Route::post('/search', [ScanFotoController::class, 'submitFaceScan'])->name('search');
+        Route::post('/refresh', [ScanFotoController::class, 'refreshMatches'])->name('refresh');
 
         Route::get('/hasil', [ScanFotoController::class, 'photos'])->name('photos');
         Route::post('/hasil/{photo}/claim-free', [ScanFotoController::class, 'claimFreePhoto'])->name('photos.claim-free');

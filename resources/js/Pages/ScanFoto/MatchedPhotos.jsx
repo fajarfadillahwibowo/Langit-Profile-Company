@@ -15,6 +15,7 @@ import {
     Gift,
     Download,
     ArrowRight,
+    RefreshCw,
 } from 'lucide-react';
 
 function formatRupiah(num) {
@@ -25,10 +26,30 @@ function formatRupiah(num) {
     }).format(num || 0);
 }
 
-export default function MatchedPhotos({ photos, cartIds, discountRule, freePhotoQuota = 0, freePhotoUsedAt = null }) {
+export default function MatchedPhotos({
+    photos,
+    cartIds,
+    discountRule,
+    freePhotoQuota = 0,
+    freePhotoUsedAt = null,
+    savedScan = null,
+}) {
     const [zoomPhoto, setZoomPhoto] = useState(null);
     const [togglingId, setTogglingId] = useState(null);
     const [claimingId, setClaimingId] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefreshMatches = () => {
+        setRefreshing(true);
+        router.post(
+            '/scan-foto/refresh',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setRefreshing(false),
+            }
+        );
+    };
 
     const toggleSelect = (photoId) => {
         setTogglingId(photoId);
@@ -85,16 +106,19 @@ export default function MatchedPhotos({ photos, cartIds, discountRule, freePhoto
                             {photos.length} Foto Ditemukan
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-300">
-                            Pilih foto yang diinginkan, lalu pesan ke Admin untuk file asli tanpa watermark.
+                            Pilih foto yang diinginkan untuk file asli tanpa watermark.
+                            {savedScan?.scanned_at ? ` (Scan tersimpan: ${savedScan.scanned_at})` : ''}
                         </p>
                     </div>
-                    <Link
-                        href="/scan-foto"
-                        className="relative z-10 min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-[0.98] text-xs font-bold text-cyan-300 border border-white/15 transition-all shrink-0 backdrop-blur-md"
+                    <button
+                        type="button"
+                        onClick={handleRefreshMatches}
+                        disabled={refreshing}
+                        className="relative z-10 min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-[0.98] text-xs font-bold text-cyan-300 border border-white/15 transition-all shrink-0 cursor-pointer disabled:opacity-60"
                     >
-                        <ScanFace className="w-4 h-4" />
-                        <span>Scan Ulang</span>
-                    </Link>
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        <span>{refreshing ? 'Memeriksa...' : 'Cek Foto Terbaru'}</span>
+                    </button>
                 </motion.div>
 
                 {/* Banner Kuota Gratis 1 Foto */}
@@ -196,14 +220,17 @@ export default function MatchedPhotos({ photos, cartIds, discountRule, freePhoto
                         </div>
                         <p className="font-heading text-base font-bold text-white">Foto Anda belum ditemukan</p>
                         <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                            Coba pindai ulang wajah Anda di tempat yang cukup terang agar akurasi AI maksimal.
+                            Data scan 3 wajah Anda sudah tersimpan permanen. Jika Admin baru saja mengunggah foto event, klik tombol di bawah untuk cek ulang.
                         </p>
-                        <Link
-                            href="/scan-foto"
-                            className="min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-xs shadow-lg shadow-sky-500/25"
+                        <button
+                            type="button"
+                            onClick={handleRefreshMatches}
+                            disabled={refreshing}
+                            className="min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-xs shadow-lg shadow-sky-500/25 cursor-pointer disabled:opacity-60"
                         >
-                            <span>Scan Wajah Lagi</span>
-                        </Link>
+                            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            <span>{refreshing ? 'Memeriksa...' : 'Cek Foto Terbaru'}</span>
+                        </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 pb-28">

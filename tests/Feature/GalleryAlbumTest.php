@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class GalleryAlbumTest extends TestCase
@@ -17,6 +18,7 @@ class GalleryAlbumTest extends TestCase
     private function payload(array $extra = []): array
     {
         $service = Service::firstOrCreate(['slug' => 'photography-videography'], ['name' => 'Photo & Video', 'is_active' => true]);
+
         return array_replace(['title' => 'Test album', 'category' => 'wedding', 'service_id' => $service->id,
             'media_type' => 'photo', 'file_webp_path' => '/cover.jpg', 'description' => 'Session description'], $extra);
     }
@@ -56,7 +58,77 @@ class GalleryAlbumTest extends TestCase
             $this->delete('/admin/galleries/'.$gallery->id)->assertRedirect();
             $this->assertFileExists($guard);
         } finally {
-            if (is_file($guard)) { unlink($guard); }
+            if (is_file($guard)) {
+                unlink($guard);
+            }
+        }
+    }
+
+    public function test_deleting_before_after_gallery_removes_both_uploaded_images_and_database_record(): void
+    {
+        $directory = public_path('uploads/galleries');
+        if (! is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+        $suffix = Str::random(16);
+        $before = '/uploads/galleries/before_cleanup_'.$suffix.'.jpg';
+        $after = '/uploads/galleries/after_cleanup_'.$suffix.'.jpg';
+        $beforeFile = public_path(ltrim($before, '/'));
+        $afterFile = public_path(ltrim($after, '/'));
+        file_put_contents($beforeFile, 'before-test-image');
+        file_put_contents($afterFile, 'after-test-image');
+
+        try {
+            $gallery = Gallery::create(array_merge($this->payload([
+                'media_type' => 'before_after',
+                'before_file_path' => $before,
+                'file_webp_path' => $after,
+            ]), ['slug' => 'before-after-cleanup-'.$suffix]));
+
+            $this->delete('/admin/galleries/'.$gallery->id)->assertRedirect();
+
+            $this->assertDatabaseMissing('galleries', ['id' => $gallery->id]);
+            $this->assertFileDoesNotExist($beforeFile);
+            $this->assertFileDoesNotExist($afterFile);
+        } finally {
+            foreach ([$beforeFile, $afterFile] as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
+    }
+
+    public function test_deleting_gallery_never_follows_before_image_traversal_or_external_urls(): void
+    {
+        $suffix = Str::random(16);
+        $guard = public_path('uploads/galleries/before_guard_'.$suffix.'.jpg');
+        if (! is_dir(dirname($guard))) {
+            mkdir(dirname($guard), 0775, true);
+        }
+        file_put_contents($guard, 'protected-test-image');
+
+        try {
+            foreach ([
+                '/uploads/galleries/../galleries/before_guard_'.$suffix.'.jpg',
+                'https://other.example/uploads/galleries/before_guard_'.$suffix.'.jpg',
+            ] as $index => $before) {
+                $gallery = Gallery::create(array_merge($this->payload([
+                    'media_type' => 'before_after',
+                    'before_file_path' => $before,
+                    'file_webp_path' => '/cover.jpg',
+                ]), ['slug' => 'before-guard-'.$suffix.'-'.$index]));
+
+                $this->delete('/admin/galleries/'.$gallery->id)->assertRedirect();
+
+                $this->assertDatabaseMissing('galleries', ['id' => $gallery->id]);
+                $this->assertFileExists($guard);
+                $this->assertSame('protected-test-image', file_get_contents($guard));
+            }
+        } finally {
+            if (is_file($guard)) {
+                unlink($guard);
+            }
         }
     }
 

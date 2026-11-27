@@ -48,7 +48,9 @@ class HandleInertiaRequests extends Middleware
             if (in_array($user->role, ['admin', 'superadmin'], true)) {
                 $pendingRequestsCount = \App\Models\AiPhotoRequest::where('status', 'WAITING_MANUAL_PAYMENT')->count();
             } elseif ($user->role === 'customer') {
-                $matchedIds = $request->session()->get('matched_photo_ids');
+                $hydrated = app(\App\Services\LangitLens\CustomerFaceProfileService::class)
+                    ->ensureSessionHydrated($request, $user);
+                $matchedIds = $hydrated['matched_ids'] ?? null;
                 $cartIds = $request->session()->get('customer_cart_ids', []);
                 $customerBadges = [
                     'hasScanned' => is_array($matchedIds),
