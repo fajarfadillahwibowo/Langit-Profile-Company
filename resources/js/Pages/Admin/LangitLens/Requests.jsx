@@ -41,6 +41,8 @@ function formatBytes(bytes) {
 
 export default function Requests({ requests, statusFilter, discountRule }) {
     const [notesMap, setNotesMap] = useState({});
+    const [originalFilesMap, setOriginalFilesMap] = useState({});
+    const [sendingId, setSendingId] = useState(null);
     const [copiedRequestId, setCopiedRequestId] = useState(null);
     const [viewingProofReq, setViewingProofReq] = useState(null);
     const [paymentConfigOpen, setPaymentConfigOpen] = useState(false);
@@ -133,23 +135,33 @@ export default function Requests({ requests, statusFilter, discountRule }) {
     ];
 
     const handleSendOriginals = (req) => {
-        if (
-            !confirm(
-                `Konfirmasi pembayaran & kirim foto asli tanpa watermark untuk ${req.request_code} ke ${req.customer?.name}?`
-            )
-        ) {
+        const attachedFiles = originalFilesMap[req.id] || [];
+        const confirmText = attachedFiles.length > 0
+            ? `Konfirmasi pembayaran & kirim ${attachedFiles.length} file ukuran asli penuh untuk ${req.request_code} ke ${req.customer?.name}?`
+            : `Konfirmasi pembayaran & kirim foto tanpa watermark untuk ${req.request_code} ke ${req.customer?.name}?`;
+
+        if (!confirm(confirmText)) {
             return;
         }
+
+        const formData = new FormData();
+        formData.append('admin_notes', notesMap[req.id] || '');
+        attachedFiles.forEach((f) => formData.append('original_files[]', f));
+
+        setSendingId(req.id);
         router.post(
             `/admin/langitlens/requests/${req.id}/send-originals`,
-            { admin_notes: notesMap[req.id] || '' },
+            formData,
             {
+                forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    setOriginalFilesMap((prev) => ({ ...prev, [req.id]: [] }));
                     if (viewingProofReq?.id === req.id) {
                         setViewingProofReq(null);
                     }
                 },
+                onFinish: () => setSendingId(null),
             }
         );
     };
@@ -565,32 +577,84 @@ export default function Requests({ requests, statusFilter, discountRule }) {
                                         </div>
 
                                         {req.status === 'WAITING_MANUAL_PAYMENT' && (
-                                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Catatan admin (opsional)..."
-                                                    value={notesMap[req.id] || ''}
-                                                    onChange={(e) =>
-                                                        setNotesMap((prev) => ({ ...prev, [req.id]: e.target.value }))
-                                                    }
-                                                    className="min-h-11 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-sky-400"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleSendOriginals(req)}
-                                                    className="min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold text-xs transition-all cursor-pointer"
-                                                >
-                                                    <Send className="w-4 h-4" />
-                                                    <span>Konfirmasi & Kirim Foto Asli</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleCancel(req)}
-                                                    className="min-h-11 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 active:scale-[0.98] text-rose-300 font-semibold text-xs transition-all cursor-pointer"
-                                                >
-                                                    <XCircle className="w-4 h-4" />
-                                                    <span>Tolak</span>
-                                                </button>
+                                            <div className="flex flex-col gap-2 w-full md:w-auto">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <label className="min-h-10 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 text-sky-200 text-xs font-semibold cursor-pointer transition-colors">
+                                                        <Upload className="w-3.5 h-3.5 shrink-0" />
+                                                        <span>
+                                                            {(originalFilesMap[req.id]?.length || 0) > 0
+                                                                ? `${originalFilesMap[req.id].length} File Asli Dipilih`
+                                                                : 'Lampirkan File Asli Penuh'}
+                                                        </span>
+                                                        <input
+                                                            type="file"
+                                                            multiple
+                                                            accept="image/*,.heic,.heif,.avif,.tif,.tiff,.raw,.dng"
+                                                            className="hidden"
+                                                            onChange={(e) =>
+                                                                setOriginalFilesMap((prev) => ({
+                                                                    ...prev,
+                                                                    [req.id]: Array.from(e.target.files || []),
+                                                                }))
+                                                            }
+                                                        />
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopyForLightroom(req)}
+                                                        className="min-h-10 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                                                        title="Salin daftar nama file untuk dicari di Lightroom/PC"
+                                                    >
+                                                        {copiedRequestId === req.id ? (
+                                                            <>
+                                                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                                <span>Tersalin</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-3.5 h-3.5 text-cyan-400" />
+                                                                <span>Salin Nama File</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Catatan admin (opsional)..."
+                                                        value={notesMap[req.id] || ''}
+                                                        onChange={(e) =>
+                                                            setNotesMap((prev) => ({ ...prev, [req.id]: e.target.value }))
+                                                        }
+                                                        className="min-h-11 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-sky-400"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        disabled={sendingId === req.id}
+                                                        onClick={() => handleSendOriginals(req)}
+                                                        className="min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold text-xs transition-all cursor-pointer disabled:opacity-60"
+                                                    >
+                                                        {sendingId === req.id ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            <Send className="w-4 h-4" />
+                                                        )}
+                                                        <span>
+                                                            {sendingId === req.id
+                                                                ? 'Mengirim...'
+                                                                : 'Konfirmasi & Kirim Foto Asli'}
+                                                        </span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={sendingId === req.id}
+                                                        onClick={() => handleCancel(req)}
+                                                        className="min-h-11 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 active:scale-[0.98] text-rose-300 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
+                                                    >
+                                                        <XCircle className="w-4 h-4" />
+                                                        <span>Tolak</span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
 

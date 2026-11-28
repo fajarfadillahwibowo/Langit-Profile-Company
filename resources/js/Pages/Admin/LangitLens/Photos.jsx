@@ -17,7 +17,103 @@ import {
     Percent,
     ChevronDown,
     ChevronUp,
+    SlidersHorizontal,
+    ShieldCheck,
 } from 'lucide-react';
+
+async function computeFileSha256(file) {
+    try {
+        if (!window.crypto?.subtle) return '';
+        const buf = await file.arrayBuffer();
+        const hashBuf = await window.crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(hashBuf))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+    } catch {
+        return '';
+    }
+}
+
+async function compressPhotoBeforeUpload(file, { enabled, maxMb, maxDimension, quality }) {
+    const sourceSize = file.size || 0;
+    const maxBytes = Math.round(Math.min(2, Math.max(0.3, Number(maxMb) || 2)) * 1024 * 1024);
+
+    if (!enabled) {
+        return { uploadFile: file, sourceSize, compressedSize: sourceSize, wasCompressed: false };
+    }
+
+    const browserDecodable = /^image\/(jpeg|jpg|png|webp|bmp|gif|avif)$/i.test(file.type || '');
+    if (!browserDecodable) {
+        return { uploadFile: file, sourceSize, compressedSize: sourceSize, wasCompressed: false };
+    }
+
+    try {
+        const objectUrl = URL.createObjectURL(file);
+        const img = await new Promise((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = objectUrl;
+        });
+        URL.revokeObjectURL(objectUrl);
+
+        const origW = img.naturalWidth || img.width;
+        const origH = img.naturalHeight || img.height;
+        if (!origW || !origH) {
+            return { uploadFile: file, sourceSize, compressedSize: sourceSize, wasCompressed: false };
+        }
+
+        let curMaxSide = Math.min(Math.max(1000, Number(maxDimension) || 2400), Math.max(origW, origH));
+        let curQuality = Math.min(0.95, Math.max(0.68, (Number(quality) || 88) / 100));
+        let bestBlob = null;
+
+        for (let attempt = 0; attempt < 7; attempt++) {
+            const scale = Math.min(1, curMaxSide / Math.max(origW, origH));
+            const dstW = Math.max(1, Math.round(origW * scale));
+            const dstH = Math.max(1, Math.round(origH * scale));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = dstW;
+            canvas.height = dstH;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, dstW, dstH);
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', curQuality));
+            if (!blob) break;
+            bestBlob = blob;
+
+            if (blob.size <= maxBytes) {
+                break;
+            }
+
+            if (curQuality > 0.70) {
+                curQuality = Math.max(0.68, curQuality - 0.06);
+            } else {
+                curMaxSide = Math.max(960, Math.round(curMaxSide * 0.84));
+            }
+        }
+
+        if (bestBlob && (bestBlob.size < sourceSize || sourceSize > maxBytes)) {
+            const baseStem = (file.name || 'photo').replace(/\.[^.]+$/, '');
+            const compressedFile = new File([bestBlob], `${baseStem}.jpg`, {
+                type: 'image/jpeg',
+                lastModified: file.lastModified || Date.now(),
+            });
+            return {
+                uploadFile: compressedFile,
+                sourceSize,
+                compressedSize: compressedFile.size,
+                wasCompressed: true,
+            };
+        }
+    } catch {
+        // Fallback: biarkan server yang melakukan kompresi bila browser gagal decode
+    }
+
+    return { uploadFile: file, sourceSize, compressedSize: sourceSize, wasCompressed: false };
+}
 
 function formatBytes(bytes) {
     if (!bytes) return '0 B';
@@ -42,6 +138,7 @@ export default function Photos({
     needsUpgradeCount,
     defaultPrice,
     discountRule,
+    oversizedPhotosCount = 0,
     insightFaceReady,
 }) {
     const totalPhotosCount = photosPaginator?.total ?? 0;
@@ -50,6 +147,35 @@ export default function Photos({
     const [uploadPrice, setUploadPrice] = useState(defaultPrice || 25000);
     const [uploading, setUploading] = useState(false);
     const [discountOpen, setDiscountOpen] = useState(false);
+    const [compressionOpen, setCompressionOpen] = useState(false);
+    const [compressingExisting, setCompressingExisting] = useState(false);
+
+    const compressionForm = useForm({
+        compress_uploads_enabled: true,
+        compress_max_mb: Number(discountRule?.compress_max_mb ?? 2),
+        compress_max_dimension: Number(discountRule?.compress_max_dimension ?? 2400),
+        compress_quality: Number(discountRule?.compress_quality ?? 88),
+    });
+
+    const handleSaveCompression = (e) => {
+        e.preventDefault();
+        compressionForm.post('/admin/langitlens/compression', {
+            preserveScroll: true,
+            onSuccess: () => setCompressionOpen(false),
+        });
+    };
+
+    const handleCompressExisting = () => {
+        setCompressingExisting(true);
+        router.post(
+            '/admin/langitlens/photos/compress-existing',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setCompressingExisting(false),
+            }
+        );
+    };
 
     const discountForm = useForm({
         name: discountRule?.name ?? 'Diskon Paket Foto',
@@ -79,6 +205,7 @@ export default function Photos({
     const [uploadStats, setUploadStats] = useState({
         total: 0,
         done: 0,
+        duplicates: 0,
         failed: 0,
         startedAt: 0,
     });
@@ -109,12 +236,15 @@ export default function Photos({
         return faceApiModuleRef.current;
     };
 
-    const uploadSingleWithRetry = async (file, priceValue) => {
+    const uploadSingleWithRetry = async (file, priceValue, compressionCfg) => {
+        const sourceHash = await computeFileSha256(file);
+        const { uploadFile, sourceSize, compressedSize } = await compressPhotoBeforeUpload(file, compressionCfg);
+
         let faces = [];
         if (!insightFaceReady) {
             try {
                 const mod = await getClientFaceApi();
-                faces = await mod.extractFacesFromFile(file);
+                faces = await mod.extractFacesFromFile(uploadFile);
             } catch {
                 // Tetap unggah foto meski deteksi browser gagal
             }
@@ -124,7 +254,12 @@ export default function Photos({
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const formData = new FormData();
-                formData.append('photo', file);
+                formData.append('photo', uploadFile);
+                formData.append('original_filename', file.name);
+                formData.append('source_size_bytes', String(sourceSize));
+                if (sourceHash) {
+                    formData.append('source_hash', sourceHash);
+                }
                 formData.append('price', String(priceValue));
                 if (faces.length > 0) {
                     formData.append('faces', JSON.stringify(faces));
@@ -134,12 +269,12 @@ export default function Photos({
                     headers: { 'Content-Type': 'multipart/form-data' },
                     timeout: 120000,
                 });
-                return response.data;
+                return { ...response.data, sourceSize, compressedSize };
             } catch (err) {
                 lastError = err;
                 const status = err.response?.status;
-                // Jangan ulangi jika error validasi (422)
-                if (status === 422) break;
+                // Jangan ulangi jika duplikat (409) atau error validasi (422)
+                if (status === 409 || status === 422) break;
                 if (attempt < MAX_RETRIES) {
                     await new Promise((r) => setTimeout(r, attempt * 700));
                 }
@@ -151,28 +286,58 @@ export default function Photos({
     const runUploadQueue = async (files) => {
         if (files.length === 0) return;
 
+        // Cegah nama file duplikat di dalam satu batch unggahan
+        const uniqueFiles = [];
+        const seenInBatch = new Set();
+        let batchDuplicates = 0;
+        const initialDupLogs = [];
+
+        for (const f of files) {
+            const key = (f.name || '').trim().toLowerCase();
+            if (key && seenInBatch.has(key)) {
+                batchDuplicates++;
+                initialDupLogs.push({
+                    id: `dup-${batchDuplicates}-${Date.now()}`,
+                    name: f.name,
+                    size: f.size,
+                    status: 'duplicate',
+                    errorMsg: 'Nama file ganda di pilihan yang sama',
+                });
+            } else {
+                if (key) seenInBatch.add(key);
+                uniqueFiles.push(f);
+            }
+        }
+
         setUploading(true);
         setFailedFiles([]);
         failedRef.current = [];
-        setRecentLogs([]);
+        setRecentLogs(initialDupLogs.slice(0, 14));
         setUploadStats({
             total: files.length,
             done: 0,
+            duplicates: batchDuplicates,
             failed: 0,
             startedAt: Date.now(),
         });
 
         let cursor = 0;
         const priceSnap = uploadPrice;
+        const compressionSnap = {
+            enabled: true,
+            maxMb: Math.min(2, Math.max(0.3, Number(compressionForm.data.compress_max_mb) || 2)),
+            maxDimension: Math.min(4000, Math.max(1000, Number(compressionForm.data.compress_max_dimension) || 2400)),
+            quality: Math.min(95, Math.max(65, Number(compressionForm.data.compress_quality) || 88)),
+        };
 
         const worker = async () => {
             while (true) {
                 const idx = cursor++;
-                if (idx >= files.length) break;
+                if (idx >= uniqueFiles.length) break;
 
-                const file = files[idx];
+                const file = uniqueFiles[idx];
                 try {
-                    const data = await uploadSingleWithRetry(file, priceSnap);
+                    const data = await uploadSingleWithRetry(file, priceSnap, compressionSnap);
                     if (data?.photo) {
                         // Tampilkan maks 48 kartu terbaru di halaman agar DOM tetap ringan saat upload 1000+ foto
                         setPhotos((prev) => [data.photo, ...prev].slice(0, 48));
@@ -183,30 +348,46 @@ export default function Photos({
                         {
                             id: `${idx}-${Date.now()}`,
                             name: file.name,
-                            size: file.size,
-                            ok: true,
+                            size: data?.photo?.original_size_bytes ?? data?.compressedSize ?? file.size,
+                            sourceSize: data?.sourceSize ?? file.size,
+                            status: 'ok',
                             faces: data?.photo?.face_count ?? 0,
                         },
                         ...prev.slice(0, 14),
                     ]);
                 } catch (err) {
-                    failedRef.current.push(file);
-                    setUploadStats((s) => ({ ...s, failed: s.failed + 1 }));
-                    setRecentLogs((prev) => [
-                        {
-                            id: `${idx}-${Date.now()}`,
-                            name: file.name,
-                            size: file.size,
-                            ok: false,
-                            errorMsg: err.response?.data?.message || err.message,
-                        },
-                        ...prev.slice(0, 14),
-                    ]);
+                    const isDup = err.response?.status === 409 && err.response?.data?.duplicate;
+                    if (isDup) {
+                        setUploadStats((s) => ({ ...s, duplicates: s.duplicates + 1 }));
+                        setRecentLogs((prev) => [
+                            {
+                                id: `${idx}-${Date.now()}`,
+                                name: file.name,
+                                size: file.size,
+                                status: 'duplicate',
+                                errorMsg: 'Sudah ada di galeri',
+                            },
+                            ...prev.slice(0, 14),
+                        ]);
+                    } else {
+                        failedRef.current.push(file);
+                        setUploadStats((s) => ({ ...s, failed: s.failed + 1 }));
+                        setRecentLogs((prev) => [
+                            {
+                                id: `${idx}-${Date.now()}`,
+                                name: file.name,
+                                size: file.size,
+                                status: 'failed',
+                                errorMsg: err.response?.data?.message || err.message,
+                            },
+                            ...prev.slice(0, 14),
+                        ]);
+                    }
                 }
             }
         };
 
-        const workerCount = Math.min(UPLOAD_CONCURRENCY, files.length);
+        const workerCount = Math.min(UPLOAD_CONCURRENCY, Math.max(1, uniqueFiles.length));
         await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
         setFailedFiles([...failedRef.current]);
@@ -330,7 +511,7 @@ export default function Photos({
         });
     };
 
-    const processedTotal = uploadStats.done + uploadStats.failed;
+    const processedTotal = uploadStats.done + uploadStats.duplicates + uploadStats.failed;
     const progressPercent =
         uploadStats.total > 0 ? Math.round((processedTotal / uploadStats.total) * 100) : 0;
 
@@ -517,6 +698,154 @@ export default function Photos({
                     )}
                 </div>
 
+                {/* Panel Aturan Kompresi Foto & Anti-Duplikat (Seperti Fotoyu) */}
+                <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/15">
+                    <button
+                        type="button"
+                        onClick={() => setCompressionOpen((prev) => !prev)}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    >
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                                <SlidersHorizontal className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-xs sm:text-sm font-bold text-white truncate">
+                                    Aturan Kompresi Foto & Anti-Duplikat
+                                </p>
+                                <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+                                    Kompres Wajib Aktif: Maks {compressionForm.data.compress_max_mb} MB •{' '}
+                                    {compressionForm.data.compress_max_dimension}px (Jernih) • Tolak Duplikat Aktif
+                                </p>
+                            </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-semibold text-cyan-300 shrink-0">
+                            <span>{compressionOpen ? 'Tutup' : 'Atur'}</span>
+                            {compressionOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </span>
+                    </button>
+
+                    {oversizedPhotosCount > 0 && (
+                        <div className="px-4 sm:px-5 py-3 border-t border-amber-500/20 bg-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div className="flex items-start sm:items-center gap-2 text-xs text-amber-200">
+                                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+                                <span>
+                                    Ditemukan <strong>{oversizedPhotosCount} foto</strong> di galeri yang ukurannya masih di atas{' '}
+                                    <strong>{compressionForm.data.compress_max_mb} MB</strong> (dari unggahan sebelumnya).
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCompressExisting}
+                                disabled={compressingExisting}
+                                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all cursor-pointer disabled:opacity-60 shrink-0"
+                            >
+                                {compressingExisting ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                )}
+                                <span>
+                                    {compressingExisting
+                                        ? 'Mengompres...'
+                                        : `Kompres ${oversizedPhotosCount} Foto Sekarang`}
+                                </span>
+                            </button>
+                        </div>
+                    )}
+
+                    {compressionOpen && (
+                        <form
+                            onSubmit={handleSaveCompression}
+                            className="px-4 sm:px-5 pb-5 pt-3 border-t border-slate-800 space-y-4"
+                        >
+                            <div className="flex items-center justify-between gap-4 p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25">
+                                <div>
+                                    <span className="block text-xs sm:text-sm font-semibold text-cyan-200">
+                                        Kompresi Foto Otomatis Sebelum Upload ke VPS (Wajib Aktif)
+                                    </span>
+                                    <span className="block text-[11px] text-slate-300">
+                                        Setiap foto yang diunggah ke galeri otomatis dikompres &le; {compressionForm.data.compress_max_mb} MB sebelum disimpan ke database &amp; disk VPS agar hemat ruang namun tetap jernih.
+                                    </span>
+                                </div>
+                                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold shrink-0">
+                                    AKTIF
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                                        Maksimal Ukuran Hasil Kompres (MB)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0.3"
+                                        max="2"
+                                        step="0.1"
+                                        value={compressionForm.data.compress_max_mb}
+                                        onChange={(e) => compressionForm.setData('compress_max_mb', Number(e.target.value))}
+                                        className="w-full min-h-11 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">Batas maksimal 2 MB per foto.</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                                        Dimensi Maksimal (px)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1000"
+                                        max="4000"
+                                        step="100"
+                                        value={compressionForm.data.compress_max_dimension}
+                                        onChange={(e) => compressionForm.setData('compress_max_dimension', Number(e.target.value))}
+                                        className="w-full min-h-11 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">Rekomendasi 2400px (tetap tajam).</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                                        Kualitas Awal (%)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="65"
+                                        max="95"
+                                        step="1"
+                                        value={compressionForm.data.compress_quality}
+                                        onChange={(e) => compressionForm.setData('compress_quality', Number(e.target.value))}
+                                        className="w-full min-h-11 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">Otomatis turun bertahap jika &gt; 2 MB.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-200">
+                                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                <span>
+                                    <strong>Anti-Duplikat Aktif:</strong> Foto dengan nama file atau isi yang sudah ada di galeri otomatis ditolak agar tidak memakan ruang VPS. File ukuran asli penuh untuk pelanggan yang sudah bayar dapat dikirim saat konfirmasi di menu <strong>Bukti Bayar &amp; Pesanan</strong>.
+                                </span>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={compressionForm.processing}
+                                    className="w-full sm:w-auto min-h-11 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:scale-[0.98] text-slate-950 font-bold text-xs sm:text-sm transition-all cursor-pointer disabled:opacity-60"
+                                >
+                                    {compressionForm.processing ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Save className="w-4 h-4" />
+                                    )}
+                                    <span>{compressionForm.processing ? 'Menyimpan...' : 'Simpan Aturan Kompresi'}</span>
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+
                 {/* Area Upload Massal Tanpa Batas */}
                 <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
@@ -592,10 +921,10 @@ export default function Photos({
                                 <Loader2 className="w-9 h-9 text-sky-400 animate-spin mx-auto" />
                                 <div>
                                     <p className="text-sm font-bold text-white">
-                                        Memproses {processedTotal} / {uploadStats.total} Foto ({progressPercent}%)
+                                        Mengompres &amp; Mengunggah {processedTotal} / {uploadStats.total} Foto ({progressPercent}%)
                                     </p>
                                     <p className="text-xs text-slate-400 mt-0.5">
-                                        Berhasil: {uploadStats.done} • Gagal: {uploadStats.failed} • Jangan tutup halaman ini
+                                        Berhasil: {uploadStats.done} • Duplikat Dilewati: {uploadStats.duplicates} • Gagal: {uploadStats.failed}
                                     </p>
                                 </div>
                                 <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
@@ -653,10 +982,13 @@ export default function Photos({
                                 </div>
                             )}
 
-                            {!uploading && uploadStats.failed === 0 && uploadStats.done > 0 && (
+                            {!uploading && uploadStats.failed === 0 && (uploadStats.done > 0 || uploadStats.duplicates > 0) && (
                                 <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200">
                                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                    <span>Semua {uploadStats.done} foto berhasil diunggah dan diproses.</span>
+                                    <span>
+                                        Selesai: {uploadStats.done} foto terkompresi &amp; tersimpan
+                                        {uploadStats.duplicates > 0 ? ` • ${uploadStats.duplicates} duplikat otomatis dilewati` : ''}.
+                                    </span>
                                 </div>
                             )}
 
@@ -669,11 +1001,19 @@ export default function Photos({
                                         >
                                             <div className="min-w-0">
                                                 <p className="font-medium text-white truncate">{item.name}</p>
-                                                <p className="text-[11px] text-slate-400">{formatBytes(item.size)}</p>
+                                                <p className="text-[11px] text-slate-400">
+                                                    {item.status === 'ok' && item.sourceSize && item.sourceSize > item.size
+                                                        ? `${formatBytes(item.sourceSize)} → ${formatBytes(item.size)}`
+                                                        : formatBytes(item.size)}
+                                                </p>
                                             </div>
-                                            {item.ok ? (
+                                            {item.status === 'ok' ? (
                                                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold shrink-0">
                                                     Selesai ({item.faces} wajah)
+                                                </span>
+                                            ) : item.status === 'duplicate' ? (
+                                                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold shrink-0">
+                                                    Duplikat (Dilewati)
                                                 </span>
                                             ) : (
                                                 <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 font-semibold shrink-0 truncate max-w-44">

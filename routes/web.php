@@ -235,11 +235,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/photos', [LangitLensAdminController::class, 'photos'])->name('photos');
             Route::post('/photos', [LangitLensAdminController::class, 'storePhoto'])->name('photos.store');
             Route::post('/photos/reindex-all', [LangitLensAdminController::class, 'reindexAllInsightFace'])->name('photos.reindex-all');
+            Route::post('/photos/compress-existing', [LangitLensAdminController::class, 'compressExistingPhotos'])->name('photos.compress-existing');
             Route::delete('/photos/clear-all', [LangitLensAdminController::class, 'destroyAllPhotos'])->name('photos.clear-all');
             Route::get('/photos/{photo}/clean-source', [LangitLensAdminController::class, 'cleanSource'])->name('photos.clean-source');
             Route::patch('/photos/{photo}', [LangitLensAdminController::class, 'updatePrice'])->name('photos.update');
             Route::post('/photos/{photo}/reindex-faces', [LangitLensAdminController::class, 'reindexFaces'])->name('photos.reindex');
             Route::delete('/photos/{photo}', [LangitLensAdminController::class, 'destroyPhoto'])->name('photos.destroy');
+            Route::match(['put', 'post'], '/compression', [LangitLensAdminController::class, 'updateCompressionRules'])->name('compression.update');
             Route::match(['put', 'post'], '/discount', [LangitLensAdminController::class, 'updateDiscount'])->name('discount.update');
             Route::get('/requests', [LangitLensAdminController::class, 'requests'])->name('requests');
             Route::get('/requests/{photoRequest}/payment-proof', [LangitLensAdminController::class, 'paymentProof'])->name('requests.payment-proof');

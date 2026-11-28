@@ -21,6 +21,10 @@ class AiDiscountRule extends Model
         'bank_account_number',
         'bank_account_holder',
         'is_active',
+        'compress_uploads_enabled',
+        'compress_max_mb',
+        'compress_max_dimension',
+        'compress_quality',
     ];
 
     protected $appends = [
@@ -35,6 +39,10 @@ class AiDiscountRule extends Model
             'discount_percentage' => 'float',
             'default_photo_price' => 'float',
             'is_active' => 'boolean',
+            'compress_uploads_enabled' => 'boolean',
+            'compress_max_mb' => 'float',
+            'compress_max_dimension' => 'integer',
+            'compress_quality' => 'integer',
         ];
     }
 

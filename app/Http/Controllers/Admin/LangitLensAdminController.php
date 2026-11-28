@@ -47,10 +47,15 @@ class LangitLensAdminController extends Controller
                 'requested_at' => $req->requested_at?->format('d M Y H:i'),
             ]);
 
+        $totalCompressedBytes = (int) AiPhoto::sum('original_size_bytes');
+        $totalSourceBytes = (int) (AiPhoto::selectRaw('COALESCE(SUM(COALESCE(source_size_bytes, original_size_bytes)), 0) as total')->value('total') ?? 0);
+
         return Inertia::render('Admin/LangitLens/Dashboard', [
             'stats' => [
                 'totalPhotos' => $totalPhotos,
-                'totalOriginalBytes' => (int) AiPhoto::sum('original_size_bytes'),
+                'totalOriginalBytes' => $totalCompressedBytes,
+                'totalCompressedBytes' => $totalCompressedBytes,
+                'totalSourceBytes' => $totalSourceBytes,
                 'totalPreviewBytes' => (int) AiPhoto::sum('preview_size_bytes'),
                 'totalIndexedFaces' => $totalIndexedFaces,
                 'totalCustomers' => $totalCustomers,
@@ -84,10 +89,15 @@ class LangitLensAdminController extends Controller
                 'created_at' => $photo->created_at?->format('d M Y H:i'),
             ]);
 
+        $maxMb = max(0.3, min(2.0, (float) ($rule->compress_max_mb ?? 2.0)));
+        $maxBytes = (int) round($maxMb * 1024 * 1024);
+        $oversizedPhotosCount = AiPhoto::where('original_size_bytes', '>', $maxBytes)->count();
+
         return Inertia::render('Admin/LangitLens/Photos', [
             'photos' => $photos,
             'defaultPrice' => $rule->default_photo_price,
             'discountRule' => $rule,
+            'oversizedPhotosCount' => $oversizedPhotosCount,
             'insightFaceReady' => $insightFace->isHealthy(),
         ])->with('adminPortal', app(AdminDashboardController::class)->portalProps());
     }
@@ -129,13 +139,51 @@ class LangitLensAdminController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
             'title' => ['nullable', 'string', 'max:255'],
             'faces' => ['nullable', 'string'],
+            'original_filename' => ['nullable', 'string', 'max:255'],
+            'source_size_bytes' => ['nullable', 'integer', 'min:0'],
+            'source_hash' => ['nullable', 'string', 'max:64'],
         ]);
 
         $file = $request->file('photo');
         $rule = AiDiscountRule::current();
         $price = $request->filled('price') ? (float) $request->input('price') : $rule->default_photo_price;
 
-        $processed = $imageService->processUpload($file, null, null, true);
+        $originalName = trim((string) ($request->input('original_filename') ?: $file->getClientOriginalName()));
+        $fileHash = trim((string) ($request->input('source_hash') ?: hash_file('sha256', $file->getRealPath())));
+
+        // Aturan Anti-Duplikat: tolak jika nama file atau isi foto sudah ada di galeri
+        $isDuplicateName = $originalName !== ''
+            && AiPhoto::whereRaw('LOWER(original_filename) = ?', [strtolower($originalName)])->exists();
+        $isDuplicateHash = $fileHash !== ''
+            && AiPhoto::where('file_hash', $fileHash)->exists();
+
+        if ($isDuplicateName || $isDuplicateHash) {
+            return response()->json([
+                'duplicate' => true,
+                'message' => "Foto \"{$originalName}\" sudah ada di galeri (duplikat ditolak agar hemat penyimpanan VPS).",
+            ], 409);
+        }
+
+        // Kompresi galeri selalu wajib aktif (maks 2 MB) agar penyimpanan VPS tidak membengkak
+        $compressEnabled = true;
+        $maxMb = max(0.3, min(2.0, (float) ($rule->compress_max_mb ?? 2.0)));
+        $maxBytes = (int) round($maxMb * 1024 * 1024);
+        $maxDimension = max(1000, min(4000, (int) ($rule->compress_max_dimension ?? 2400)));
+        $quality = max(65, min(95, (int) ($rule->compress_quality ?? 88)));
+        $sourceSizeBytes = $request->filled('source_size_bytes') ? (int) $request->input('source_size_bytes') : null;
+
+        $processed = $imageService->processUpload(
+            $file,
+            null,
+            null,
+            true,
+            $originalName,
+            $compressEnabled,
+            $maxBytes,
+            $maxDimension,
+            $quality,
+            $sourceSizeBytes
+        );
         $cleanAiTempPath = $processed['clean_ai_temp_path'] ?? null;
 
         $facesData = [];
@@ -163,16 +211,18 @@ class LangitLensAdminController extends Controller
             }
         }
 
-        $photo = DB::transaction(function () use ($request, $processed, $price, $facesData) {
+        $photo = DB::transaction(function () use ($request, $processed, $price, $facesData, $fileHash) {
             $photo = AiPhoto::create([
                 'uploaded_by_admin_id' => $request->user()->id,
                 'title' => $request->input('title') ?: pathinfo($processed['original_filename'], PATHINFO_FILENAME),
                 'original_filename' => $processed['original_filename'],
+                'file_hash' => $fileHash ?: null,
                 'original_file_path' => $processed['original_file_path'],
                 'preview_watermarked_path' => $processed['preview_watermarked_path'],
                 'original_width' => $processed['original_width'],
                 'original_height' => $processed['original_height'],
                 'original_size_bytes' => $processed['original_size_bytes'],
+                'source_size_bytes' => $processed['source_size_bytes'],
                 'preview_size_bytes' => $processed['preview_size_bytes'],
                 'price' => $price,
                 'is_active' => true,
@@ -278,15 +328,22 @@ class LangitLensAdminController extends Controller
         ]);
     }
 
-    public function reindexAllInsightFace(InsightFaceClient $insightFace): JsonResponse
+    public function reindexAllInsightFace(Request $request, InsightFaceClient $insightFace): JsonResponse|RedirectResponse
     {
         @set_time_limit(600);
+        @ini_set('memory_limit', '1024M');
+
+        $wantsJson = $request->expectsJson() && ! $request->header('X-Inertia');
 
         if (! $insightFace->isHealthy()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'InsightFace server belum aktif di port 8001.',
-            ], 503);
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'InsightFace server belum aktif di port 8001.',
+                ], 503);
+            }
+
+            return back()->with('error', 'Mesin Deteksi Wajah (InsightFace) belum aktif di port 8001.');
         }
 
         $processed = 0;
@@ -324,11 +381,15 @@ class LangitLensAdminController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'processed_photos' => $processed,
-            'total_faces' => $totalFaces,
-        ]);
+        if ($wantsJson) {
+            return response()->json([
+                'success' => true,
+                'processed_photos' => $processed,
+                'total_faces' => $totalFaces,
+            ]);
+        }
+
+        return back()->with('success', "Berhasil memindai ulang {$processed} foto ({$totalFaces} wajah terdeteksi dengan InsightFace).");
     }
 
     public function destroyPhoto(AiPhoto $photo): RedirectResponse
@@ -373,6 +434,88 @@ class LangitLensAdminController extends Controller
             'success',
             "Semua {$result['deleted_photos']} foto galeri & seluruh file fisik di disk server ({$freedLabel}) berhasil dihapus tuntas. Galeri siap untuk event baru."
         );
+    }
+
+    public function updateCompressionRules(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'compress_uploads_enabled' => ['nullable', 'boolean'],
+            'compress_max_mb' => ['required', 'numeric', 'min:0.3', 'max:2'],
+            'compress_max_dimension' => ['required', 'integer', 'min:1000', 'max:4000'],
+            'compress_quality' => ['required', 'integer', 'min:65', 'max:95'],
+        ], [
+            'compress_max_mb.max' => 'Batas kompresi galeri maksimal 2 MB agar penyimpanan VPS tetap hemat.',
+            'compress_max_mb.min' => 'Batas kompresi minimal 0.3 MB agar foto tetap jernih.',
+        ]);
+
+        $rule = AiDiscountRule::current();
+        $rule->update([
+            'compress_uploads_enabled' => true,
+            'compress_max_mb' => $validated['compress_max_mb'],
+            'compress_max_dimension' => $validated['compress_max_dimension'],
+            'compress_quality' => $validated['compress_quality'],
+        ]);
+
+        return back()->with('success', 'Aturan kompresi wajib aktif (maks '.number_format((float) $validated['compress_max_mb'], 1).' MB) berhasil disimpan.');
+    }
+
+    public function compressExistingPhotos(AiImageProcessingService $imageService): RedirectResponse
+    {
+        @set_time_limit(600);
+        @ini_set('memory_limit', '1024M');
+
+        $rule = AiDiscountRule::current();
+        $maxMb = max(0.3, min(2.0, (float) ($rule->compress_max_mb ?? 2.0)));
+        $maxBytes = (int) round($maxMb * 1024 * 1024);
+        $maxDimension = max(1000, min(4000, (int) ($rule->compress_max_dimension ?? 2400)));
+        $quality = max(65, min(95, (int) ($rule->compress_quality ?? 88)));
+
+        $photos = AiPhoto::where('original_size_bytes', '>', $maxBytes)->get();
+        if ($photos->isEmpty()) {
+            return back()->with('success', 'Semua foto di galeri sudah terkompres di bawah '.number_format($maxMb, 1).' MB.');
+        }
+
+        $compressedCount = 0;
+        $savedBytes = 0;
+
+        foreach ($photos as $photo) {
+            $oldRelPath = $photo->original_file_path;
+            $oldFullPath = Storage::disk('local')->path($oldRelPath);
+            if (! is_file($oldFullPath)) {
+                continue;
+            }
+
+            $beforeBytes = (int) (@filesize($oldFullPath) ?: $photo->original_size_bytes);
+            $dir = dirname($oldRelPath);
+            $stem = pathinfo($oldRelPath, PATHINFO_FILENAME);
+            $newRelPath = ($dir !== '.' ? $dir.'/' : '').$stem.'.jpg';
+            $newFullPath = Storage::disk('local')->path($newRelPath);
+
+            if ($imageService->compressImageToByteLimit($oldFullPath, $newFullPath, $maxBytes, $maxDimension, $quality)) {
+                if ($newFullPath !== $oldFullPath && is_file($oldFullPath)) {
+                    @unlink($oldFullPath);
+                }
+
+                clearstatcache(true, $newFullPath);
+                $afterBytes = (int) (@filesize($newFullPath) ?: $beforeBytes);
+                $info = @getimagesize($newFullPath);
+
+                $photo->update([
+                    'original_file_path' => $newRelPath,
+                    'original_size_bytes' => $afterBytes,
+                    'source_size_bytes' => max((int) ($photo->source_size_bytes ?? 0), $beforeBytes),
+                    'original_width' => $info[0] ?? $photo->original_width,
+                    'original_height' => $info[1] ?? $photo->original_height,
+                ]);
+
+                $compressedCount++;
+                $savedBytes += max(0, $beforeBytes - $afterBytes);
+            }
+        }
+
+        $savedMb = number_format($savedBytes / (1024 * 1024), 1);
+
+        return back()->with('success', "Berhasil mengompres {$compressedCount} foto lama menjadi <= ".number_format($maxMb, 1)." MB (hemat {$savedMb} MB penyimpanan VPS).");
     }
 
     public function updateDiscount(Request $request): RedirectResponse
@@ -523,18 +666,61 @@ class LangitLensAdminController extends Controller
 
     public function sendOriginals(Request $request, AiPhotoRequest $photoRequest): RedirectResponse
     {
+        @set_time_limit(300);
+
         $validated = $request->validate([
             'admin_notes' => ['nullable', 'string', 'max:1000'],
+            'original_files' => ['nullable', 'array'],
+            'original_files.*' => ['file'],
         ]);
 
-        DB::transaction(function () use ($photoRequest, $validated) {
+        $uploadedFiles = $request->file('original_files', []);
+        $matchedOriginalCount = 0;
+
+        DB::transaction(function () use ($photoRequest, $validated, $uploadedFiles, &$matchedOriginalCount) {
             $photoRequest->load('items.photo');
 
-            foreach ($photoRequest->items as $item) {
-                if ($item->photo) {
+            // Petakan file asli resolusi penuh yang diunggah Admin berdasarkan nama file
+            $byExactName = [];
+            $byStem = [];
+            foreach ($uploadedFiles as $uFile) {
+                $nameLower = strtolower(trim($uFile->getClientOriginalName()));
+                $stemLower = strtolower(pathinfo($nameLower, PATHINFO_FILENAME));
+                $byExactName[$nameLower] = $uFile;
+                $byStem[$stemLower] = $uFile;
+            }
+
+            foreach ($photoRequest->items as $idx => $item) {
+                $targetOrigName = strtolower(trim((string) ($item->photo?->original_filename ?? '')));
+                $targetStem = strtolower(pathinfo($targetOrigName, PATHINFO_FILENAME));
+
+                $chosenFile = null;
+                if ($targetOrigName !== '' && isset($byExactName[$targetOrigName])) {
+                    $chosenFile = $byExactName[$targetOrigName];
+                } elseif ($targetStem !== '' && isset($byStem[$targetStem])) {
+                    $chosenFile = $byStem[$targetStem];
+                } elseif (count($uploadedFiles) === 1 && $photoRequest->items->count() === 1) {
+                    $chosenFile = $uploadedFiles[0];
+                } elseif (count($uploadedFiles) === $photoRequest->items->count() && isset($uploadedFiles[$idx])) {
+                    $chosenFile = $uploadedFiles[$idx];
+                }
+
+                $deliveredPath = $item->photo?->original_file_path;
+                if ($chosenFile) {
+                    $ext = strtolower($chosenFile->getClientOriginalExtension() ?: 'jpg');
+                    $storedName = $item->id.'_'.\Illuminate\Support\Str::uuid().'.'.$ext;
+                    $deliveredPath = Storage::disk('local')->putFileAs(
+                        "ai_paid_originals/{$photoRequest->id}",
+                        $chosenFile,
+                        $storedName
+                    );
+                    $matchedOriginalCount++;
+                }
+
+                if ($deliveredPath) {
                     $item->update([
                         'is_original_unlocked' => true,
-                        'delivered_original_file_path' => $item->photo->original_file_path,
+                        'delivered_original_file_path' => $deliveredPath,
                     ]);
                 }
             }
@@ -544,12 +730,18 @@ class LangitLensAdminController extends Controller
                 'payment_confirmed_at' => now(),
                 'admin_notes' => ! empty($validated['admin_notes'])
                     ? $validated['admin_notes']
-                    : 'Pembayaran dikonfirmasi. Foto asli tanpa watermark sudah tersedia di menu Unduh.',
+                    : ($matchedOriginalCount > 0
+                        ? "Pembayaran dikonfirmasi. {$matchedOriginalCount} file foto ukuran asli penuh tanpa watermark siap diunduh."
+                        : 'Pembayaran dikonfirmasi. Foto asli tanpa watermark sudah tersedia di menu Unduh.'),
                 'sent_at' => now(),
             ]);
         });
 
-        return back()->with('success', "Pembayaran {$photoRequest->request_code} dikonfirmasi dan foto asli tanpa watermark sudah dikirim ke pelanggan.");
+        $msg = $matchedOriginalCount > 0
+            ? "Pembayaran {$photoRequest->request_code} dikonfirmasi dan {$matchedOriginalCount} file ukuran asli penuh berhasil dikirim ke pelanggan."
+            : "Pembayaran {$photoRequest->request_code} dikonfirmasi dan foto tanpa watermark sudah dikirim ke pelanggan.";
+
+        return back()->with('success', $msg);
     }
 
     public function cancelRequest(Request $request, AiPhotoRequest $photoRequest): RedirectResponse

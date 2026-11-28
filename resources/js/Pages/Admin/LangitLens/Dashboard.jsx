@@ -59,9 +59,11 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
         },
     ];
 
+    const storedBytes = stats.totalCompressedBytes ?? stats.totalOriginalBytes ?? 0;
+    const sourceBytes = stats.totalSourceBytes ?? storedBytes;
     const savedPercent =
-        stats.totalOriginalBytes > 0
-            ? Math.max(0, Math.round((1 - stats.totalPreviewBytes / stats.totalOriginalBytes) * 100))
+        sourceBytes > 0
+            ? Math.max(0, Math.round((1 - storedBytes / sourceBytes) * 100))
             : 0;
 
     return (
@@ -92,21 +94,28 @@ export default function Dashboard({ stats, recentRequests, discountRule }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-5 space-y-3 transition-colors duration-200 hover:border-white/15">
-                        <div className="flex items-center gap-2 text-sm font-bold text-white">
-                            <HardDrive className="w-4 h-4 text-sky-400" />
-                            <span>Ukuran File & Kompresi</span>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                <HardDrive className="w-4 h-4 text-sky-400" />
+                                <span>Ukuran File &amp; Kompresi</span>
+                            </div>
+                            <Link href="/admin/langitlens/photos" className="text-xs font-semibold text-sky-400 hover:underline">
+                                Atur
+                            </Link>
                         </div>
                         <div className="space-y-2 text-xs text-slate-300">
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">File Asli:</span>
-                                <span className="font-semibold text-white">{formatBytes(stats.totalOriginalBytes)}</span>
+                            <div className="flex justify-between items-baseline gap-3">
+                                <span className="text-slate-400">Total Keseluruhan Foto Galeri Terkompresi:</span>
+                                <span className="font-semibold text-white shrink-0">{formatBytes(storedBytes)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-slate-400">Pratinjau Web:</span>
-                                <span className="font-semibold text-emerald-400">{formatBytes(stats.totalPreviewBytes)}</span>
+                                <span className="text-slate-400">Batas Kompresi:</span>
+                                <span className="font-semibold text-emerald-400">
+                                    Maks {discountRule?.compress_max_mb ?? 2} MB / foto
+                                </span>
                             </div>
                             <div className="flex justify-between pt-2 border-t border-slate-800">
-                                <span className="text-slate-400">Lebih Ringan:</span>
+                                <span className="text-slate-400">Hemat Ruang VPS:</span>
                                 <span className="font-bold text-sky-400">{savedPercent}%</span>
                             </div>
                         </div>

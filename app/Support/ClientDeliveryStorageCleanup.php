@@ -203,13 +203,13 @@ class ClientDeliveryStorageCleanup
         }
 
         $paymentProofs = AiPhotoRequest::where('customer_id', $customer->id)
-            ->whereNotNull('payment_proof_path')
-            ->pluck('payment_proof_path')
-            ->all();
-        foreach ($paymentProofs as $proofPath) {
-            if (is_string($proofPath) && $proofPath !== '') {
-                $localFiles[] = $proofPath;
+            ->get(['id', 'payment_proof_path']);
+        $paidOriginalDirs = [];
+        foreach ($paymentProofs as $reqRow) {
+            if (is_string($reqRow->payment_proof_path) && $reqRow->payment_proof_path !== '') {
+                $localFiles[] = $reqRow->payment_proof_path;
             }
+            $paidOriginalDirs[] = "ai_paid_originals/{$reqRow->id}";
         }
 
         $webFiles = [];
@@ -221,7 +221,7 @@ class ClientDeliveryStorageCleanup
             'public_files' => [],
             'public_dirs' => [],
             'local_files' => $localFiles,
-            'local_dirs' => [],
+            'local_dirs' => $paidOriginalDirs,
             'public_web_files' => $webFiles,
             'upload_ids' => [],
         ];

@@ -61,7 +61,7 @@ class LangitLensIntegrationTest extends TestCase
         $photoIds = [];
         for ($i = 0; $i < 2; $i++) {
             $res = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
-                'photo' => UploadedFile::fake()->image("langit_ai_{$i}.jpg", 1200, 900),
+                'photo' => UploadedFile::fake()->image("langit_ai_{$i}.jpg", 1200 + ($i * 10), 900),
                 'price' => 25000,
                 'faces' => json_encode([
                     [
@@ -533,7 +533,7 @@ class LangitLensIntegrationTest extends TestCase
 
         // 5. Admin mengunggah foto ke-2 di kemudian hari -> otomatis muncul di Foto Saya tanpa scan ulang
         $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
-            'photo' => UploadedFile::fake()->image('event_2.jpg', 1200, 900),
+            'photo' => UploadedFile::fake()->image('event_2.jpg', 1220, 900),
             'price' => 25000,
             'faces' => json_encode([
                 [
@@ -587,13 +587,13 @@ class LangitLensIntegrationTest extends TestCase
         ])->assertOk()->json('photo.id');
 
         $photoA2 = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
-            'photo' => UploadedFile::fake()->image('person_a_2.jpg', 1200, 900),
+            'photo' => UploadedFile::fake()->image('person_a_2.jpg', 1210, 900),
             'price' => 25000,
             'faces' => json_encode([['face_embedding' => $faceA, 'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3], 'confidence_score' => 0.99]]),
         ])->assertOk()->json('photo.id');
 
         $photoB1 = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
-            'photo' => UploadedFile::fake()->image('person_b_1.jpg', 1200, 900),
+            'photo' => UploadedFile::fake()->image('person_b_1.jpg', 1220, 900),
             'price' => 25000,
             'faces' => json_encode([['face_embedding' => $faceB, 'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3], 'confidence_score' => 0.99]]),
         ])->assertOk()->json('photo.id');
@@ -675,5 +675,100 @@ class LangitLensIntegrationTest extends TestCase
             ->post("/scan-foto/hasil/{$photoB1}/claim-free")
             ->assertRedirect('/scan-foto/unduhan');
         $this->assertEquals(1, AiPhotoRequest::where('customer_id', $accountB->id)->count());
+    }
+
+    public function test_compression_rules_duplicate_upload_rejection_and_full_res_paid_delivery(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $admin = User::factory()->create([
+            'username' => 'admin_compress',
+            'role' => 'admin',
+        ]);
+
+        // 1. Aturan kompresi menolak batas > 2 MB dan menerima <= 2 MB
+        $this->actingAs($admin)->post('/admin/langitlens/compression', [
+            'compress_uploads_enabled' => true,
+            'compress_max_mb' => 5,
+            'compress_max_dimension' => 2400,
+            'compress_quality' => 88,
+        ])->assertSessionHasErrors('compress_max_mb');
+
+        $this->actingAs($admin)->post('/admin/langitlens/compression', [
+            'compress_uploads_enabled' => true,
+            'compress_max_mb' => 1.8,
+            'compress_max_dimension' => 2400,
+            'compress_quality' => 86,
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $rule = \App\Models\AiDiscountRule::current();
+        $this->assertTrue($rule->compress_uploads_enabled);
+        $this->assertEquals(1.8, $rule->compress_max_mb);
+
+        // 2. Upload pertama berhasil dan menyimpan ukuran sumber & hash
+        $firstHash = str_repeat('a', 64);
+        $firstRes = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('DSC_0001.jpg', 1200, 900),
+            'original_filename' => 'DSC_0001.JPG',
+            'source_size_bytes' => 14_500_000,
+            'source_hash' => $firstHash,
+            'price' => 25000,
+        ])->assertOk();
+
+        $photo = AiPhoto::findOrFail($firstRes->json('photo.id'));
+        $this->assertEquals('DSC_0001.JPG', $photo->original_filename);
+        $this->assertEquals(14_500_000, $photo->source_size_bytes);
+        $this->assertLessThanOrEqual(2 * 1024 * 1024, $photo->original_size_bytes);
+        $this->assertEquals(1, AiPhoto::count());
+
+        // 3. Upload ulang dengan nama file sama (beda huruf besar/kecil) -> DITOLAK 409 (duplikat)
+        $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('dsc_0001.jpg', 1200, 900),
+            'original_filename' => 'dsc_0001.jpg',
+            'source_hash' => str_repeat('b', 64),
+            'price' => 25000,
+        ])->assertStatus(409)->assertJsonPath('duplicate', true);
+        $this->assertEquals(1, AiPhoto::count());
+
+        // 4. Upload ulang dengan nama berbeda tetapi isi hash sama -> DITOLAK 409 (duplikat)
+        $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('salinan_baru.jpg', 1200, 900),
+            'original_filename' => 'salinan_baru.jpg',
+            'source_hash' => $firstHash,
+            'price' => 25000,
+        ])->assertStatus(409)->assertJsonPath('duplicate', true);
+        $this->assertEquals(1, AiPhoto::count());
+
+        // 5. Pengiriman file ukuran ASLI penuh untuk pesanan yang sudah dibayar pelanggan
+        $customer = User::factory()->create(['role' => 'customer']);
+        $req = AiPhotoRequest::create([
+            'request_code' => 'REQ-FULL-01',
+            'customer_id' => $customer->id,
+            'total_selected_photos' => 1,
+            'subtotal_price' => 25000,
+            'discount_percentage_applied' => 0,
+            'discount_amount' => 0,
+            'total_final_price' => 25000,
+            'status' => 'WAITING_MANUAL_PAYMENT',
+            'requested_at' => now(),
+        ]);
+        $item = \App\Models\AiRequestItem::create([
+            'request_id' => $req->id,
+            'photo_id' => $photo->id,
+            'price_at_request' => 25000,
+            'is_original_unlocked' => false,
+        ]);
+
+        $fullResFile = UploadedFile::fake()->create('DSC_0001.JPG', 8192, 'image/jpeg');
+        $this->actingAs($admin)->post("/admin/langitlens/requests/{$req->id}/send-originals", [
+            'admin_notes' => 'File asli penuh siap diunduh.',
+            'original_files' => [$fullResFile],
+        ])->assertRedirect();
+
+        $item->refresh();
+        $this->assertTrue((bool) $item->is_original_unlocked);
+        $this->assertStringStartsWith("ai_paid_originals/{$req->id}/", $item->delivered_original_file_path);
+        Storage::disk('local')->assertExists($item->delivered_original_file_path);
     }
 }

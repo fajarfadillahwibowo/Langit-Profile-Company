@@ -13,27 +13,49 @@ class AiImageProcessingService
         UploadedFile $file,
         ?string $watermarkText = null,
         ?int $watermarkOpacity = null,
-        bool $prepareCleanAiFile = false
+        bool $prepareCleanAiFile = false,
+        ?string $overrideOriginalName = null,
+        bool $compressToLimit = true,
+        int $maxBytes = 2097152,
+        int $maxDimension = 2400,
+        int $initialQuality = 88,
+        ?int $sourceSizeBytes = null
     ): array {
         @set_time_limit(300);
         @ini_set('memory_limit', '1024M');
 
         $subDir = date('Y/m');
         $uuid = (string) Str::uuid();
-        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-        $originalName = $file->getClientOriginalName();
-        $originalSize = (int) $file->getSize();
+        $originalName = trim((string) ($overrideOriginalName ?: $file->getClientOriginalName()));
+        $ext = strtolower($file->getClientOriginalExtension() ?: pathinfo($originalName, PATHINFO_EXTENSION) ?: 'jpg');
+        $uploadedSize = (int) $file->getSize();
+        $recordedSourceSize = max($uploadedSize, (int) ($sourceSizeBytes ?? $uploadedSize));
 
-        // 1. Simpan file master ASLI secara utuh (resolusi penuh tanpa batas & tanpa watermark)
+        // 1. Simpan file yang masuk (terkompresi <= 2 MB agar hemat disk VPS namun tetap jernih)
         $originalRelativePath = "ai_originals/{$subDir}/{$uuid}.{$ext}";
         Storage::disk('local')->putFileAs("ai_originals/{$subDir}", $file, "{$uuid}.{$ext}");
         $fullOriginalPath = Storage::disk('local')->path($originalRelativePath);
+
+        // Jika kompresi aktif dan file dari client masih > batas (default 2 MB), kompres otomatis di server
+        if ($compressToLimit && $maxBytes > 0 && is_file($fullOriginalPath) && filesize($fullOriginalPath) > $maxBytes) {
+            $compressedPath = Storage::disk('local')->path("ai_originals/{$subDir}/{$uuid}.jpg");
+            if ($this->compressImageToByteLimit($fullOriginalPath, $compressedPath, $maxBytes, $maxDimension, $initialQuality)) {
+                if ($compressedPath !== $fullOriginalPath && is_file($fullOriginalPath)) {
+                    @unlink($fullOriginalPath);
+                }
+                $originalRelativePath = "ai_originals/{$subDir}/{$uuid}.jpg";
+                $fullOriginalPath = $compressedPath;
+            }
+        }
+
+        clearstatcache(true, $fullOriginalPath);
+        $storedSize = (int) (@filesize($fullOriginalPath) ?: $uploadedSize);
 
         $imageInfo = @getimagesize($fullOriginalPath);
         $originalWidth = $imageInfo[0] ?? 0;
         $originalHeight = $imageInfo[1] ?? 0;
 
-        // 2. Buat versi pratinjau terkompresi (tetap jernih) + watermark resmi Langit
+        // 2. Buat versi pratinjau ber-watermark ringan untuk tampilan katalog pelanggan sebelum bayar
         $previewRelativePath = "ai_previews/{$subDir}/{$uuid}.webp";
         $previewFullPath = Storage::disk('public')->path($previewRelativePath);
         @mkdir(dirname($previewFullPath), 0755, true);
@@ -54,10 +76,99 @@ class AiImageProcessingService
             'preview_watermarked_path' => $previewRelativePath,
             'original_width' => $originalWidth,
             'original_height' => $originalHeight,
-            'original_size_bytes' => $originalSize,
+            'original_size_bytes' => $storedSize,
+            'source_size_bytes' => $recordedSourceSize,
             'preview_size_bytes' => $previewSize,
             'clean_ai_temp_path' => ($cleanAiTempPath && is_file($cleanAiTempPath)) ? $cleanAiTempPath : null,
         ];
+    }
+
+    /**
+     * Kompres gambar agar ukurannya <= $maxBytes (default 2 MB) dengan tetap menjaga ketajaman.
+     */
+    public function compressImageToByteLimit(
+        string $sourcePath,
+        string $destPath,
+        int $maxBytes = 2097152,
+        int $maxDimension = 2400,
+        int $initialQuality = 88
+    ): bool {
+        $info = @getimagesize($sourcePath);
+        if (! $info) {
+            return false;
+        }
+
+        $mime = $info['mime'] ?? 'image/jpeg';
+        $source = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($sourcePath),
+            'image/png' => @imagecreatefrompng($sourcePath),
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($sourcePath) : false,
+            'image/avif' => function_exists('imagecreatefromavif') ? @imagecreatefromavif($sourcePath) : false,
+            'image/bmp', 'image/x-ms-bmp' => function_exists('imagecreatefrombmp') ? @imagecreatefrombmp($sourcePath) : false,
+            'image/gif' => @imagecreatefromgif($sourcePath),
+            default => @imagecreatefromstring((string) @file_get_contents($sourcePath)),
+        };
+
+        if (! $source) {
+            return false;
+        }
+
+        if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($sourcePath);
+            $orientation = $exif['Orientation'] ?? 1;
+            $source = match ($orientation) {
+                3 => imagerotate($source, 180, 0),
+                6 => imagerotate($source, -90, 0),
+                8 => imagerotate($source, 90, 0),
+                default => $source,
+            };
+        }
+
+        $srcW = imagesx($source);
+        $srcH = imagesy($source);
+        $curMaxSide = max(800, min($maxDimension, max($srcW, $srcH)));
+        $quality = max(65, min(95, $initialQuality));
+        $tmpDest = $destPath.'.tmp.jpg';
+
+        for ($attempt = 0; $attempt < 7; $attempt++) {
+            if ($srcW > $curMaxSide || $srcH > $curMaxSide) {
+                $ratio = min($curMaxSide / $srcW, $curMaxSide / $srcH);
+                $dstW = max(1, (int) round($srcW * $ratio));
+                $dstH = max(1, (int) round($srcH * $ratio));
+            } else {
+                $dstW = $srcW;
+                $dstH = $srcH;
+            }
+
+            $canvas = imagecreatetruecolor($dstW, $dstH);
+            imagecopyresampled($canvas, $source, 0, 0, 0, 0, $dstW, $dstH, $srcW, $srcH);
+            imagejpeg($canvas, $tmpDest, $quality);
+            imagedestroy($canvas);
+
+            clearstatcache(true, $tmpDest);
+            $size = (int) @filesize($tmpDest);
+            if ($size > 0 && $size <= $maxBytes) {
+                break;
+            }
+
+            if ($quality > 70) {
+                $quality = max(68, $quality - 7);
+            } else {
+                $curMaxSide = max(960, (int) round($curMaxSide * 0.82));
+            }
+        }
+
+        imagedestroy($source);
+
+        if (is_file($tmpDest) && filesize($tmpDest) > 0) {
+            @rename($tmpDest, $destPath);
+
+            return true;
+        }
+
+        @unlink($tmpDest);
+
+        return false;
     }
 
     public function regeneratePreview(AiPhoto $photo): bool
