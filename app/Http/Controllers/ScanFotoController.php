@@ -14,6 +14,7 @@ use App\Services\LangitLens\InsightFaceClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -134,6 +135,14 @@ class ScanFotoController extends Controller
             'scanned_at' => now(),
         ]);
 
+        // Aturan 1 wajah = 1 foto gratis: cabut kuota gratis jika wajah ini sudah klaim di akun lain
+        if (
+            (int) ($user->free_photo_quota ?? 0) > 0
+            && $faceProfile->hasSameFaceClaimedFreePhotoOnOtherAccount($user, $embeddingsPayload)
+        ) {
+            $user->update(['free_photo_quota' => 0]);
+        }
+
         $request->session()->put('matched_photo_ids', $matchedIds);
         $request->session()->put('matched_photo_scores', $matchedScores);
         $request->session()->put('matched_catalog_signature', $faceProfile->catalogSignature());
@@ -195,9 +204,20 @@ class ScanFotoController extends Controller
                 'original_height' => $photo->original_height,
             ]);
 
-        $hasUsedFreeQuota = (int) ($user->free_photo_quota ?? 0) <= 0
-            || $user->free_photo_used_at !== null
+        $usedOnThisAccount = $user->free_photo_used_at !== null
             || AiPhotoRequest::where('customer_id', $user->id)->where('request_code', 'like', 'FREE-%')->exists();
+
+        $claimedOnOtherAccount = ! $usedOnThisAccount
+            && $faceProfile->hasSameFaceClaimedFreePhotoOnOtherAccount(
+                $user,
+                is_array($hydrated['scan']?->selected_face_embedding) ? $hydrated['scan']->selected_face_embedding : null
+            );
+
+        if ($claimedOnOtherAccount && (int) ($user->free_photo_quota ?? 0) > 0) {
+            $user->update(['free_photo_quota' => 0]);
+        }
+
+        $hasUsedFreeQuota = $usedOnThisAccount || $claimedOnOtherAccount || (int) ($user->free_photo_quota ?? 0) <= 0;
         $remainingFreeQuota = $hasUsedFreeQuota ? 0 : (int) ($user->free_photo_quota ?? 0);
 
         return Inertia::render('ScanFoto/MatchedPhotos', [
@@ -206,6 +226,7 @@ class ScanFotoController extends Controller
             'discountRule' => AiDiscountRule::current(),
             'freePhotoQuota' => $remainingFreeQuota,
             'freePhotoUsedAt' => $user->free_photo_used_at?->format('d M Y H:i'),
+            'freePhotoClaimedOtherAccount' => $claimedOnOtherAccount,
             'savedScan' => $faceProfile->summary($hydrated['scan'], count($matchedIds)),
         ]);
     }
@@ -218,75 +239,95 @@ class ScanFotoController extends Controller
             return back()->with('error', 'Foto tersebut tidak ada di hasil scan wajah Anda.');
         }
 
-        $result = DB::transaction(function () use ($request, $photo) {
-            $lockedUser = User::where('id', $request->user()->id)->lockForUpdate()->first();
+        $ownEmbeddings = is_array($hydrated['scan']?->selected_face_embedding)
+            ? $hydrated['scan']->selected_face_embedding
+            : null;
 
-            $alreadyUsedOnAccount = ! $lockedUser
-                || (int) $lockedUser->free_photo_quota <= 0
-                || $lockedUser->free_photo_used_at !== null
-                || AiPhotoRequest::where('customer_id', $lockedUser->id)->where('request_code', 'like', 'FREE-%')->exists();
+        $result = Cache::lock('langitlens:free-photo-claim', 10)->block(5, function () use ($request, $photo, $faceProfile, $ownEmbeddings) {
+            return DB::transaction(function () use ($request, $photo, $faceProfile, $ownEmbeddings) {
+                $lockedUser = User::where('id', $request->user()->id)->lockForUpdate()->first();
 
-            if ($alreadyUsedOnAccount) {
-                return ['status' => 'no_quota'];
-            }
+                $usedOnThisAccount = ! $lockedUser
+                    || $lockedUser->free_photo_used_at !== null
+                    || AiPhotoRequest::where('customer_id', $lockedUser->id)->where('request_code', 'like', 'FREE-%')->exists();
 
-            // Cegah duplikasi klaim gratis dengan nomor WhatsApp yang sama
-            $waDigits = preg_replace('/\D+/', '', (string) $lockedUser->whatsapp_number);
-            if ($waDigits !== '') {
-                $waAlreadyUsed = User::where('id', '!=', $lockedUser->id)
-                    ->whereNotNull('free_photo_used_at')
-                    ->get(['id', 'whatsapp_number'])
-                    ->contains(fn ($u) => preg_replace('/\D+/', '', (string) $u->whatsapp_number) === $waDigits);
-
-                if ($waAlreadyUsed) {
-                    $lockedUser->update(['free_photo_quota' => 0]);
-
+                if ($usedOnThisAccount) {
                     return ['status' => 'no_quota'];
                 }
-            }
 
-            $alreadyUnlocked = AiRequestItem::whereHas('photoRequest', fn ($q) => $q->where('customer_id', $lockedUser->id))
-                ->where('photo_id', $photo->id)
-                ->where('is_original_unlocked', true)
-                ->exists();
+                // Cek biometrik 1 wajah = 1 foto gratis lintas semua akun
+                if ($faceProfile->hasSameFaceClaimedFreePhotoOnOtherAccount($lockedUser, $ownEmbeddings)) {
+                    $lockedUser->update(['free_photo_quota' => 0]);
 
-            if ($alreadyUnlocked) {
-                return ['status' => 'already_unlocked'];
-            }
+                    return ['status' => 'claimed_other_account'];
+                }
 
-            $lockedUser->update([
-                'free_photo_quota' => (int) $lockedUser->free_photo_quota - 1,
-                'free_photo_used_at' => now(),
-                'free_photo_id' => $photo->id,
-            ]);
+                if ((int) $lockedUser->free_photo_quota <= 0) {
+                    return ['status' => 'no_quota'];
+                }
 
-            $code = 'FREE-'.date('Ymd').'-'.strtoupper(Str::random(5));
+                // Cegah duplikasi klaim gratis dengan nomor WhatsApp yang sama
+                $waDigits = preg_replace('/\D+/', '', (string) $lockedUser->whatsapp_number);
+                if ($waDigits !== '') {
+                    $waAlreadyUsed = User::where('id', '!=', $lockedUser->id)
+                        ->whereNotNull('free_photo_used_at')
+                        ->get(['id', 'whatsapp_number'])
+                        ->contains(fn ($u) => preg_replace('/\D+/', '', (string) $u->whatsapp_number) === $waDigits);
 
-            $req = AiPhotoRequest::create([
-                'request_code' => $code,
-                'customer_id' => $lockedUser->id,
-                'total_selected_photos' => 1,
-                'subtotal_price' => $photo->price,
-                'discount_percentage_applied' => 100,
-                'discount_amount' => $photo->price,
-                'total_final_price' => 0,
-                'status' => 'SENT_BY_ADMIN',
-                'customer_notes' => 'Klaim kuota gratis 1 foto oleh pelanggan.',
-                'admin_notes' => 'Kuota gratis 1 foto pelanggan — foto asli resolusi penuh tanpa watermark langsung terbuka.',
-                'requested_at' => now(),
-                'sent_at' => now(),
-            ]);
+                    if ($waAlreadyUsed) {
+                        $lockedUser->update(['free_photo_quota' => 0]);
 
-            AiRequestItem::create([
-                'request_id' => $req->id,
-                'photo_id' => $photo->id,
-                'price_at_request' => 0,
-                'is_original_unlocked' => true,
-                'delivered_original_file_path' => $photo->original_file_path,
-            ]);
+                        return ['status' => 'claimed_other_account'];
+                    }
+                }
 
-            return ['status' => 'ok', 'request' => $req];
+                $alreadyUnlocked = AiRequestItem::whereHas('photoRequest', fn ($q) => $q->where('customer_id', $lockedUser->id))
+                    ->where('photo_id', $photo->id)
+                    ->where('is_original_unlocked', true)
+                    ->exists();
+
+                if ($alreadyUnlocked) {
+                    return ['status' => 'already_unlocked'];
+                }
+
+                $lockedUser->update([
+                    'free_photo_quota' => (int) $lockedUser->free_photo_quota - 1,
+                    'free_photo_used_at' => now(),
+                    'free_photo_id' => $photo->id,
+                ]);
+
+                $code = 'FREE-'.date('Ymd').'-'.strtoupper(Str::random(5));
+
+                $req = AiPhotoRequest::create([
+                    'request_code' => $code,
+                    'customer_id' => $lockedUser->id,
+                    'total_selected_photos' => 1,
+                    'subtotal_price' => $photo->price,
+                    'discount_percentage_applied' => 100,
+                    'discount_amount' => $photo->price,
+                    'total_final_price' => 0,
+                    'status' => 'SENT_BY_ADMIN',
+                    'customer_notes' => 'Klaim kuota gratis 1 foto oleh pelanggan.',
+                    'admin_notes' => 'Kuota gratis 1 foto pelanggan — foto asli resolusi penuh tanpa watermark langsung terbuka.',
+                    'requested_at' => now(),
+                    'sent_at' => now(),
+                ]);
+
+                AiRequestItem::create([
+                    'request_id' => $req->id,
+                    'photo_id' => $photo->id,
+                    'price_at_request' => 0,
+                    'is_original_unlocked' => true,
+                    'delivered_original_file_path' => $photo->original_file_path,
+                ]);
+
+                return ['status' => 'ok', 'request' => $req];
+            });
         });
+
+        if ($result['status'] === 'claimed_other_account') {
+            return back()->with('error', 'Foto gratis Anda sudah diambil di akun lain dengan wajah yang sama.');
+        }
 
         if ($result['status'] === 'no_quota') {
             return back()->with('error', 'Kuota gratis 1 foto Anda sudah digunakan.');

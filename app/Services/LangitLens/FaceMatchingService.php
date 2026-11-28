@@ -32,6 +32,19 @@ class FaceMatchingService
 
     public const ARCFACE_CONSISTENCY_MIN_COS = 0.25;
 
+    // Ambang batas perbandingan identitas antar-akun (1 wajah = 1 kuota foto gratis)
+    public const ARCFACE_SAME_PERSON_FRONT_MIN_COS = 0.45;
+
+    public const ARCFACE_SAME_PERSON_AVG_MIN_COS = 0.42;
+
+    public const ARCFACE_SAME_PERSON_MAX_MIN_COS = 0.48;
+
+    public const LEGACY_SAME_PERSON_FRONT_MAX = 0.34;
+
+    public const LEGACY_SAME_PERSON_AVG_MAX = 0.36;
+
+    public const LEGACY_SAME_PERSON_MIN_MAX = 0.32;
+
     // Ambang batas legacy 128-D (Euclidean Distance L2, makin KECIL makin mirip)
     public const LEGACY_FRONT_MAX = 0.30;
 
@@ -213,6 +226,108 @@ class FaceMatchingService
         }
 
         return true;
+    }
+
+    /**
+     * Bandingkan dua profil scan wajah (multi-sudut atau tunggal) untuk mendeteksi
+     * apakah keduanya milik orang/wajah yang sama (mencegah klaim foto gratis ganda lintas akun).
+     *
+     * @param  array<mixed>  $embeddingsA
+     * @param  array<mixed>  $embeddingsB
+     */
+    public function areSamePerson(array $embeddingsA, array $embeddingsB): bool
+    {
+        $posesA = $this->normalizeQueryInput($embeddingsA);
+        $posesB = $this->normalizeQueryInput($embeddingsB);
+
+        if (count($posesA) === 0 || count($posesB) === 0) {
+            return false;
+        }
+
+        $firstA = reset($posesA);
+        $firstB = reset($posesB);
+        $dim = count($firstA);
+
+        if ($dim !== count($firstB)) {
+            return false;
+        }
+
+        $isArcFace = $dim >= 256;
+
+        if ($isArcFace) {
+            $maxCos = -1.0;
+            foreach ($posesA as $vecA) {
+                foreach ($posesB as $vecB) {
+                    if (count($vecA) !== $dim || count($vecB) !== $dim) {
+                        continue;
+                    }
+                    $cos = $this->cosineSimilarity($vecA, $vecB);
+                    if ($cos > $maxCos) {
+                        $maxCos = $cos;
+                    }
+                }
+            }
+
+            if (isset($posesA['front'], $posesB['front'])) {
+                $frontCos = $this->cosineSimilarity($posesA['front'], $posesB['front']);
+                if ($frontCos >= self::ARCFACE_SAME_PERSON_FRONT_MIN_COS) {
+                    return true;
+                }
+            }
+
+            $sharedScores = [];
+            foreach (['front', 'left', 'right'] as $angle) {
+                if (isset($posesA[$angle], $posesB[$angle])) {
+                    $sharedScores[] = $this->cosineSimilarity($posesA[$angle], $posesB[$angle]);
+                }
+            }
+
+            if (count($sharedScores) >= 2) {
+                $avgCos = array_sum($sharedScores) / count($sharedScores);
+                if ($avgCos >= self::ARCFACE_SAME_PERSON_AVG_MIN_COS && $maxCos >= self::ARCFACE_SAME_PERSON_MAX_MIN_COS) {
+                    return true;
+                }
+            }
+
+            return $maxCos >= self::ARCFACE_SAME_PERSON_MAX_MIN_COS;
+        }
+
+        // Mode legacy 128-D (Euclidean distance: semakin kecil semakin mirip)
+        $minDist = INF;
+        foreach ($posesA as $vecA) {
+            foreach ($posesB as $vecB) {
+                if (count($vecA) !== $dim || count($vecB) !== $dim) {
+                    continue;
+                }
+                $dist = $this->euclideanDistance($vecA, $vecB);
+                if ($dist < $minDist) {
+                    $minDist = $dist;
+                }
+            }
+        }
+
+        if (isset($posesA['front'], $posesB['front'])) {
+            $frontDist = $this->euclideanDistance($posesA['front'], $posesB['front']);
+            if ($frontDist <= self::LEGACY_SAME_PERSON_FRONT_MAX) {
+                return true;
+            }
+        }
+
+        $sharedDists = [];
+        foreach (['front', 'left', 'right'] as $angle) {
+            if (isset($posesA[$angle], $posesB[$angle])) {
+                $sharedDists[] = $this->euclideanDistance($posesA[$angle], $posesB[$angle]);
+            }
+        }
+
+        if (count($sharedDists) >= 2) {
+            $avgDist = array_sum($sharedDists) / count($sharedDists);
+            if ($avgDist <= self::LEGACY_SAME_PERSON_AVG_MAX && $minDist <= self::LEGACY_SAME_PERSON_MIN_MAX) {
+                return true;
+            }
+        }
+
+        return $minDist <= self::LEGACY_SAME_PERSON_MIN_MAX;
     }
 
     /**

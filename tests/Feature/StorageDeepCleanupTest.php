@@ -400,4 +400,100 @@ class StorageDeepCleanupTest extends TestCase
         $this->assertFalse(Storage::disk('public')->exists("client_photos/{$oldExpired->id}"));
         $this->assertFalse(Storage::disk('public')->exists("client_raw_photos/{$oldExpired->id}"));
     }
+
+    public function test_admin_can_clear_all_langitlens_photos_from_database_and_vps_disk_while_keeping_customer_face_profiles(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+
+        $admin = $this->createAdmin();
+        $customer = User::factory()->create([
+            'role' => 'customer',
+            'free_photo_quota' => 0,
+            'free_photo_used_at' => now(),
+        ]);
+
+        $photo1 = AiPhoto::create([
+            'uploaded_by_admin_id' => $admin->id,
+            'title' => 'Event Lama 1',
+            'original_filename' => 'event1.jpg',
+            'original_file_path' => 'ai_originals/2026/11/old1.jpg',
+            'preview_watermarked_path' => 'ai_previews/2026/11/old1.webp',
+            'original_width' => 6000,
+            'original_height' => 4000,
+            'original_size_bytes' => 15000000,
+            'preview_size_bytes' => 150000,
+            'price' => 25000,
+            'is_active' => true,
+        ]);
+
+        $photo2 = AiPhoto::create([
+            'uploaded_by_admin_id' => $admin->id,
+            'title' => 'Event Lama 2',
+            'original_filename' => 'event2.jpg',
+            'original_file_path' => 'ai_originals/2026/11/old2.jpg',
+            'preview_watermarked_path' => 'ai_previews/2026/11/old2.webp',
+            'original_width' => 6000,
+            'original_height' => 4000,
+            'original_size_bytes' => 18000000,
+            'preview_size_bytes' => 180000,
+            'price' => 25000,
+            'is_active' => true,
+        ]);
+
+        $customer->update(['free_photo_id' => $photo1->id]);
+
+        Storage::disk('local')->put($photo1->original_file_path, 'raw-high-res-1');
+        Storage::disk('local')->put($photo2->original_file_path, 'raw-high-res-2');
+        Storage::disk('local')->put('temp_REQ-OLD.zip', 'old-temp-zip');
+        Storage::disk('public')->put($photo1->preview_watermarked_path, 'preview-1');
+        Storage::disk('public')->put($photo2->preview_watermarked_path, 'preview-2');
+
+        \App\Models\AiPhotoFace::create([
+            'photo_id' => $photo1->id,
+            'face_embedding' => array_fill(0, 128, 0.1),
+            'bounding_box' => ['x' => 0.1, 'y' => 0.1, 'width' => 0.3, 'height' => 0.3],
+            'confidence_score' => 0.99,
+        ]);
+
+        $scan = AiFaceScan::create([
+            'customer_id' => $customer->id,
+            'selected_face_embedding' => ['front' => array_fill(0, 128, 0.1)],
+            'matched_photo_ids' => [$photo1->id, $photo2->id],
+            'scanned_at' => now(),
+        ]);
+
+        // Pelanggan biasa tidak boleh menghapus semua foto galeri (403)
+        $this->actingAs($customer)
+            ->delete('/admin/langitlens/photos/clear-all')
+            ->assertForbidden();
+        $this->assertEquals(2, AiPhoto::count());
+
+        // Admin menghapus semua foto galeri sekaligus
+        $this->actingAs($admin)
+            ->delete('/admin/langitlens/photos/clear-all')
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        // Database foto & indeks wajah bersih 100%
+        $this->assertEquals(0, AiPhoto::count());
+        $this->assertEquals(0, \App\Models\AiPhotoFace::count());
+
+        // File asli, preview watermark, folder, & ZIP sementara di disk VPS bersih 100%
+        Storage::disk('local')->assertMissing($photo1->original_file_path);
+        Storage::disk('local')->assertMissing($photo2->original_file_path);
+        Storage::disk('local')->assertMissing('temp_REQ-OLD.zip');
+        $this->assertFalse(Storage::disk('local')->exists('ai_originals'));
+        Storage::disk('public')->assertMissing($photo1->preview_watermarked_path);
+        Storage::disk('public')->assertMissing($photo2->preview_watermarked_path);
+        $this->assertFalse(Storage::disk('public')->exists('ai_previews'));
+
+        // Akun & profil scan 3 wajah permanen pelanggan tetap aman (hanya matched_photo_ids direset)
+        $scan->refresh();
+        $customer->refresh();
+        $this->assertNotNull($scan->selected_face_embedding);
+        $this->assertSame([], $scan->matched_photo_ids);
+        $this->assertNull($customer->free_photo_id);
+        $this->assertNotNull($customer->free_photo_used_at);
+    }
 }

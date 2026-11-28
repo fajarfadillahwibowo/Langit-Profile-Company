@@ -552,4 +552,128 @@ class LangitLensIntegrationTest extends TestCase
                 ->where('sidebarBadges.matchedCount', 2)
             );
     }
+
+    public function test_same_face_cannot_claim_free_photo_again_on_another_account_while_different_face_can(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $admin = User::factory()->create([
+            'username' => 'admin_antidupe',
+            'role' => 'admin',
+        ]);
+
+        // Buat 2 vektor wajah 512-D berbeda (orang A dan orang B yang ortogonal)
+        $faceA = array_fill(0, 512, 0.0);
+        for ($i = 0; $i < 256; $i++) {
+            $faceA[$i] = 1.0;
+        }
+        // Variasi tipis wajah orang A (simulasi pencahayaan/kamera akun ke-2)
+        $faceAVariant = $faceA;
+        for ($i = 0; $i < 20; $i++) {
+            $faceAVariant[$i] = 0.85;
+        }
+        // Wajah orang B yang benar-benar berbeda
+        $faceB = array_fill(0, 512, 0.0);
+        for ($i = 256; $i < 512; $i++) {
+            $faceB[$i] = 1.0;
+        }
+
+        // Admin unggah 2 foto orang A dan 1 foto orang B
+        $photoA1 = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('person_a_1.jpg', 1200, 900),
+            'price' => 25000,
+            'faces' => json_encode([['face_embedding' => $faceA, 'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3], 'confidence_score' => 0.99]]),
+        ])->assertOk()->json('photo.id');
+
+        $photoA2 = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('person_a_2.jpg', 1200, 900),
+            'price' => 25000,
+            'faces' => json_encode([['face_embedding' => $faceA, 'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3], 'confidence_score' => 0.99]]),
+        ])->assertOk()->json('photo.id');
+
+        $photoB1 = $this->actingAs($admin)->postJson('/admin/langitlens/photos', [
+            'photo' => UploadedFile::fake()->image('person_b_1.jpg', 1200, 900),
+            'price' => 25000,
+            'faces' => json_encode([['face_embedding' => $faceB, 'bounding_box' => ['x' => 0.2, 'y' => 0.2, 'width' => 0.3, 'height' => 0.3], 'confidence_score' => 0.99]]),
+        ])->assertOk()->json('photo.id');
+
+        // 3 akun berbeda untuk orang A (akun1, akunPreScan, akun2) + 1 akun orang B
+        $accountA1 = User::factory()->create(['username' => 'akun_a1', 'email' => 'a1@example.com', 'role' => 'customer', 'free_photo_quota' => 1]);
+        $accountAPre = User::factory()->create(['username' => 'akun_apre', 'email' => 'apre@example.com', 'role' => 'customer', 'free_photo_quota' => 1]);
+        $accountA2 = User::factory()->create(['username' => 'akun_a2', 'email' => 'a2@example.com', 'role' => 'customer', 'free_photo_quota' => 1]);
+        $accountB = User::factory()->create(['username' => 'akun_b', 'email' => 'b@example.com', 'role' => 'customer', 'free_photo_quota' => 1]);
+
+        // Akun A-Pre scan duluan sebelum A1 klaim
+        $this->actingAs($accountAPre)->postJson('/scan-foto/search', [
+            'face_embeddings' => ['front' => $faceAVariant, 'left' => $faceAVariant, 'right' => $faceAVariant],
+        ])->assertOk();
+
+        // Akun A1 scan lalu klaim 1 foto gratis -> BERHASIL
+        $this->actingAs($accountA1)->postJson('/scan-foto/search', [
+            'face_embeddings' => ['front' => $faceA, 'left' => $faceA, 'right' => $faceA],
+        ])->assertOk();
+
+        $this->actingAs($accountA1)
+            ->post("/scan-foto/hasil/{$photoA1}/claim-free")
+            ->assertRedirect('/scan-foto/unduhan');
+
+        $accountA1->refresh();
+        $this->assertEquals(0, $accountA1->free_photo_quota);
+        $this->assertNotNull($accountA1->free_photo_used_at);
+
+        // Akun A-Pre (yang sudah scan duluan) sekarang coba lihat Foto Saya & klaim -> DITOLAK dengan pesan khusus
+        $this->actingAs($accountAPre)->get('/scan-foto/hasil')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/MatchedPhotos')
+                ->where('freePhotoQuota', 0)
+                ->where('freePhotoClaimedOtherAccount', true)
+            );
+
+        $this->actingAs($accountAPre)
+            ->post("/scan-foto/hasil/{$photoA2}/claim-free")
+            ->assertSessionHas('error', 'Foto gratis Anda sudah diambil di akun lain dengan wajah yang sama.');
+        $this->assertEquals(0, AiPhotoRequest::where('customer_id', $accountAPre->id)->count());
+
+        // Akun A2 (akun baru dengan wajah yang sama) scan -> kuota langsung dicabut & tidak bisa klaim
+        $this->actingAs($accountA2)->postJson('/scan-foto/search', [
+            'face_embeddings' => ['front' => $faceAVariant, 'left' => $faceAVariant, 'right' => $faceAVariant],
+        ])->assertOk();
+
+        $accountA2->refresh();
+        $this->assertEquals(0, $accountA2->free_photo_quota);
+        $this->assertNull($accountA2->free_photo_used_at);
+
+        $this->actingAs($accountA2)->get('/scan-foto/hasil')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/MatchedPhotos')
+                ->where('freePhotoQuota', 0)
+                ->where('freePhotoClaimedOtherAccount', true)
+            );
+
+        $this->actingAs($accountA2)
+            ->post("/scan-foto/hasil/{$photoA2}/claim-free")
+            ->assertSessionHas('error', 'Foto gratis Anda sudah diambil di akun lain dengan wajah yang sama.');
+        $this->assertEquals(0, AiPhotoRequest::where('customer_id', $accountA2->id)->count());
+
+        // Orang B (wajah berbeda) tetap mendapat kuota 1 foto gratis normal
+        $this->actingAs($accountB)->postJson('/scan-foto/search', [
+            'face_embeddings' => ['front' => $faceB, 'left' => $faceB, 'right' => $faceB],
+        ])->assertOk();
+
+        $this->actingAs($accountB)->get('/scan-foto/hasil')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('ScanFoto/MatchedPhotos')
+                ->where('freePhotoQuota', 1)
+                ->where('freePhotoClaimedOtherAccount', false)
+            );
+
+        $this->actingAs($accountB)
+            ->post("/scan-foto/hasil/{$photoB1}/claim-free")
+            ->assertRedirect('/scan-foto/unduhan');
+        $this->assertEquals(1, AiPhotoRequest::where('customer_id', $accountB->id)->count());
+    }
 }

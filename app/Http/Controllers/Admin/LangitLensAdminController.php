@@ -352,6 +352,29 @@ class LangitLensAdminController extends Controller
         return back()->with('success', 'Foto berhasil dihapus tuntas dari database dan penyimpanan server.');
     }
 
+    public function destroyAllPhotos(): RedirectResponse
+    {
+        @set_time_limit(300);
+
+        $result = ClientDeliveryStorageCleanup::purgeAllAiGalleryPhotos();
+
+        if ($result['deleted_photos'] === 0 && $result['bytes_freed'] === 0) {
+            return back()->with('success', 'Galeri foto LangitLens sudah kosong.');
+        }
+
+        $bytes = $result['bytes_freed'];
+        $freedLabel = $bytes >= 1073741824
+            ? number_format($bytes / 1073741824, 2).' GB'
+            : ($bytes >= 1048576
+                ? number_format($bytes / 1048576, 2).' MB'
+                : number_format($bytes / 1024, 0).' KB');
+
+        return back()->with(
+            'success',
+            "Semua {$result['deleted_photos']} foto galeri & seluruh file fisik di disk server ({$freedLabel}) berhasil dihapus tuntas. Galeri siap untuk event baru."
+        );
+    }
+
     public function updateDiscount(Request $request): RedirectResponse
     {
         $validated = $request->validate([

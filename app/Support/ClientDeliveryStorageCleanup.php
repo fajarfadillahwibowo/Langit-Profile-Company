@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\AiFaceScan;
 use App\Models\AiPhoto;
+use App\Models\AiPhotoFace;
 use App\Models\AiPhotoRequest;
+use App\Models\AiRequestItem;
 use App\Models\ClientDelivery;
 use App\Models\ClientPhoto;
 use App\Models\ClientRawPhoto;
@@ -483,6 +485,82 @@ class ClientDeliveryStorageCleanup
         }
 
         return $stats;
+    }
+
+    /**
+     * Hapus tuntas SEMUA foto galeri LangitLens (untuk pergantian event & hemat penyimpanan VPS):
+     * - Database: ai_photos, ai_photo_faces, ai_request_items, reset matched_photo_ids pada ai_face_scans
+     *   (profil scan 3 wajah permanen pelanggan tetap aman untuk event baru), dan reset free_photo_id.
+     * - Disk VPS/Lokal: seluruh file & subfolder di storage/app/private/ai_originals,
+     *   storage/app/public/ai_previews, serta sisa ZIP sementara LangitLens.
+     *
+     * @return array{deleted_photos: int, deleted_faces: int, bytes_freed: int}
+     */
+    public static function purgeAllAiGalleryPhotos(): array
+    {
+        $publicDisk = Storage::disk('public');
+        $localDisk = Storage::disk('local');
+
+        $deletedPhotos = AiPhoto::count();
+        $deletedFaces = AiPhotoFace::count();
+        $recordedBytes = (int) AiPhoto::sum('original_size_bytes') + (int) AiPhoto::sum('preview_size_bytes');
+
+        $diskBytes = 0;
+        if ($localDisk->exists('ai_originals')) {
+            $diskBytes += self::directorySizeBytes($localDisk->path('ai_originals'));
+        }
+        if ($publicDisk->exists('ai_previews')) {
+            $diskBytes += self::directorySizeBytes($publicDisk->path('ai_previews'));
+        }
+
+        $originalPaths = AiPhoto::whereNotNull('original_file_path')
+            ->pluck('original_file_path')
+            ->filter(fn ($p) => is_string($p) && $p !== '')
+            ->values()
+            ->all();
+
+        $previewPaths = AiPhoto::whereNotNull('preview_watermarked_path')
+            ->pluck('preview_watermarked_path')
+            ->filter(fn ($p) => is_string($p) && $p !== '')
+            ->values()
+            ->all();
+
+        DB::transaction(function () use ($originalPaths, $previewPaths, $localDisk, $publicDisk) {
+            User::whereNotNull('free_photo_id')->update(['free_photo_id' => null]);
+            AiFaceScan::query()->update(['matched_photo_ids' => json_encode([])]);
+            AiRequestItem::query()->delete();
+            AiPhotoFace::query()->delete();
+            AiPhoto::query()->delete();
+
+            DB::afterCommit(function () use ($originalPaths, $previewPaths, $localDisk, $publicDisk) {
+                if (! empty($originalPaths)) {
+                    $localDisk->delete($originalPaths);
+                }
+                if ($localDisk->exists('ai_originals')) {
+                    $localDisk->deleteDirectory('ai_originals');
+                }
+
+                if (! empty($previewPaths)) {
+                    $publicDisk->delete($previewPaths);
+                }
+                if ($publicDisk->exists('ai_previews')) {
+                    $publicDisk->deleteDirectory('ai_previews');
+                }
+
+                // Bersihkan juga sisa file ZIP sementara LangitLens (storage/app/private/temp_*.zip)
+                foreach (glob($localDisk->path('temp_*.zip')) ?: [] as $tempZip) {
+                    if (is_file($tempZip) && ! is_link($tempZip)) {
+                        @unlink($tempZip);
+                    }
+                }
+            });
+        });
+
+        return [
+            'deleted_photos' => $deletedPhotos,
+            'deleted_faces' => $deletedFaces,
+            'bytes_freed' => max($recordedBytes, $diskBytes),
+        ];
     }
 
     protected static function directorySizeBytes(string $path): int

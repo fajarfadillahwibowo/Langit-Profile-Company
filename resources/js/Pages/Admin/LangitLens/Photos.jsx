@@ -89,6 +89,8 @@ export default function Photos({
     const [editPrice, setEditPrice] = useState('');
     const [reindexingId, setReindexingId] = useState(null);
     const [reindexingAll, setReindexingAll] = useState(false);
+    const [confirmClearAllOpen, setConfirmClearAllOpen] = useState(false);
+    const [clearingAll, setClearingAll] = useState(false);
 
     const fileInputRef = useRef(null);
     const folderInputRef = useRef(null);
@@ -311,6 +313,23 @@ export default function Photos({
         );
     };
 
+    const handleClearAllPhotos = () => {
+        if (clearingAll || uploading) return;
+        setClearingAll(true);
+        router.delete('/admin/langitlens/photos/clear-all', {
+            preserveScroll: false,
+            onSuccess: () => {
+                setPhotos([]);
+                setTotalCount(0);
+                setRecentLogs([]);
+                setFailedFiles([]);
+                setUploadStats({ total: 0, done: 0, failed: 0, startedAt: 0 });
+                setConfirmClearAllOpen(false);
+            },
+            onFinish: () => setClearingAll(false),
+        });
+    };
+
     const processedTotal = uploadStats.done + uploadStats.failed;
     const progressPercent =
         uploadStats.total > 0 ? Math.round((processedTotal / uploadStats.total) * 100) : 0;
@@ -500,7 +519,7 @@ export default function Photos({
 
                 {/* Area Upload Massal Tanpa Batas */}
                 <div className="bg-[#0B1222]/90 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
                         <div>
                             <h2 className="text-base font-bold text-white">Unggah Foto Massal (Tanpa Batas)</h2>
                             <p className="text-xs text-slate-400 mt-0.5">
@@ -508,18 +527,32 @@ export default function Photos({
                                 ulangi jika jaringan terganggu.
                             </p>
                         </div>
-                        <div className="shrink-0">
-                            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                                Harga per Foto (Rp)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                step="1000"
-                                value={uploadPrice}
-                                onChange={(e) => setUploadPrice(e.target.value)}
-                                className="w-full sm:w-40 min-h-11 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-sky-400"
-                            />
+                        <div className="flex flex-wrap items-end gap-2.5 shrink-0">
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                                    Harga per Foto (Rp)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    value={uploadPrice}
+                                    onChange={(e) => setUploadPrice(e.target.value)}
+                                    className="w-full sm:w-40 min-h-11 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-sky-400"
+                                />
+                            </div>
+                            {totalCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmClearAllOpen(true)}
+                                    disabled={uploading || clearingAll}
+                                    className="min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 active:scale-[0.98] border border-rose-500/35 text-rose-300 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+                                    title="Hapus seluruh foto galeri event lama dari database & disk VPS"
+                                >
+                                    <Trash2 className="w-4 h-4 shrink-0" />
+                                    <span>Hapus Semua Foto ({totalCount})</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -785,6 +818,61 @@ export default function Photos({
                     )}
                 </div>
             </div>
+
+            {/* Modal Konfirmasi Hapus Semua Foto Galeri */}
+            {confirmClearAllOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4"
+                    onClick={() => !clearingAll && setConfirmClearAllOpen(false)}
+                >
+                    <div
+                        className="w-full max-w-md rounded-2xl bg-[#0B1222] border border-white/15 p-5 sm:p-6 shadow-2xl space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                                <AlertTriangle className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="text-sm font-bold text-white">Hapus Semua Foto Galeri?</h3>
+                                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Seluruh <strong className="text-white">{totalCount} foto</strong> (file asli resolusi
+                                    penuh &amp; preview watermark) akan dihapus permanen dari{' '}
+                                    <strong className="text-rose-300">database dan penyimpanan disk VPS</strong> agar
+                                    ruang server kembali lega untuk event baru.
+                                </p>
+                                <p className="text-[11px] text-slate-400 mt-2">
+                                    Akun dan data scan 3 wajah permanen pelanggan tetap aman.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/10">
+                            <button
+                                type="button"
+                                disabled={clearingAll}
+                                onClick={() => setConfirmClearAllOpen(false)}
+                                className="min-h-10 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={clearingAll}
+                                onClick={handleClearAllPhotos}
+                                className="min-h-10 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                {clearingAll ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                )}
+                                <span>{clearingAll ? 'Menghapus...' : 'Ya, Hapus Semua Foto'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

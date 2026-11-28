@@ -235,6 +235,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/photos', [LangitLensAdminController::class, 'photos'])->name('photos');
             Route::post('/photos', [LangitLensAdminController::class, 'storePhoto'])->name('photos.store');
             Route::post('/photos/reindex-all', [LangitLensAdminController::class, 'reindexAllInsightFace'])->name('photos.reindex-all');
+            Route::delete('/photos/clear-all', [LangitLensAdminController::class, 'destroyAllPhotos'])->name('photos.clear-all');
             Route::get('/photos/{photo}/clean-source', [LangitLensAdminController::class, 'cleanSource'])->name('photos.clean-source');
             Route::patch('/photos/{photo}', [LangitLensAdminController::class, 'updatePrice'])->name('photos.update');
             Route::post('/photos/{photo}/reindex-faces', [LangitLensAdminController::class, 'reindexFaces'])->name('photos.reindex');

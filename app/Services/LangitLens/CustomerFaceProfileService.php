@@ -138,4 +138,63 @@ class CustomerFaceProfileService
             'matched_count' => $matchedCount,
         ];
     }
+
+    /**
+     * Cek apakah wajah milik akun ini sudah pernah mengklaim kuota 1 foto gratis
+     * di akun pelanggan lain (aturan 1 wajah = 1 foto gratis saja).
+     *
+     * @param  array<mixed>|null  $embeddingsOverride
+     */
+    public function hasSameFaceClaimedFreePhotoOnOtherAccount(User $user, ?array $embeddingsOverride = null): bool
+    {
+        $targetEmbeddings = $embeddingsOverride;
+        if (! is_array($targetEmbeddings) || count($targetEmbeddings) === 0) {
+            $ownScan = $this->latestScan($user);
+            $targetEmbeddings = is_array($ownScan?->selected_face_embedding)
+                ? $ownScan->selected_face_embedding
+                : [];
+        }
+
+        if (count($targetEmbeddings) === 0) {
+            return false;
+        }
+
+        $foundMatch = false;
+
+        AiFaceScan::query()
+            ->join('users', 'users.id', '=', 'ai_face_scans.customer_id')
+            ->where('ai_face_scans.customer_id', '!=', $user->id)
+            ->where(function ($query) {
+                $query->whereNotNull('users.free_photo_used_at')
+                    ->orWhereExists(function ($sub) {
+                        $sub->selectRaw('1')
+                            ->from('ai_photo_requests')
+                            ->whereColumn('ai_photo_requests.customer_id', 'users.id')
+                            ->where('ai_photo_requests.request_code', 'like', 'FREE-%');
+                    });
+            })
+            ->select([
+                'ai_face_scans.id',
+                'ai_face_scans.customer_id',
+                'ai_face_scans.selected_face_embedding',
+            ])
+            ->orderBy('ai_face_scans.id')
+            ->chunkById(200, function ($scans) use ($targetEmbeddings, &$foundMatch) {
+                foreach ($scans as $otherScan) {
+                    $otherEmbedding = is_array($otherScan->selected_face_embedding)
+                        ? $otherScan->selected_face_embedding
+                        : [];
+
+                    if (count($otherEmbedding) > 0 && $this->matcher->areSamePerson($targetEmbeddings, $otherEmbedding)) {
+                        $foundMatch = true;
+
+                        return false;
+                    }
+                }
+
+                return true;
+            }, 'ai_face_scans.id', 'id');
+
+        return $foundMatch;
+    }
 }

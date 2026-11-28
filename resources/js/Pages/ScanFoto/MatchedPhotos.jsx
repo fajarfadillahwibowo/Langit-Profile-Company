@@ -16,6 +16,7 @@ import {
     Download,
     ArrowRight,
     RefreshCw,
+    AlertTriangle,
 } from 'lucide-react';
 
 function formatRupiah(num) {
@@ -32,6 +33,7 @@ export default function MatchedPhotos({
     discountRule,
     freePhotoQuota = 0,
     freePhotoUsedAt = null,
+    freePhotoClaimedOtherAccount = false,
     savedScan = null,
 }) {
     const [zoomPhoto, setZoomPhoto] = useState(null);
@@ -143,8 +145,22 @@ export default function MatchedPhotos({
                             </div>
                         </div>
                     </motion.div>
+                ) : freePhotoClaimedOtherAccount ? (
+                    <div className="rounded-2xl p-4 border bg-amber-500/10 border-amber-400/35 text-amber-100 text-xs sm:text-sm flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/35 flex items-center justify-center text-amber-300 shrink-0 mt-0.5">
+                            <AlertTriangle className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-amber-300">
+                                Foto gratis Anda sudah diambil di akun lain dengan wajah yang sama.
+                            </p>
+                            <p className="text-xs text-amber-100/80 mt-0.5">
+                                Kuota 1 foto gratis hanya berlaku untuk 1 wajah 1 akun. Silakan tambah foto ke keranjang untuk memesan.
+                            </p>
+                        </div>
+                    </div>
                 ) : (
-                    <div className="rounded-2xl p-3.5 border bg-white/[0.03] border-white/10 text-slate-300 text-xs flex flex-wrap items-center justify-between gap-3 backdrop-blur-md">
+                    <div className="rounded-2xl p-3.5 border bg-white/[0.03] border-white/10 text-slate-300 text-xs flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
                             <Gift className="w-4 h-4 text-slate-500 shrink-0" />
                             <span>
